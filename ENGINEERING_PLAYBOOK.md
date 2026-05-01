@@ -279,15 +279,15 @@ This document defines the execution strategy to demonstrate engineering judgment
 **Execution Risks & Mitigations**
 - **Risk 1**: Data extraction takes longer than expected.
   - *Mitigation*: Freeze the time window (e.g., last 30 days) from Day 1.
-- **Risk 2**: Writing expands uncontrollably.
-  - *Mitigation*: Hard word limit (< 700 words) per case.
+- **Risk 2**: Writing expands uncontrollably or becomes generic.
+  - *Mitigation*: Hard word limit (< 700 words) per case. Use summarized technical language only; strictly no "LinkedIn-style" phrasing.
 - **Risk 3**: Lack of source traceability.
   - *Mitigation*: Mandatory evidence checklist before publishing.
 
 - [ ] **4. Case Studies (D1 + D2)**
   - **Max 2 Cases Rule**: Case A (mandatory, highest business impact); Case B (mandatory, best evidence of *human friction*). Everything else goes to the backlog (Phase 3+).
   - **Definition of "Done"**: A Case Study is ready ONLY if it has:
-    - Narrative in < 700 words.
+    - Narrative in < 700 words (concise technical language, zero generic/LinkedIn phrasing).
     - 3 "before vs after" metrics.
     - Real/Reproduced tag visible.
     - 1 lesson learned + 1 future action.

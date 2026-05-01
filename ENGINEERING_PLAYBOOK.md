@@ -270,13 +270,46 @@ This document defines the execution strategy to demonstrate engineering judgment
 > [!WARNING]
 > **Strict Timebox and Scope**: Maximum 2 Case Studies. Writing and data extraction are slow; expanding scope here guarantees not finishing.
 
+**Weekly Cadence**
+- **Week 4**: Select 2 incidents + gather raw evidence.
+- **Week 5**: Case Study #1 (draft + metrics + tags).
+- **Week 6**: Case Study #2.
+- **Week 7**: Normalize badges, confidence score, final review.
+
+**Execution Risks & Mitigations**
+- **Risk 1**: Data extraction takes longer than expected.
+  - *Mitigation*: Freeze the time window (e.g., last 30 days) from Day 1.
+- **Risk 2**: Writing expands uncontrollably or becomes generic.
+  - *Mitigation*: Hard word limit (< 700 words) per case. Use summarized technical language only; strictly no "LinkedIn-style" phrasing.
+- **Risk 3**: Lack of source traceability.
+  - *Mitigation*: Mandatory evidence checklist before publishing.
+
 - [ ] **4. Case Studies (D1 + D2)**
-  - Human Friction and Partial Cause: Document real incidents (e.g., INC-002: cold-starts) with "before vs after" metrics.
-  - Data (Real vs Reproduced): Strict labeling in reports.
+  - **Max 2 Cases Rule**: Case A (mandatory, highest business impact); Case B (mandatory, best evidence of *human friction*). Everything else goes to the backlog (Phase 3+).
+  - **Definition of "Done"**: A Case Study is ready ONLY if it has:
+    - Narrative in < 700 words (concise technical language, zero generic/LinkedIn phrasing).
+    - 3 "before vs after" metrics.
+    - Real/Reproduced tag visible.
+    - 1 lesson learned + 1 future action.
+  - **Standard Template (Disciplined Copy/Paste)**:
+    1. **Context**: Which service, when, impact.
+    2. **Symptom**: What was observed.
+    3. **Initial Hypotheses**: What was suspected.
+    4. **Partial/Human Cause**: Decision, process, communication, etc.
+    5. **Before vs After**: Table with 3 metrics.
+    6. **Real vs Reproduced**: Data source and limitations.
+    7. **Lessons & Guardrails**: Preventive action.
 
 - [ ] **5. Real vs Synthetic Signal (B2)**
-  - **Tasks**: Explicit visual indicator (Badge) to distinguish real from synthetic telemetry.
-  - **Confidence Score**: Simplified implementation (maximum 2 lines of logic).
+  - **Labeling Rule**: Every chart/table must have a badge (in title or subtitle). No tag = no publish.
+  - **Taxonomy**:
+    - `REAL`: Verifiable production telemetry.
+    - `REPRODUCED`: Controlled experiment replicating a pattern.
+    - `SYNTHETIC`: Simulated data for demo purposes.
+  - **Confidence Score**:
+    - `High`: Real data + consistent evidence from ≥2 sources.
+    - `Medium`: Real but incomplete, or strictly controlled reproduced data.
+    - `Low`: Synthetic or insufficient sample.
 
 #### Phase 3: Visual Consistency (Week 8)
 

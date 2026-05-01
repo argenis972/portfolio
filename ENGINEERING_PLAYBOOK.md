@@ -265,7 +265,7 @@ This document defines the execution strategy to demonstrate engineering judgment
 
 ### UPCOMING PHASES
 
-#### Phase 2: Credibility and Incidents (Weeks 4-7)
+#### Phase 2: Credibility and Incidents (✅ COMPLETED)
 
 > [!WARNING]
 > **Strict Timebox and Scope**: Maximum 2 Case Studies. Writing and data extraction are slow; expanding scope here guarantees not finishing.
@@ -284,7 +284,7 @@ This document defines the execution strategy to demonstrate engineering judgment
 - **Risk 3**: Lack of source traceability.
   - *Mitigation*: Mandatory evidence checklist before publishing.
 
-- [ ] **4. Case Studies (D1 + D2)**
+- [x] **4. Case Studies (D1 + D2)**
   - **Max 2 Cases Rule**: Case A (mandatory, highest business impact); Case B (mandatory, best evidence of *human friction*). Everything else goes to the backlog (Phase 3+).
   - **Definition of "Done"**: A Case Study is ready ONLY if it has:
     - Narrative in < 700 words (concise technical language, zero generic/LinkedIn phrasing).
@@ -300,7 +300,7 @@ This document defines the execution strategy to demonstrate engineering judgment
     6. **Real vs Reproduced**: Data source and limitations.
     7. **Lessons & Guardrails**: Preventive action.
 
-- [ ] **5. Real vs Synthetic Signal (B2)**
+- [x] **5. Real vs Synthetic Signal (B2)**
   - **Labeling Rule**: Every chart/table must have a badge (in title or subtitle). No tag = no publish.
   - **Taxonomy**:
     - `REAL`: Verifiable production telemetry.

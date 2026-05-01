@@ -17,7 +17,7 @@ Assumed the 14-minute cron interval was insufficient to prevent Koyeb's free-tie
 ### 4. Partial/Human Cause
 Diagnostic error (wrong bottleneck identified). The keep-alive cron was working; the container was warm. However, `/health` did not require a database connection. The latency was entirely due to the TCP/TLS overhead of establishing a new connection to Supabase (PostgreSQL) on the first read request.
 
-### 5. Before vs After
+### 5. Before vs After [REAL]
 
 | Metric | Before (PostgreSQL) | After (JSONRepository) |
 | :--- | :--- | :--- |

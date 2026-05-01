@@ -17,7 +17,7 @@ Assumed the backend CORS policy in Koyeb was rejecting the requests from the new
 ### 4. Partial/Human Cause
 Infrastructure silos and environmental drift. The frontend and backend managed security headers independently without a single source of truth. The incident bypassed QA because `localhost` and Vercel preview URLs (staging) utilized relaxed CSP templates. The restrictive production CSP was only evaluated post-cutover.
 
-### 5. Before vs After
+### 5. Before vs After [REAL]
 
 | Metric | Before (Production Cutover) | After (v1.4.0) |
 | :--- | :--- | :--- |

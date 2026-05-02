@@ -11,15 +11,6 @@ import React from 'react';
 import { m, AnimatePresence } from 'framer-motion';
 import { useMetricsDisplay } from '../hooks/useMetricsDisplay';
 
-const LIFECYCLE_CONFIG: Record<
-  string,
-  { label: string; dot: string; labelClass: string }
-> = {
-  DEGRADED:   { label: 'DEGRADED',   dot: 'bg-[var(--color-status-degraded)] animate-pulse', labelClass: 'text-[var(--color-status-degraded-text)]' },
-  RECOVERING: { label: 'RECOVERING', dot: 'bg-[var(--color-status-recovering)] animate-pulse', labelClass: 'text-[var(--color-status-recovering-text)]' },
-  STABLE:     { label: 'STABLE',     dot: 'bg-[var(--color-status-stable)]',             labelClass: 'text-[var(--color-status-ok-text)]' },
-  NORMAL:     { label: 'NORMAL',     dot: 'bg-[var(--color-status-stable)]',             labelClass: 'text-[var(--color-status-ok-text)]' },
-};
 
 function causeKey(lastIncident: string): string {
   const map: Record<string, string> = {
@@ -47,7 +38,6 @@ const SystemStatusBanner = React.memo(() => {
       : 'bg-[var(--color-status-recovering-bg)] border-[var(--color-status-recovering-border)] text-[var(--color-status-recovering-text)]';
 
   const lifecycle     = displayLifecycle ?? data.system_lifecycle ?? 'NORMAL';
-  const lifecycleCfg  = LIFECYCLE_CONFIG[lifecycle] ?? LIFECYCLE_CONFIG['NORMAL'];
 
   const cause = data.last_incident && data.last_incident !== 'none'
     ? t(causeKey(data.last_incident))

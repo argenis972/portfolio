@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { m, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
 import { useMetricsDisplay } from '../hooks/useMetricsDisplay';
@@ -7,20 +7,6 @@ import { Tile, TileSkeleton } from './ui/Tile';
 import MetricsSparkline from './ui/MetricsSparkline';
 
 
-const UpdatedAgo = React.memo(({ timestamp }: { timestamp: string }) => {
-  const { t } = useLanguage();
-  const [secondsAgo, setSecondsAgo] = useState<number>(0);
-
-  useEffect(() => {
-    const start = new Date(timestamp).getTime();
-    const update = () => setSecondsAgo(Math.max(0, Math.floor((Date.now() - start) / 1000)));
-    update();
-    const timer = setInterval(update, 1000);
-    return () => clearInterval(timer);
-  }, [timestamp]);
-
-  return <span className="text-xs text-app-muted font-mono truncate">{t('metrics.updated_ago', { s: secondsAgo })}</span>;
-});
 
 export default function LiveMetricsBento() {
   const displayContext = useMetricsDisplay();
@@ -43,7 +29,6 @@ export default function LiveMetricsBento() {
 
   const {
     data,
-    statusCfg,
     errorIsElevated,
     errorRateColor,
     errorNumberColor,
@@ -84,6 +69,9 @@ export default function LiveMetricsBento() {
           <span className="text-app-muted/80">
             Session includes ~{100 - confidenceScore}% synthetic data during active chaos events.
           </span>
+          <span className={`ml-1 rounded-full border px-2 py-0.5 ${confidenceTone}`}>
+            {t(`metrics.confidence.${confidenceLabel}`)}
+          </span>
           <span className="rounded-full border border-app-border/40 bg-app-surface/30 px-2 py-1 text-app-muted ml-auto">
             {t(`metrics.lifecycle.${displayLifecycle}`)}
           </span>
@@ -91,17 +79,7 @@ export default function LiveMetricsBento() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-        <Tile index={0} label={t('metrics.system_status')}>
-          <div className="flex items-center gap-2 mt-1">
-            <span className={`h-2.5 w-2.5 rounded-full flex-shrink-0 ${statusCfg.dot}`} />
-                <span className={`font-mono text-lg font-bold uppercase tracking-tight ${statusCfg.text}`}>
-                  {t(statusCfg.i18nKey)}
-                </span>
-              </div>
-              <UpdatedAgo timestamp={data.timestamp} />
-        </Tile>
-
-        <Tile index={1} label={t('metrics.latency')} alertState={preset !== 'off' ? 'chaos' : 'none'}>
+        <Tile index={0} label={t('metrics.latency')} alertState={preset !== 'off' ? 'chaos' : 'none'}>
           <div className="mt-1 flex flex-col gap-3">
             <div className="flex items-end justify-between gap-4">
               <div className="flex items-end gap-1">
@@ -137,7 +115,7 @@ export default function LiveMetricsBento() {
           </span>
         </Tile>
 
-        <Tile index={2} label={t('metrics.error_rate')} alertState={preset !== 'off' ? 'chaos' : 'none'}>
+        <Tile index={1} label={t('metrics.error_rate')} alertState={preset !== 'off' ? 'chaos' : 'none'}>
            <div className="flex items-center gap-2 mt-1">
              <AnimatePresence>
                {errorIsElevated && (
@@ -169,12 +147,12 @@ export default function LiveMetricsBento() {
            </m.div>
         </Tile>
 
-        <Tile index={3} label={t('metrics.requests_24h')}>
+        <Tile index={2} label={t('metrics.requests_24h')}>
           <span className="font-mono text-2xl font-bold text-app-text mt-1">{data.requests_24h.toLocaleString('en-US')}</span>
           <UpdatedAgo timestamp={data.timestamp} />
         </Tile>
 
-        <Tile index={4} label={t('metrics.retries_1h')}>
+        <Tile index={3} label={t('metrics.retries_1h')}>
           <div className="flex items-center gap-2 mt-1">
             {strategyProfile.retryBudget > 5 && <span className="text-status-error text-lg">⚠</span>}
             <span className={`font-mono text-2xl font-bold ${strategyProfile.retryBudget > 10 ? 'text-status-error' : strategyProfile.retryBudget > 0 ? 'text-status-warn' : 'text-app-text'}`}>
@@ -187,7 +165,7 @@ export default function LiveMetricsBento() {
           <span className="text-[10px] font-mono text-app-muted">{t('metrics.strategy.retry')} {strategyProfile.source === 'synthetic' ? t('metrics.strategy.synthetic') : t('metrics.strategy.backend')}</span>
         </Tile>
 
-        <Tile index={5} label={t('metrics.last_incident')}>
+        <Tile index={4} label={t('metrics.last_incident')}>
           <div className="flex items-center gap-2 mt-1">
             <span className={`h-2.5 w-2.5 rounded-full flex-shrink-0 ${incidentDot}`} />
             <span className={`font-mono text-sm font-bold ${incidentText} truncate`}>

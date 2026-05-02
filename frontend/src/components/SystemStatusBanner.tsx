@@ -53,7 +53,8 @@ const SystemStatusBanner = React.memo(() => {
     ? t(causeKey(data.last_incident))
     : t('banner.cause.backend');
 
-  const showCause = lifecycle !== 'STABLE' && lifecycle !== 'NORMAL';
+  const showCause   = lifecycle !== 'STABLE' && lifecycle !== 'NORMAL';
+  const showImpact  = lifecycle !== 'STABLE' && lifecycle !== 'NORMAL';
 
   return (
     <AnimatePresence>
@@ -85,17 +86,15 @@ const SystemStatusBanner = React.memo(() => {
                 </>
               )}
               
-              <span className="text-current/45">·</span>
-              <span className="text-current/80">
-                <span className="text-current/55">{t('banner.impact')}: </span>
-                +{effectiveP95}ms latency{strategyProfile.retryBudget > 0 ? ', retries active' : ''}
-              </span>
-
-              <span className="text-current/45">·</span>
-              <span className="text-current/80">
-                <span className="text-current/55">Status: </span>
-                {lifecycle === 'DEGRADED' ? 'Recovering' : 'Stable'}
-              </span>
+              {showImpact && (
+                <>
+                  <span className="text-current/45">·</span>
+                  <span className="text-current/80">
+                    <span className="text-current/55">{t('banner.impact')}: </span>
+                    +{effectiveP95}ms latency{strategyProfile.retryBudget > 0 ? ', retries active' : ''}
+                  </span>
+                </>
+              )}
             </div>
           </div>
         </m.div>

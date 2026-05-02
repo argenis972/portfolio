@@ -312,7 +312,7 @@
   "tradeoffs.title": "Trade-offs de Arquitectura",
   "tradeoffs.subtitle": "La ingeniería no se trata de elecciones; se trata de compromisos.",
   "tradeoffs.impact_label": "Impacto Operativo",
-  "tradeoffs.protip": "PRO-TIP: Activa el modo [STRESS] o [FAILURE] abajo para ver estos trade-offs en acción. Cuando la latencia supera los 100ms, el sistema prioriza automáticamente la disponibilidad cambiando a la ruta de fallback asíncrona.",
+  "tradeoffs.protip": "Activa el modo [STRESS] o [FAILURE] abajo para ver estos trade-offs en acción. Cuando la latencia supera los 100ms, el sistema prioriza automáticamente la disponibilidad cambiando a la ruta de fallback asíncrona.",
   "tradeoffs.status.active": "ACTIVO",
   "tradeoffs.status.optimized": "OPTIMIZADO",
   "tradeoffs.status.enforced": "FORZADO",

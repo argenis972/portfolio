@@ -79,15 +79,10 @@ export default function LiveMetricsBento() {
           {t('metrics.section_subtitle')}
         </p>
         <div className="mt-3 flex flex-wrap items-center justify-center lg:justify-start gap-2 text-[10px] font-mono">
-          <span className={`rounded-full border px-2 py-1 ${confidenceTone}`}>
-            {t(`metrics.confidence.${confidenceLabel}`)} {confidenceScore}%
+          <span className="text-app-muted/80">
+            Session includes ~{100 - confidenceScore}% synthetic data during active chaos events.
           </span>
-          {latestSample && (
-            <span className="rounded-full border border-app-border/40 bg-app-surface/30 px-2 py-1 text-app-muted">
-              {t(`metrics.origin.${latestSample.source}`)}
-            </span>
-          )}
-          <span className="rounded-full border border-app-border/40 bg-app-surface/30 px-2 py-1 text-app-muted">
+          <span className="rounded-full border border-app-border/40 bg-app-surface/30 px-2 py-1 text-app-muted ml-auto">
             {t(`metrics.lifecycle.${displayLifecycle}`)}
           </span>
         </div>
@@ -102,10 +97,6 @@ export default function LiveMetricsBento() {
                 </span>
               </div>
               <UpdatedAgo timestamp={data.timestamp} />
-              <div className="flex flex-wrap gap-2 text-[10px] font-mono">
-                <span className={`rounded-full px-2 py-0.5 ${confidenceTone}`}>{t(`metrics.confidence.${confidenceLabel}`)} {confidenceScore}%</span>
-                <span className="rounded-full border border-app-border/40 bg-app-surface/40 px-2 py-0.5 text-app-muted">{t(`metrics.origin.${latestSample?.source ?? 'real'}`)}</span>
-              </div>
         </Tile>
 
         <Tile index={1} label={t('metrics.latency')}>
@@ -137,15 +128,10 @@ export default function LiveMetricsBento() {
                   {t('metrics.delta.baseline')} {baselineDelta > 0 ? '+' : ''}{baselineDelta}ms
                 </span>
               )}
-              {latestSample && (
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-mono ${latestSample.source === 'synthetic' ? 'bg-[var(--color-status-synthetic-bg)] text-[var(--color-status-synthetic)]' : 'bg-[var(--color-status-ok-bg)] text-[var(--color-status-ok-text)]'}`}>
-                  {t(`metrics.origin.${latestSample.source}`)}
-                </span>
-              )}
             </div>
           </div>
-          <span className={`text-xs font-mono px-2 py-0.5 rounded-full w-fit ${effectiveP95 <= 60 ? 'bg-status-ok-soft text-status-ok' : effectiveP95 <= 100 ? 'bg-status-warn-soft text-status-warn' : 'bg-status-error-soft text-status-error'}`}>
-            {effectiveP95 <= 60 ? t('metrics.health.healthy') : effectiveP95 <= 100 ? t('metrics.health.warning') : t('metrics.status.degraded')}
+          <span className={`text-xs font-mono px-2 py-0.5 rounded-full w-fit ${effectiveP95 <= 60 ? 'bg-status-ok-soft text-status-ok' : 'bg-status-warn-soft text-status-warn'}`}>
+            {effectiveP95 <= 60 ? t('metrics.health.healthy') : t('metrics.health.warning')}
           </span>
         </Tile>
 
@@ -182,7 +168,7 @@ export default function LiveMetricsBento() {
         </Tile>
 
         <Tile index={3} label={t('metrics.requests_24h')}>
-          <span className="font-mono text-2xl font-bold text-app-text mt-1">{data.requests_24h.toLocaleString()}</span>
+          <span className="font-mono text-2xl font-bold text-app-text mt-1">{data.requests_24h.toLocaleString('en-US')}</span>
           <UpdatedAgo timestamp={data.timestamp} />
         </Tile>
 

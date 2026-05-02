@@ -313,7 +313,7 @@
   "tradeoffs.title": "Architecture Trade-offs",
   "tradeoffs.subtitle": "Engineering isn't about choices; it's about compromises.",
   "tradeoffs.impact_label": "Operational Impact",
-  "tradeoffs.protip": "PRO-TIP: Toggle [STRESS] or [FAILURE] mode below to see these trade-offs in action. When latency exceeds 100ms, the system automatically prioritizes availability by switching to the async fallback path.",
+  "tradeoffs.protip": "Toggle [STRESS] or [FAILURE] mode below to see these trade-offs in action. When latency exceeds 100ms, the system automatically prioritizes availability by switching to the async fallback path.",
   "tradeoffs.status.active": "ACTIVE",
   "tradeoffs.status.optimized": "OPTIMIZED",
   "tradeoffs.status.enforced": "ENFORCED",

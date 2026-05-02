@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { m, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
 import { useMetricsDisplay } from '../hooks/useMetricsDisplay';
+import { useChaosMode } from '../hooks/useChaosMode';
 import { Tile, TileSkeleton } from './ui/Tile';
 import MetricsSparkline from './ui/MetricsSparkline';
 
@@ -23,6 +24,7 @@ const UpdatedAgo = React.memo(({ timestamp }: { timestamp: string }) => {
 
 export default function LiveMetricsBento() {
   const displayContext = useMetricsDisplay();
+  const { preset } = useChaosMode();
   const { isLoading, t } = displayContext;
 
   if (isLoading || !displayContext.data) {
@@ -99,7 +101,7 @@ export default function LiveMetricsBento() {
               <UpdatedAgo timestamp={data.timestamp} />
         </Tile>
 
-        <Tile index={1} label={t('metrics.latency')}>
+        <Tile index={1} label={t('metrics.latency')} alertState={preset !== 'off' ? 'chaos' : 'none'}>
           <div className="mt-1 flex flex-col gap-3">
             <div className="flex items-end justify-between gap-4">
               <div className="flex items-end gap-1">
@@ -135,7 +137,7 @@ export default function LiveMetricsBento() {
           </span>
         </Tile>
 
-        <Tile index={2} label={t('metrics.error_rate')}>
+        <Tile index={2} label={t('metrics.error_rate')} alertState={preset !== 'off' ? 'chaos' : 'none'}>
            <div className="flex items-center gap-2 mt-1">
              <AnimatePresence>
                {errorIsElevated && (

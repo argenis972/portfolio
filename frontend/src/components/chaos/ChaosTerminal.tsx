@@ -24,22 +24,33 @@ export default function ChaosTerminal({ entries }: ChaosTerminalProps) {
         {entries.length === 0 ? (
           <p className="text-white/40">{'>'} {t('logs.waiting')}</p>
         ) : (
-          entries.map((entry) => (
-            <m.div
-              key={entry.id}
-              initial={{ opacity: 0, x: -4 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="flex gap-2 mb-1"
-            >
-              <span className="text-white/60 flex-shrink-0">[{entry.timestamp}]</span>
-               <span className={
-                 entry.level === 'ERROR' ? 'text-status-error flex-shrink-0' :
-                 entry.level === 'WARN' ? 'text-status-warn flex-shrink-0' :
-                 'text-status-ok/70 flex-shrink-0'
-               }>{entry.level.padEnd(5)}</span>
-              <span className="text-white/90 break-all">{entry.message}</span>
-            </m.div>
-          ))
+          entries.map((entry) => {
+            const parts = entry.message.split(/(TIMEOUT|CIRCUIT_BREAKER=OPEN|RETRY|DEGRADED|FALLBACK|RECOVERED|status=APPLIED)/g);
+            const formattedMessage = parts.map((part, i) => {
+              if (part === 'TIMEOUT' || part === 'CIRCUIT_BREAKER=OPEN') return <span key={i} className="text-red-400 font-bold bg-red-400/10 px-1 rounded">{part}</span>;
+              if (part === 'DEGRADED') return <span key={i} className="text-red-400 font-bold">{part}</span>;
+              if (part === 'RETRY' || part === 'FALLBACK') return <span key={i} className="text-amber-400 font-bold bg-amber-400/10 px-1 rounded">{part}</span>;
+              if (part === 'RECOVERED' || part === 'status=APPLIED') return <span key={i} className="text-emerald-400 font-bold">{part}</span>;
+              return part;
+            });
+
+            return (
+              <m.div
+                key={entry.id}
+                initial={{ opacity: 0, x: -4 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="flex gap-2 mb-1"
+              >
+                <span className="text-white/60 flex-shrink-0">[{entry.timestamp}]</span>
+                 <span className={
+                   entry.level === 'ERROR' ? 'text-status-error flex-shrink-0' :
+                   entry.level === 'WARN' ? 'text-status-warn flex-shrink-0' :
+                   'text-status-ok/70 flex-shrink-0'
+                 }>{entry.level.padEnd(5)}</span>
+                <span className="text-white/90 break-all">{formattedMessage}</span>
+              </m.div>
+            );
+          })
         )}
       </div>
     </AnimatePresence>

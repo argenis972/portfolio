@@ -1,8 +1,8 @@
 /**
  * SystemStatusBanner — Global system narrative strip.
  *
- * Epic 1: Multi-service status row (API / Worker / Cache).
- * Round-2: System lifecycle badge (DEGRADED → RECOVERING → STABLE).
+ * This banner follows a structured SRE-first format:
+ * ⚠️ [STATUS] · Cause: [Trigger] · Impact: [Delta] · Status: [Lifecycle]
  *
  * Appears below the Navbar only when system_status is not 'operational'.
  * Never shown when lifecycle === 'NORMAL'.

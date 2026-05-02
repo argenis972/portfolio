@@ -1,6 +1,4 @@
-import React from 'react';
 import { m, AnimatePresence } from 'framer-motion';
-import { useLanguage } from '../context/LanguageContext';
 import { useMetricsDisplay } from '../hooks/useMetricsDisplay';
 import { useChaosMode } from '../hooks/useChaosMode';
 import { Tile, TileSkeleton } from './ui/Tile';
@@ -42,7 +40,6 @@ export default function LiveMetricsBento() {
     confidenceTone,
     metrics: {
       sampleHistory,
-      latestSample,
       effectiveP95,
       confidenceScore,
       confidenceLabel,
@@ -149,7 +146,7 @@ export default function LiveMetricsBento() {
 
         <Tile index={2} label={t('metrics.requests_24h')}>
           <span className="font-mono text-2xl font-bold text-app-text mt-1">{data.requests_24h.toLocaleString('en-US')}</span>
-          <UpdatedAgo timestamp={data.timestamp} />
+          <span className="text-xs text-app-muted font-mono truncate">{data.timestamp}</span>
         </Tile>
 
         <Tile index={3} label={t('metrics.retries_1h')}>

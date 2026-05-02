@@ -27,10 +27,10 @@ export default function ChaosTerminal({ entries }: ChaosTerminalProps) {
           entries.map((entry) => {
             const parts = entry.message.split(/(TIMEOUT|CIRCUIT_BREAKER=OPEN|RETRY|DEGRADED|FALLBACK|RECOVERED|status=APPLIED)/g);
             const formattedMessage = parts.map((part, i) => {
-              if (part === 'TIMEOUT' || part === 'CIRCUIT_BREAKER=OPEN') return <span key={i} className="text-red-400 font-bold bg-red-400/10 px-1 rounded">{part}</span>;
-              if (part === 'DEGRADED') return <span key={i} className="text-red-400 font-bold">{part}</span>;
-              if (part === 'RETRY' || part === 'FALLBACK') return <span key={i} className="text-amber-400 font-bold bg-amber-400/10 px-1 rounded">{part}</span>;
-              if (part === 'RECOVERED' || part === 'status=APPLIED') return <span key={i} className="text-emerald-400 font-bold">{part}</span>;
+              if (part === 'TIMEOUT' || part === 'CIRCUIT_BREAKER=OPEN') return <span key={i} className="text-status-error font-bold bg-status-error-soft px-1 rounded">{part}</span>;
+              if (part === 'DEGRADED') return <span key={i} className="text-status-error font-bold">{part}</span>;
+              if (part === 'RETRY' || part === 'FALLBACK') return <span key={i} className="text-status-warn font-bold bg-status-warn-soft px-1 rounded">{part}</span>;
+              if (part === 'RECOVERED' || part === 'status=APPLIED') return <span key={i} className="text-status-ok font-bold">{part}</span>;
               return part;
             });
 

@@ -47,15 +47,14 @@ export default function ErrorNotification({
         <motion.div
           role="alert"
           aria-live="polite"
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 12 }}
-          transition={{ duration: 0.3 }}
-          className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 w-[min(92vw,440px)]
-                     glass rounded-2xl px-5 py-4 flex flex-col gap-2 border border-red-500/30"
+          initial={{ opacity: 0, y: -20, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -20, scale: 0.95 }}
+          className="fixed top-20 right-4 z-[60] shadow-2xl w-80 
+                     glass rounded-2xl px-5 py-4 flex flex-col gap-2 border border-status-error/30"
         >
-          <div className="flex items-start gap-2.5">
-            <span className="text-red-500 mt-0.5 flex-shrink-0">⚠</span>
+          <div className="flex items-start gap-3">
+            <span className="text-status-error mt-0.5 flex-shrink-0">⚠</span>
             <div className="flex flex-col gap-1 min-w-0">
               <p className="text-sm font-semibold text-app-text">
                 {t('metrics.error.unavailable')}

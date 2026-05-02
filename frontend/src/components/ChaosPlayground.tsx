@@ -80,8 +80,8 @@ export default function ChaosPlayground() {
             <div className="space-y-1">
               <h3 className="text-xs font-mono font-bold text-app-text uppercase tracking-widest flex items-center gap-2">
                 <span className="relative flex h-2 w-2">
-                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${preset !== 'off' ? 'bg-violet-400' : 'bg-status-ok'}`}></span>
-                  <span className={`relative inline-flex rounded-full h-2 w-2 ${preset !== 'off' ? 'bg-violet-500' : 'bg-status-ok'}`}></span>
+                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${preset !== 'off' ? 'bg-status-synthetic' : 'bg-status-ok'}`}></span>
+                  <span className={`relative inline-flex rounded-full h-2 w-2 ${preset !== 'off' ? 'bg-status-synthetic' : 'bg-status-ok'}`}></span>
                 </span>
                 {t('chaos.presets.title')}
               </h3>
@@ -100,7 +100,7 @@ export default function ChaosPlayground() {
                   }}
                   className={`px-3 py-1.5 rounded-md text-[10px] font-mono font-bold transition-all duration-200 ${
                     preset === p
-                      ? 'bg-violet-500 text-white shadow-lg shadow-violet-500/20'
+                      ? 'bg-status-synthetic text-white shadow-lg shadow-status-synthetic/20'
                       : 'text-app-muted hover:text-app-text hover:bg-app-surface-hover'
                   }`}
                 >

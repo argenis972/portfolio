@@ -13,7 +13,7 @@ export default function ChaosModeBanner() {
           initial={{ height: 0, opacity: 0 }}
           animate={{ height: 'auto', opacity: 1 }}
           exit={{ height: 0, opacity: 0 }}
-          className="bg-violet-600/90 backdrop-blur-sm border-y border-violet-400/30 overflow-hidden relative"
+          className="bg-[var(--color-status-synthetic)]/90 backdrop-blur-sm border-y border-[var(--color-status-synthetic-border)] overflow-hidden relative"
         >
           <div className="max-w-6xl mx-auto px-4 py-2 flex items-center justify-center gap-3">
             <span className="relative flex h-2 w-2">

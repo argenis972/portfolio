@@ -80,8 +80,8 @@ export default function ChaosPlayground() {
             <div className="space-y-1">
               <h3 className="text-xs font-mono font-bold text-app-text uppercase tracking-widest flex items-center gap-2">
                 <span className="relative flex h-2 w-2">
-                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${preset !== 'off' ? 'bg-violet-400' : 'bg-status-ok'}`}></span>
-                  <span className={`relative inline-flex rounded-full h-2 w-2 ${preset !== 'off' ? 'bg-violet-500' : 'bg-status-ok'}`}></span>
+                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${preset !== 'off' ? 'bg-status-synthetic' : 'bg-status-ok'}`}></span>
+                  <span className={`relative inline-flex rounded-full h-2 w-2 ${preset !== 'off' ? 'bg-status-synthetic' : 'bg-status-ok'}`}></span>
                 </span>
                 {t('chaos.presets.title')}
               </h3>
@@ -100,7 +100,7 @@ export default function ChaosPlayground() {
                   }}
                   className={`px-3 py-1.5 rounded-md text-[10px] font-mono font-bold transition-all duration-200 ${
                     preset === p
-                      ? 'bg-violet-500 text-white shadow-lg shadow-violet-500/20'
+                      ? 'bg-status-synthetic text-white shadow-lg shadow-status-synthetic/20'
                       : 'text-app-muted hover:text-app-text hover:bg-app-surface-hover'
                   }`}
                 >
@@ -129,9 +129,9 @@ export default function ChaosPlayground() {
             icon="🌬️"
             titleKey="chaos.action.drain.title"
             descKey="chaos.action.drain.desc"
-            accentClass="text-status-ok"
-            borderClass="border-status-ok/20"
-            hoverClass="bg-status-ok-soft text-status-ok hover:bg-status-ok-soft"
+            accentClass="text-status-ok font-black"
+            borderClass="border-status-ok/50"
+            hoverClass="bg-status-ok text-white shadow-lg shadow-status-ok/20 hover:brightness-110"
             loading={drainLoading}
             cooldown={drainCooldown}
             loadingKey="chaos.action.drain.running"
@@ -143,9 +143,9 @@ export default function ChaosPlayground() {
             icon="⏳"
             titleKey="chaos.action.latency.title"
             descKey="chaos.action.latency.desc"
-            accentClass="text-status-warn"
-            borderClass="border-status-warn/20"
-            hoverClass="bg-status-warn-soft text-status-warn hover:bg-status-warn-soft"
+            accentClass="text-status-warn font-black"
+            borderClass="border-status-warn/50"
+            hoverClass="bg-status-warn text-white shadow-lg shadow-status-warn/20 hover:brightness-110"
             loading={latencyLoading}
             cooldown={latencyCooldown}
             loadingKey="chaos.action.latency.running"
@@ -157,9 +157,9 @@ export default function ChaosPlayground() {
             icon="🔄"
             titleKey="chaos.action.retry.title"
             descKey="chaos.action.retry.desc"
-            accentClass="text-status-info"
-            borderClass="border-status-info/20"
-            hoverClass="bg-status-info-soft text-status-info hover:bg-status-info-soft"
+            accentClass="text-status-info font-black"
+            borderClass="border-status-info/50"
+            hoverClass="bg-status-info text-white shadow-lg shadow-status-info/20 hover:brightness-110"
             loading={retryLoading}
             cooldown={retryCooldown}
             loadingKey="chaos.action.retry.running"

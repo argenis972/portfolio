@@ -17,11 +17,9 @@ interface KpiStripProps {
   previous: MetricsSummary | null;
   status: SystemStatus;
   effectiveP95: number;
-  confidenceScore: number;
-  confidenceLabel: string;
 }
 
-export function KpiStrip({ data, previous, status, effectiveP95, confidenceScore, confidenceLabel }: KpiStripProps) {
+export function KpiStrip({ data, previous, status, effectiveP95 }: KpiStripProps) {
   const { t } = useLanguage();
 
   const items = [
@@ -39,13 +37,7 @@ export function KpiStrip({ data, previous, status, effectiveP95, confidenceScore
      },
     {
       label: t('hero.kpi.requests'),
-      value: data.requests_24h.toLocaleString(),
-      delta: null,
-    },
-    {
-      label: t('hero.kpi.confidence'),
-      value: `${confidenceScore}%`,
-      className: confidenceLabel === 'estimated' ? 'text-[var(--color-status-synthetic)]' : 'text-[var(--color-status-ok-text)]',
+      value: data.requests_24h.toLocaleString('en-US'),
       delta: null,
     },
     {

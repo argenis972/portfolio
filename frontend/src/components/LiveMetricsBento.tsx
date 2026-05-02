@@ -1,25 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { m, AnimatePresence } from 'framer-motion';
-import { useLanguage } from '../context/LanguageContext';
+import { m } from 'framer-motion';
 import { useMetricsDisplay } from '../hooks/useMetricsDisplay';
 import { Tile, TileSkeleton } from './ui/Tile';
 import MetricsSparkline from './ui/MetricsSparkline';
 
 
-const UpdatedAgo = React.memo(({ timestamp }: { timestamp: string }) => {
-  const { t } = useLanguage();
-  const [secondsAgo, setSecondsAgo] = useState<number>(0);
-
-  useEffect(() => {
-    const start = new Date(timestamp).getTime();
-    const update = () => setSecondsAgo(Math.max(0, Math.floor((Date.now() - start) / 1000)));
-    update();
-    const timer = setInterval(update, 1000);
-    return () => clearInterval(timer);
-  }, [timestamp]);
-
-  return <span className="text-xs text-app-muted font-mono truncate">{t('metrics.updated_ago', { s: secondsAgo })}</span>;
-});
 
 export default function LiveMetricsBento() {
   const displayContext = useMetricsDisplay();
@@ -41,25 +25,14 @@ export default function LiveMetricsBento() {
 
   const {
     data,
-    statusCfg,
-    errorIsElevated,
-    errorRateColor,
-    errorNumberColor,
     hasIncident,
     incidentDot,
     incidentText,
-    latencyDelta,
-    baselineDelta,
     latestEventLabel,
     latestEventAgoSeconds,
-    confidenceTone,
     metrics: {
       sampleHistory,
-      latestSample,
-      effectiveP95,
       confidenceScore,
-      confidenceLabel,
-      baselineP95,
       latestTrace,
       recentTraces,
       displayLifecycle,
@@ -79,114 +52,14 @@ export default function LiveMetricsBento() {
           {t('metrics.section_subtitle')}
         </p>
         <div className="mt-3 flex flex-wrap items-center justify-center lg:justify-start gap-2 text-[10px] font-mono">
-          <span className={`rounded-full border px-2 py-1 ${confidenceTone}`}>
-            {t(`metrics.confidence.${confidenceLabel}`)} {confidenceScore}%
-          </span>
-          {latestSample && (
-            <span className="rounded-full border border-app-border/40 bg-app-surface/30 px-2 py-1 text-app-muted">
-              {t(`metrics.origin.${latestSample.source}`)}
-            </span>
-          )}
-          <span className="rounded-full border border-app-border/40 bg-app-surface/30 px-2 py-1 text-app-muted">
-            {t(`metrics.lifecycle.${displayLifecycle}`)}
+          <span className="text-app-muted/80">
+            Session includes ~{100 - confidenceScore}% synthetic data during active chaos events.
           </span>
         </div>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-        <Tile index={0} label={t('metrics.system_status')}>
-          <div className="flex items-center gap-2 mt-1">
-            <span className={`h-2.5 w-2.5 rounded-full flex-shrink-0 ${statusCfg.dot}`} />
-                <span className={`font-mono text-lg font-bold uppercase tracking-tight ${statusCfg.text}`}>
-                  {t(statusCfg.i18nKey)}
-                </span>
-              </div>
-              <UpdatedAgo timestamp={data.timestamp} />
-              <div className="flex flex-wrap gap-2 text-[10px] font-mono">
-                <span className={`rounded-full px-2 py-0.5 ${confidenceTone}`}>{t(`metrics.confidence.${confidenceLabel}`)} {confidenceScore}%</span>
-                <span className="rounded-full border border-app-border/40 bg-app-surface/40 px-2 py-0.5 text-app-muted">{t(`metrics.origin.${latestSample?.source ?? 'real'}`)}</span>
-              </div>
-        </Tile>
-
-        <Tile index={1} label={t('metrics.latency')}>
-          <div className="mt-1 flex flex-col gap-3">
-            <div className="flex items-end justify-between gap-4">
-              <div className="flex items-end gap-1">
-                <span className="font-mono text-2xl font-bold text-app-text">{effectiveP95}</span>
-                <span className="text-sm font-normal text-app-muted mb-1">ms</span>
-              </div>
-              {baselineP95 !== null && <span className="text-[10px] font-mono text-app-muted">baseline {baselineP95}ms</span>}
-            </div>
-            {sampleHistory.length >= 2 ? (
-              <div className="rounded-xl border border-app-border/40 bg-app-surface/30 px-2 py-2 overflow-hidden">
-                <MetricsSparkline samples={sampleHistory} traces={recentTraces} width={248} height={72} compact />
-              </div>
-            ) : (
-              <div className="rounded-xl border border-app-border/40 bg-app-surface/30 px-2 py-2 overflow-hidden">
-                <MetricsSparkline samples={[]} traces={recentTraces} width={248} height={72} compact />
-              </div>
-            )}
-            <div className="flex flex-wrap gap-2">
-              {latencyDelta !== null && (
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-mono ${latencyDelta > 0 ? 'bg-status-error-soft text-status-error' : 'bg-status-ok-soft text-status-ok'}`}>
-                  {t('metrics.delta.previous')} {latencyDelta > 0 ? '+' : ''}{latencyDelta}ms
-                </span>
-              )}
-              {baselineDelta !== null && (
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-mono ${baselineDelta > 0 ? 'bg-status-warn-soft text-status-warn' : 'bg-status-ok-soft text-status-ok'}`}>
-                  {t('metrics.delta.baseline')} {baselineDelta > 0 ? '+' : ''}{baselineDelta}ms
-                </span>
-              )}
-              {latestSample && (
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-mono ${latestSample.source === 'synthetic' ? 'bg-[var(--color-status-synthetic-bg)] text-[var(--color-status-synthetic)]' : 'bg-[var(--color-status-ok-bg)] text-[var(--color-status-ok-text)]'}`}>
-                  {t(`metrics.origin.${latestSample.source}`)}
-                </span>
-              )}
-            </div>
-          </div>
-          <span className={`text-xs font-mono px-2 py-0.5 rounded-full w-fit ${effectiveP95 <= 60 ? 'bg-status-ok-soft text-status-ok' : effectiveP95 <= 100 ? 'bg-status-warn-soft text-status-warn' : 'bg-status-error-soft text-status-error'}`}>
-            {effectiveP95 <= 60 ? t('metrics.health.healthy') : effectiveP95 <= 100 ? t('metrics.health.warning') : t('metrics.status.degraded')}
-          </span>
-        </Tile>
-
-        <Tile index={2} label={t('metrics.error_rate')}>
-           <div className="flex items-center gap-2 mt-1">
-             <AnimatePresence>
-               {errorIsElevated && (
-                 <m.span
-                   initial={{ opacity: 0, scale: 0.5 }}
-                   animate={{ opacity: 1, scale: 1 }}
-                   exit={{ opacity: 0, scale: 0.5 }}
-                   className="text-status-error text-xl drop-shadow-[0_0_8px_rgba(239,68,68,0.4)]"
-                 >
-                   ⚠
-                 </m.span>
-               )}
-             </AnimatePresence>
-             <m.span 
-               animate={errorIsElevated ? { color: '#f87171' } : { color: 'inherit' }}
-               className={`font-mono text-2xl font-bold ${errorNumberColor}`}
-             >
-               {data.error_rate_pct}
-             </m.span>
-           </div>
-           <div className="text-[9px] text-status-ok/80 mt-1">
-             {t('metrics.error_rate_slo_context')}
-           </div>
-           <m.div
-             animate={errorIsElevated ? { scale: [1, 1.05, 1], transition: { repeat: Infinity, duration: 2 } } : {}}
-             className={`text-xs font-mono px-2 py-0.5 rounded-full w-fit ${errorRateColor}`}
-           >
-             {t(`metrics.health.${data.error_rate_status}`)}
-           </m.div>
-        </Tile>
-
-        <Tile index={3} label={t('metrics.requests_24h')}>
-          <span className="font-mono text-2xl font-bold text-app-text mt-1">{data.requests_24h.toLocaleString()}</span>
-          <UpdatedAgo timestamp={data.timestamp} />
-        </Tile>
-
-        <Tile index={4} label={t('metrics.retries_1h')}>
+        <Tile index={0} label={t('metrics.retries_1h')}>
           <div className="flex items-center gap-2 mt-1">
             {strategyProfile.retryBudget > 5 && <span className="text-status-error text-lg">⚠</span>}
             <span className={`font-mono text-2xl font-bold ${strategyProfile.retryBudget > 10 ? 'text-status-error' : strategyProfile.retryBudget > 0 ? 'text-status-warn' : 'text-app-text'}`}>
@@ -199,7 +72,7 @@ export default function LiveMetricsBento() {
           <span className="text-[10px] font-mono text-app-muted">{t('metrics.strategy.retry')} {strategyProfile.source === 'synthetic' ? t('metrics.strategy.synthetic') : t('metrics.strategy.backend')}</span>
         </Tile>
 
-        <Tile index={5} label={t('metrics.last_incident')}>
+        <Tile index={1} label={t('metrics.last_incident')}>
           <div className="flex items-center gap-2 mt-1">
             <span className={`h-2.5 w-2.5 rounded-full flex-shrink-0 ${incidentDot}`} />
             <span className={`font-mono text-sm font-bold ${incidentText} truncate`}>
@@ -208,6 +81,13 @@ export default function LiveMetricsBento() {
           </div>
           {hasIncident && <span className="text-xs text-app-muted font-mono">{data.last_incident_ago}</span>}
         </Tile>
+
+        <Tile index={2} label={t('metrics.requests_24h')}>
+          <span className="font-mono text-2xl font-bold text-app-text mt-1">{data.requests_24h.toLocaleString('en-US')}</span>
+          <span className="text-xs text-app-muted font-mono truncate">{data.timestamp}</span>
+        </Tile>
+
+
       </div>
 
       <m.div

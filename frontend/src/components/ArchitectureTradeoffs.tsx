@@ -65,7 +65,7 @@ export default function ArchitectureTradeoffs() {
       
       <div className="mt-8 p-4 bg-app-primary/5 border border-app-primary/10 rounded-xl">
         <p className="text-[11px] font-mono text-app-muted leading-relaxed">
-          <span className="text-app-primary font-bold">PRO-TIP:</span> {t('tradeoffs.protip')}
+          {t('tradeoffs.protip')}
         </p>
       </div>
     </section>

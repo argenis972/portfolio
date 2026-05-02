@@ -25,7 +25,7 @@ export default function FeaturedIncident() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.5, delay: index * 0.1 }}
-            className="glass rounded-3xl border border-app-border overflow-hidden bg-gradient-to-br from-app-surface to-app-surface-hover/50"
+            className="rounded-3xl border border-app-border/60 shadow-xl overflow-hidden bg-gradient-to-br from-app-surface/90 to-app-surface hover:border-app-primary/50 transition-colors duration-500"
           >
             <div className={`p-1 bg-gradient-to-r ${id === '001' ? 'from-red-500/20 to-orange-500/20' :
                 id === '002' ? 'from-amber-500/20 to-yellow-500/20' :

@@ -31,14 +31,16 @@ export const Hero = React.memo(() => {
           className="max-w-xl text-center md:text-left mx-auto md:mx-0"
         >
           {/* Status badge */}
-          <m.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4 }}
-            className="mb-4 flex justify-center md:justify-start"
-          >
-            <LiveStatusBadge status={status} latencyMs={effectiveP95} source={latestSample?.source} />
-          </m.div>
+          {status !== 'degraded' && status !== 'down' && (
+            <m.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.4 }}
+              className="mb-4 flex justify-center md:justify-start"
+            >
+              <LiveStatusBadge status={status} latencyMs={effectiveP95} source={latestSample?.source} />
+            </m.div>
+          )}
 
           {/* H1 */}
           <m.h1
@@ -61,18 +63,20 @@ export const Hero = React.memo(() => {
           </m.p>
 
           {/* Dynamic system state line */}
-          <m.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-          >
-            <SystemStateLine
-              status={status}
-              effectiveP95={effectiveP95}
-              recoveryState={recoveryState}
-              lastIncident={data?.last_incident}
-            />
-          </m.div>
+          {status !== 'degraded' && status !== 'down' && (
+            <m.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+            >
+              <SystemStateLine
+                status={status}
+                effectiveP95={effectiveP95}
+                recoveryState={recoveryState}
+                lastIncident={data?.last_incident}
+              />
+            </m.div>
+          )}
 
           {/* KPI strip */}
           {data && (
@@ -86,8 +90,6 @@ export const Hero = React.memo(() => {
                 previous={previous}
                 status={status}
                 effectiveP95={effectiveP95}
-                confidenceScore={confidenceScore}
-                confidenceLabel={confidenceLabel}
               />
             </m.div>
           )}

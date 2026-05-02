@@ -26,7 +26,19 @@ const tileVariants: Variants = {
   }
 };
 
-export function Tile({ index, label, children, alertState }: { index: number; label: string; children: React.ReactNode; alertState?: 'none' | 'alert' | 'critical' | 'chaos' }) {
+export function Tile({ 
+  index, 
+  label, 
+  children, 
+  alertState,
+  className = ''
+}: { 
+  index: number; 
+  label: string; 
+  children: React.ReactNode; 
+  alertState?: 'none' | 'alert' | 'critical' | 'chaos',
+  className?: string
+}) {
   return (
     <m.div
       custom={index}
@@ -38,7 +50,7 @@ export function Tile({ index, label, children, alertState }: { index: number; la
         alertState === 'alert' ? 'bg-status-warn-soft border-status-warn/20' : 
         alertState === 'chaos' ? 'bg-[var(--color-status-synthetic-bg)] border-[var(--color-status-synthetic-border)]' :
         ''
-      }`}
+      } ${className}`}
     >
       <span className="text-xs font-mono uppercase tracking-widest text-app-muted">{label}</span>
       {children}

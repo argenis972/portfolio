@@ -70,9 +70,9 @@ const SystemStatusBanner = React.memo(() => {
           <div className="max-w-6xl mx-auto px-4 py-2.5 font-mono text-xs">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <div className="flex items-center gap-1.5 flex-shrink-0">
-                <span className={`w-2 h-2 rounded-full ${lifecycleCfg.dot}`} />
-                <span className={`font-bold uppercase tracking-widest ${lifecycleCfg.labelClass}`}>
-                  {lifecycle}
+                <span className="text-sm">⚠️</span>
+                <span className={`font-bold uppercase tracking-widest ${status === 'down' ? 'text-status-error' : 'text-status-warn'}`}>
+                  {t(`metrics.status.${status}`)}
                 </span>
               </div>
               
@@ -91,10 +91,16 @@ const SystemStatusBanner = React.memo(() => {
                   <span className="text-current/45">·</span>
                   <span className="text-current/80">
                     <span className="text-current/55">{t('banner.impact')}: </span>
-                    +{effectiveP95}ms latency{strategyProfile.retryBudget > 0 ? ', retries active' : ''}
+                    +{effectiveP95}ms{strategyProfile.retryBudget > 0 ? `, ${t('banner.impact.retries_active')}` : ''}
                   </span>
                 </>
               )}
+
+              <span className="text-current/45">·</span>
+              <span className="text-current/80">
+                <span className="text-current/55">{t('banner.status')}: </span>
+                <span className="capitalize">{t(`metrics.lifecycle.${lifecycle}`).toLowerCase()}</span>
+              </span>
             </div>
           </div>
         </m.div>

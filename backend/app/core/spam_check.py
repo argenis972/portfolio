@@ -96,12 +96,12 @@ def calculate_spam_score(
     # Rule 2: Excessive links
     all_links = re.findall(r"https?://|www\.", message_lower)
     unique_domains = set(re.findall(r"https?://(?:www\.)?([^/\s]+)", message_lower))
-    
+
     if len(all_links) >= 3:
         score += 45
     elif len(all_links) >= 1:
         score += 15
-        
+
     # Extra suspicious: multiple links to same domain in a short message
     if len(all_links) >= 2 and len(unique_domains) == 1 and len(message) < 500:
         score += 15
@@ -144,7 +144,11 @@ def calculate_spam_score(
     # Rule 8: Suspicious subject patterns
     if subject:
         subject_lower = subject.lower()
-        if "spam" in subject_lower or "advertencia" in subject_lower or "security" in subject_lower:
+        if (
+            "spam" in subject_lower
+            or "advertencia" in subject_lower
+            or "security" in subject_lower
+        ):
             score += 30
 
     return min(score, 100)

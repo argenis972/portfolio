@@ -8,6 +8,7 @@ import re
 SPAM_KEYWORDS = [
     r"\bcrypto\b",
     r"\bbitcoin\b",
+    r"\bbtc\b",
     r"\binvestment\b",
     r"\bseo\b",
     r"\bmarketing\b",
@@ -27,6 +28,8 @@ SPAM_KEYWORDS = [
     r"\blead generation\b",
     r"\bfreelance\b",
     r"\boutsourcing\b",
+    r"\btelegram\b",
+    r"\bwhatsapp\b",
     # Spanish/Portuguese keywords
     r"\binvertir\b",
     r"\binversión\b",
@@ -58,7 +61,7 @@ TEMP_EMAIL_DOMAINS = [
 
 # Regexes previously in the schema, now used for scoring
 NAME_REGEX = re.compile(r"^[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ .,'-]{1,79}$")
-SUBJECT_REGEX = re.compile(r"^[A-Za-zÀ-ÿ0-9 .,:;!?()/#&+@'\-]{0,120}$")
+SUBJECT_REGEX = re.compile(r"^[A-Za-zÀ-ÿ0-9 .\[\],:;!?()/#&+@'\-]{0,120}$")
 EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
 
 
@@ -76,8 +79,7 @@ def calculate_spam_score(
     score = 0
     message_lower = message.lower()
 
-    # Rule 0: Strict format validation (moved from schema to avoid 422)
-    # These return 100 immediately to ensure silent drop
+    # Rule 0: Strict format validation
     if not EMAIL_REGEX.match(email):
         return 100
 
@@ -92,10 +94,16 @@ def calculate_spam_score(
         score += 10
 
     # Rule 2: Excessive links
-    links = len(re.findall(r"https?://|www\.", message_lower))
-    if links >= 3:
-        score += 40
-    elif links >= 1:
+    all_links = re.findall(r"https?://|www\.", message_lower)
+    unique_domains = set(re.findall(r"https?://(?:www\.)?([^/\s]+)", message_lower))
+
+    if len(all_links) >= 3:
+        score += 45
+    elif len(all_links) >= 1:
+        score += 15
+
+    # Extra suspicious: multiple links to same domain in a short message
+    if len(all_links) >= 2 and len(unique_domains) == 1 and len(message) < 500:
         score += 15
 
     # Rule 3: Spam keywords
@@ -109,15 +117,38 @@ def calculate_spam_score(
     elif keyword_matches == 2:
         score += 40
     elif keyword_matches == 1:
-        score += 30
+        score += 25
 
     # Rule 4: Temporary email domains
     email_domain = email.split("@")[-1].lower() if "@" in email else ""
     if email_domain in TEMP_EMAIL_DOMAINS:
-        score += 40
+        score += 50
 
     # Rule 5: No spaces in long message
     if len(message) > 50 and " " not in message:
-        score += 20
+        score += 30
+
+    # Rule 6: Excessive symbols ($%@! etc)
+    symbols = len(re.findall(r"[$%@!*#]", message))
+    if symbols > 10:
+        score += 25
+    elif symbols > 5:
+        score += 10
+
+    # Rule 7: Excessive capitalization
+    if len(message) > 20:
+        caps_ratio = sum(1 for c in message if c.isupper()) / len(message)
+        if caps_ratio > 0.4:
+            score += 20
+
+    # Rule 8: Suspicious subject patterns
+    if subject:
+        subject_lower = subject.lower()
+        if (
+            "spam" in subject_lower
+            or "advertencia" in subject_lower
+            or "security" in subject_lower
+        ):
+            score += 30
 
     return min(score, 100)

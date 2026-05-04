@@ -336,7 +336,7 @@ def reset_global_state():
 
 
 @pytest.fixture(autouse=True)
-async def override_dependencies(setup_database):
+def override_dependencies(setup_database):
     """
     Overrides FastAPI dependencies to use the real temporary database.
     Clears provider caches to ensure the new SqlRepository is used.

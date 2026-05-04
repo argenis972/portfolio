@@ -5,8 +5,6 @@ Simple endpoint to verify if the API is responding.
 Used by load balancers, Kubernetes probes, and monitoring.
 """
 
-
-
 import time
 
 from fastapi import APIRouter, Depends, Response

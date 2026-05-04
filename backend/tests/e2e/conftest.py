@@ -5,6 +5,7 @@ import os
 
 BASE_URL = os.getenv("BASE_URL", "http://localhost:8000")
 
+
 @pytest.fixture(scope="session")
 def api_client():
     try:
@@ -12,9 +13,10 @@ def api_client():
             client.get("/health")
     except httpx.RequestError:
         pytest.skip(f"Backend not running at {BASE_URL}. Skipping E2E tests.")
-        
+
     with httpx.Client(base_url=BASE_URL, timeout=10.0) as client:
         yield client
+
 
 @pytest.fixture
 def chaos_teardown(api_client):
@@ -27,14 +29,14 @@ def chaos_teardown(api_client):
     # reset state before test
     api_client.post("/api/v1/chaos/drain")
     time.sleep(1)
-    
+
     yield
-    
+
     # Teardown: Wait and assert recovery to STABLE or NORMAL
     max_wait = 120  # chaos incident lasts up to 120s in system_lifecycle
     start_time = time.time()
     recovered = False
-    
+
     while time.time() - start_time < max_wait:
         resp = api_client.get("/api/v1/metrics/summary")
         if resp.status_code == 200:
@@ -44,5 +46,5 @@ def chaos_teardown(api_client):
                 recovered = True
                 break
         time.sleep(2)
-        
+
     assert recovered, f"System did not recover to STABLE within {max_wait}s"

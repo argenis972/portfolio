@@ -233,7 +233,18 @@ Accepted side effects: what the fix broke or constrained
 
 ---
 
-*Last updated: v1.6.0*
+## 16. Infrastructure Provisioning
+
+**Minimum Viable IaC**: The infrastructure is deliberately scoped to provision the Koyeb environment using Terraform, prioritizing backend reproducibility over complete infrastructure automation.
+
+**Bootstrap Flow**:
+1. Manual: Create external stateful resources (Supabase, Upstash Redis).
+2. Export secrets to the local environment (`TF_VAR_*`).
+3. Execute `terraform init` -> `terraform apply` in the `infrastructure/` directory.
+
+---
+
+*Last updated: v1.7.0*
 
 ---
 

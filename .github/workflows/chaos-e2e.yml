@@ -12,9 +12,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run backend locally (docker-compose)
+      - name: Run backend locally (docker compose)
         run: |
-          docker-compose up -d --build
+          docker compose up -d --build
         env:
           ENVIRONMENT: "testing"
           # Simulated secrets for local docker-compose

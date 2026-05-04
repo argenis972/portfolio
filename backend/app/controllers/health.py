@@ -7,6 +7,8 @@ Used by load balancers, Kubernetes probes, and monitoring.
 
 
 
+import time
+
 from fastapi import APIRouter, Depends, Response
 
 from app.adapters.repository import PortfolioRepository

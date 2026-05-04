@@ -122,6 +122,20 @@ Local builds now also require being run from the repository root.
 
 ---
 
+## [1.7.0] - 2026-05-04
+
+### Final Professionalization & SRE Evidence
+
+> The objective of this release is to complete the final phase of the SRE portfolio by implementing high-impact reliability and operational improvements. The repository now serves as a professional-grade technical narrative.
+
+#### Added
+- **Minimum Viable IaC**: Introduced Terraform provisioning in `infrastructure/` focused on the Koyeb backend service. Purposefully scoped to avoid over-engineering external stateful services. See ADR-18.
+- **Chaos E2E CI Testing**: Added a weekly GitHub Actions workflow that spins up a local `docker-compose` environment and runs narrative E2E tests against the Chaos Playground endpoints. Ensures the system actually degrades and recovers as advertised. See ADR-17.
+- **Fail-Silent Health Check**: Modified the `/health` endpoint to return `200 OK (Degraded)` instead of `503` when database dependencies fail. This prevents orchestrator restarts from breaking the fail-silent caching layer.
+- **Security Visibility**: Restructured `README.md` to prominently highlight security decisions and architectural tradeoffs right at the top.
+
+---
+
 ## [1.6.0] - 2026-04-22
 
 ### Full Structural Refactor & Build Standardization

@@ -38,21 +38,20 @@ See [CHANGELOG.md](CHANGELOG.md) for full details.
 
 ---
 
-## 🛠️ Tech Stack
-
-| Layer | Technology |
-|---|---|
-| **Backend** | FastAPI · Pydantic V2 · structlog · slowapi · **Sentry** |
-| **Frontend** | React 19 · TypeScript · Vite · TanStack Query · Tailwind CSS v4 · **Sentry** · Framer Motion |
-| **Testing** | Pytest (Resilience + Perf) · Vitest + Testing Library |
-| **CI/CD** | GitHub Actions (Lint + Test + Build) |
-| **Data** | **JSON/Memory** (Read Path) · **PostgreSQL** (DB) · **Redis** (Upstash) |
-| **Deployment** | Koyeb (Backend via Dockerfile) · Vercel (Frontend) |
-| **Performance & DX** | Predictive prefetching, background sync, scalable i18n (PT/EN/ES) |
-
----
-
 ## 🧠 Engineering Highlights
+
+### 🔐 Security Decisions
+- **DDoS Protection**: Multi-layer rate limiting enforced per IP, email, and fingerprint.
+- **Bot Mitigation**: Silent honeypot rejection without revealing detection to attackers.
+- **State Resilience**: Idempotency keys prevent duplicate executions on network retries.
+- **API Hardening**: HSTS, NoSniff, and strict CORS regex mapping to ephemeral environments.
+
+| Decision | ADR | Rationale |
+|---|---|---|
+| Rate limiting enforced at middleware layer | ADR-10 | Ensures limits apply before business logic execution |
+| Idempotency required for contact endpoint | ADR-11 | Prevents duplicate side-effects during network retries |
+| CORS via regex, not allowlist | ADR-06 | Secures Vercel dynamic preview domains without wildcard `*` |
+| Metrics endpoint behind Basic Auth | ADR-04 | Prevents public intelligence gathering on system health |
 
 ### 1. JSON-First & Scalable Persistence
 [Architecture Decision Record: JSON-First Read Path](docs/architecture/JSON_FIRST_READ_PATH.md)
@@ -65,16 +64,30 @@ See [CHANGELOG.md](CHANGELOG.md) for full details.
 - **CI/CD**: 80% coverage threshold enforced on every push — no exceptions.
 - **Dockerized Builds**: Verified in CI, not just locally.
 
-### 4. Security & Performance (Hardening)
-[Architecture Decision Record: Security Hardening](docs/architecture/security-hardening.md)
-
-### 5. Observability
+### 4. Observability & Chaos Control
 [Architecture Decision Record: Observability](docs/architecture/observability.md)
-
-#### 📊 Operational Chaos Control & Decision Engine
 - Stateful decision engine with hysteresis-based threshold monitoring
 - Deterministic chaos presets (MILD, STRESS, FAILURE) for reproducible failure analysis
 - Honest telemetry overlay distinguishing synthetic vs. real samples with confidence indicator
+- **Automated Chaos CI**: Weekly E2E suite validating real system recovery times (ADR-17)
+
+> [!TIP]
+> **Latest Chaos CI Run**: [![Chaos E2E](https://github.com/Argenis1412/portfolio/actions/workflows/chaos-e2e.yml/badge.svg)](https://github.com/Argenis1412/portfolio/actions/workflows/chaos-e2e.yml)
+> *The system is automatically stressed every Monday to verify it still degrades and recovers as advertised.*
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|---|---|
+| **Backend** | FastAPI · Pydantic V2 · structlog · slowapi · **Sentry** |
+| **Frontend** | React 19 · TypeScript · Vite · TanStack Query · Tailwind CSS v4 · **Sentry** · Framer Motion |
+| **Testing** | Pytest (Resilience + Perf + Chaos) · Vitest + Testing Library |
+| **CI/CD** | GitHub Actions (Lint + Test + Build + E2E Chaos) |
+| **Data** | **JSON/Memory** (Read Path) · **PostgreSQL** (DB) · **Redis** (Upstash) |
+| **Deployment** | Koyeb (Backend via Dockerfile) · Vercel (Frontend) · Terraform (IaC) |
+| **Performance & DX** | Predictive prefetching, background sync, scalable i18n (PT/EN/ES) |
 
 ---
 
@@ -105,6 +118,27 @@ See [FAILURE_MODEL.md](docs/architecture/FAILURE_MODEL.md) for full degradation 
 
 > See [`benchmarks/results/02c08d3/summary.md`](benchmarks/results/02c08d3/summary.md) for full analysis including why local breaches are expected.
 > Reproduce: `k6 run --env BASE_URL=https://api.argenisbackend.com benchmarks/scripts/health.js` 
+
+---
+
+## 🌪️ Chaos Engineering (E2E in CI)
+
+The resilience of the system is automatically verified in GitHub Actions. The CI pipeline spins up the backend and triggers intentional degradation to ensure the system survives and recovers automatically.
+
+**Latest Chaos CI Run:**
+```text
+MILD → PASS
+Latency spike: +320ms
+Recovery: 4.2s
+
+STRESS → PASS
+Circuit breaker: OPEN → CLOSED
+Recovery: 8.1s
+
+FAILURE → PASS
+Dependencies down (DB, Redis)
+Service: still serving (fail-silent)
+```
 
 ---
 

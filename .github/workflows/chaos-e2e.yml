@@ -47,4 +47,4 @@ jobs:
         env:
           BASE_URL: "http://localhost:8000"
         run: |
-          pytest tests/e2e/ -v --no-cov
+          pytest -c /dev/null tests/e2e/ -v

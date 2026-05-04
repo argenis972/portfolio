@@ -69,6 +69,11 @@ See [CHANGELOG.md](CHANGELOG.md) for full details.
 - Stateful decision engine with hysteresis-based threshold monitoring
 - Deterministic chaos presets (MILD, STRESS, FAILURE) for reproducible failure analysis
 - Honest telemetry overlay distinguishing synthetic vs. real samples with confidence indicator
+- **Automated Chaos CI**: Weekly E2E suite validating real system recovery times (ADR-17)
+
+> [!TIP]
+> **Latest Chaos CI Run**: [![Chaos E2E](https://github.com/Argenis1412/portfolio/actions/workflows/chaos-e2e.yml/badge.svg)](https://github.com/Argenis1412/portfolio/actions/workflows/chaos-e2e.yml)
+> *The system is automatically stressed every Monday to verify it still degrades and recovers as advertised.*
 
 ---
 

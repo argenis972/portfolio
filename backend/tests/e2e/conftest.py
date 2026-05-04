@@ -26,9 +26,21 @@ def chaos_teardown(api_client):
     - test -> validate degraded behavior
     - teardown -> assert recovery to STABLE within SLO
     """
-    # reset state before test
-    api_client.post("/api/v1/chaos/drain")
-    time.sleep(1)
+    # Ensure system is STABLE/NORMAL before starting the test
+    max_wait = 120
+    start_time = time.time()
+    ready = False
+
+    while time.time() - start_time < max_wait:
+        resp = api_client.get("/api/v1/metrics/summary")
+        if resp.status_code == 200:
+            data = resp.json()
+            if data.get("system_lifecycle") in ("STABLE", "NORMAL"):
+                ready = True
+                break
+        time.sleep(2)
+
+    assert ready, "System not in a stable state before test"
 
     yield
 

@@ -20,6 +20,8 @@ jobs:
           # Simulated secrets for local docker-compose
           SENTRY_DSN: "dummy-dsn"
           REDIS_URL: "redis://redis:6379/0"
+          POSTGRES_PASSWORD: "ci-dummy-password"
+          GRAFANA_ADMIN_PASSWORD: "ci-admin-password"
 
       - name: Wait for health
         run: |

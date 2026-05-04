@@ -1,4 +1,4 @@
-import time
+
 
 def test_chaos_failure(api_client, chaos_teardown):
     """

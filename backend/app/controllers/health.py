@@ -5,9 +5,9 @@ Simple endpoint to verify if the API is responding.
 Used by load balancers, Kubernetes probes, and monitoring.
 """
 
-import time
 
-from fastapi import APIRouter, Depends, Response, status
+
+from fastapi import APIRouter, Depends, Response
 
 from app.adapters.repository import PortfolioRepository
 from app.settings import settings

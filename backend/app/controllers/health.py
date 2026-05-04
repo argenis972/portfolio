@@ -36,8 +36,7 @@ async def check_liveness() -> dict:
     summary="API health check",
     description="Returns OK if the API is running. Includes version, environment, and detailed status of database and services.",
     responses={
-        200: {"description": "API is healthy and running"},
-        503: {"description": "API or its dependencies are unhealthy"},
+        200: {"description": "API is healthy and running, or degraded but serving"},
     },
 )
 async def check_health(
@@ -65,14 +64,11 @@ async def check_health(
 
     is_healthy = db_health["status"] == "ok"
 
-    if not is_healthy:
-        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
-
     return HealthResponse(
-        status="ok" if is_healthy else "error",
+        status="ok" if is_healthy else "degraded",
         message="API functioning normally"
         if is_healthy
-        else "The API is experiencing connection issues",
+        else "API degraded (fail-silent mode active)",
         api_version="1.0.0",
         environment=settings.environment,
         uptime_seconds=uptime,

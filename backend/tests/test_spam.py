@@ -165,3 +165,23 @@ def test_spam_score_url_with_trailing_punctuation_no_false_penalty():
     assert score <= 30, (
         f"Expected score <= 30 for different domains with trailing punct, got {score}"
     )
+
+
+def test_spam_score_adjacent_urls_with_comma_are_separated():
+    """
+    Regressión para P1: URLs adyacentes separadas por coma deben contarse
+    como dos enlaces distintos, no uno solo fusionado.
+    """
+    from app.core.spam_check import calculate_spam_score
+    # https://a.com,https://b.com -> 2 links, 2 unique domains
+    # No debería aplicar la penalización de mismo dominio (+15).
+    # Pero sí debería contar como 2 links para la regla de >=3 links.
+    msg = "Check https://a.com,https://b.com,www.c.com"
+    score = calculate_spam_score(msg, "valid@email.com")
+
+    # Detalle esperado:
+    # all_links = 3
+    # unique_domains = 3
+    # Rule 2 (all_links >= 3) -> +45
+    # Rule 2 (multiple links same domain) -> NO (+0)
+    assert score == 45

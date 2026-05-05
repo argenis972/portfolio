@@ -33,6 +33,8 @@ This project didn't start production-ready. It evolved through real production i
 | **v1.5.0** | Chaos Engineering | Deterministic chaos presets + stateful decision engine (ADR-14) |
 | **v1.5.1** | Honest Telemetry | Synthetic vs. real labels + confidence indicator (ADR-13) |
 | **v1.6.0** | Build Standardization | Modular API layer + root-context Dockerfile (ADR-15.2) — fixed INC-005 |
+| **v1.7.0** | SRE Evidence | Minimum Viable IaC (Terraform) + Weekly Chaos CI (ADR-17/18) |
+| **v1.8.0** | System Closure | Typography audit + Anti-spam accuracy fix (INC-006) |
 
 See [CHANGELOG.md](CHANGELOG.md) for full details.
 
@@ -92,7 +94,7 @@ See [CHANGELOG.md](CHANGELOG.md) for full details.
 ---
 
 ## 📊 Production Incident Track Record
-*5 real production incidents documented with post-mortems:*
+*6 real production incidents documented with post-mortems:*
 
 | Incident | Failure | Detection | Resolution |
 |---|---|---|---|
@@ -101,8 +103,9 @@ See [CHANGELOG.md](CHANGELOG.md) for full details.
 | **INC-003** | Chaos Playground crash on DB unavailability | Manual testing | Fail-silent persistence (v1.4.x) |
 | **INC-004** | CSP blocking all API calls in production | Browser console | CSP/CORS synchronization (v1.4.0) |
 | **INC-005** | Docker build context mismatch across environments | CI/CD failure | Root-context standardization (v1.6.0) |
+| **INC-006** | Spam filter false positive on mixed-protocol links (`https://` + `www.`) | Static analysis bot | Unified URL extraction + hostname normalization (v1.8.0) |
 
-See [FAILURE_MODEL.md](docs/architecture/FAILURE_MODEL.md) for full degradation behaviors and governing ADRs.
+See [FAILURE_MODEL.md](docs/architecture/FAILURE_MODEL.md) for full degradation behaviors and governing ADRs (INC-001–INC-006).
 
 ---
 
@@ -191,13 +194,6 @@ Key tests that demonstrate production-level reliability:
 
 ---
 
-## 🗺️ Roadmap: Next Big Step
-- 🚀 Advanced Simulation: Transactional flow for a mock "Financial Ledger" (ACID compliance testing)
-- 🔐 Identity Research: Role-Based Access Control (RBAC) for administrative panels
-- 📊 Real-time Monitoring: Transition from polling to WebSocket-based live dashboard for a "Live Operations Console" experience.
-
----
-
 ## 📁 Repository Structure
 ```
 portfolio/
@@ -206,10 +202,10 @@ portfolio/
 ├── docs/
 │   └── architecture/
 │       ├── SLO_DEFINITIONS.md    # Per-endpoint SLOs with measurement methods
-│       └── FAILURE_MODEL.md      # Production incident failure model (INC-001–INC-005)
+│       └── FAILURE_MODEL.md      # Production incident failure model (INC-001–INC-006)
 ├── .github/              # GitHub Actions CI/CD workflows
 ├── ARCHITECTURE.md       # ADR-01 through ADR-16
-├── CHANGELOG.md          # Release history + 5 production incidents
+├── CHANGELOG.md          # Release history + 6 production incidents
 ├── ENGINEERING_PLAYBOOK.md  # SLOs, standards, incident protocol
 └── docker-compose.yml
 ```

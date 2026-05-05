@@ -327,10 +327,10 @@ This document defines the execution strategy to demonstrate engineering judgment
 > [!WARNING]
 > **Non-negotiable Timebox**: 3–4 real days maximum. Focus on typography and reducing visual noise.
 
-- [ ] Premium aesthetic improvement focused on readability of technical data.
+- [x] Premium aesthetic improvement focused on readability of technical data.
 
 #### Phase 4: Closure and Release (Weeks 9-12)
 
-- [ ] Final smoke tests.
-- [ ] Technical release notes documenting accepted degradations.
-- [ ] Final hygiene check in production.
+- [x] Final smoke tests.
+- [x] Technical release notes documenting accepted degradations.
+- [x] Final hygiene check in production.

@@ -41,7 +41,7 @@ export default function FeaturedIncident() {
                     </span>
                     <span className="text-app-muted font-mono text-[10px]">{t(`incident.${id}.id`)}</span>
                   </div>
-                  <h3 className="text-2xl font-bold bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
+                  <h3 className="text-2xl font-bold text-app-text">
                     {t(`incident.${id}.title`)}
                   </h3>
                 </div>

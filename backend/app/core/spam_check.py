@@ -94,8 +94,25 @@ def calculate_spam_score(
         score += 10
 
     # Rule 2: Excessive links
-    all_links = re.findall(r"https?://|www\.", message_lower)
-    unique_domains = set(re.findall(r"https?://(?:www\.)?([^/\s]+)", message_lower))
+    # Capture full URL tokens for both https:// and bare www. formats.
+    # We exclude common delimiters like , ; ( ) [ ] to prevent merging adjacent URLs.
+    all_links_raw = re.findall(
+        r"https?://[^\s,;()\[\]]+|www\.[^\s,;()\[\]]+", message_lower
+    )
+
+    def _extract_domain(url: str) -> str:
+        """Normalize https://www.foo.com/path and www.foo.com → foo.com.
+
+        Also strips trailing prose punctuation (. , ; !) that may appear when
+        a URL ends a sentence, e.g. "visit www.foo.com." → "foo.com".
+        """
+        url = re.sub(r"^https?://", "", url)
+        url = re.sub(r"^www\.", "", url)
+        hostname = url.split("/")[0].split("?")[0]
+        return hostname.rstrip(".,;!")
+
+    all_links = all_links_raw
+    unique_domains = set(_extract_domain(u) for u in all_links_raw)
 
     if len(all_links) >= 3:
         score += 45

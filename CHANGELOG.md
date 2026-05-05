@@ -118,6 +118,37 @@ Local builds now also require being run from the repository root.
 
 ---
 
+### INC-006 · Spam Filter False Positive on Mixed-Protocol Links
+**Period**: v1.7.0 (antispam enhancement) → v1.8.0
+**Affected**: `POST /api/v1/contact` — spam scoring Rule 2 (excessive links penalty)
+
+**What happened**
+The antispam filter incorrectly penalized legitimate messages containing one `https://` URL and one bare `www.` URL pointing to **different** domains. The filter counted them as "2 links to 1 unique domain" and applied an extra +15 spam score, pushing some legitimate multi-link messages into the SUSPECT tier.
+
+**How it was discovered**
+Static analysis by an automated code review bot. No user complaints received — but the failure mode was systematically biased against any message linking to two different sites when one used a bare `www.` prefix.
+
+**What was tried first (didn't work)**
+N/A — the bug was caught before any mitigation attempt. No rollback required.
+
+**Root cause**
+`all_links` used `re.findall(r"https?://|www\.")` — capturing protocol/prefix *patterns*, not full URL tokens. `unique_domains` used a separate regex that only processed `https://` URLs. The two variables were not measuring the same thing:
+
+```
+Input: "Check https://foo.com and www.bar.com"
+all_links      → ["https://", "www."]  → len=2
+unique_domains → {"foo.com"}           → len=1
+Condition: len>=2 AND unique==1        → True → +15 pts INCORRECTLY
+```
+
+**Resolution (v1.8.0)**
+Unified extraction: both regexes replaced with a single `re.findall(r"https?://[^\s]+|www\.[^\s]+")` that captures full URL tokens. A `_extract_domain()` helper normalizes both formats to bare hostnames — strips protocol prefix, strips `www.`, and strips trailing prose punctuation (`. , ; !`) that can appear when a URL ends a sentence. `unique_domains` is now derived from the same source set as `all_links`.
+
+**Accepted side effect**
+None. The fix is strictly more accurate. Three regression tests added to `test_spam.py` cover the corrected behavior.
+
+---
+
 ## 🚀 Releases
 
 ---

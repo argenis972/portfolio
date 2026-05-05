@@ -153,6 +153,22 @@ None. The fix is strictly more accurate. Three regression tests added to `test_s
 
 ---
 
+## [1.8.0] - 2026-05-05
+
+### Visual Consistency & System Closure
+
+> The objective of this release is to finalize the portfolio's presentation and stability. We applied strict visual consistency to the typography and design system tokens, and patched a critical edge case in the anti-spam system before final delivery.
+
+#### Fixed
+- **Spam Filter Accuracy (INC-006)**: Unified URL extraction logic to prevent false positives when users submitted mixed-protocol links (e.g., `https://` + `www.`). Normalization now strips trailing prose punctuation.
+- **Heading Hierarchy Consistency**: Extended the `Montserrat` font application in `index.css` to cover `h4` and `h5` elements, ensuring uniform typography across all nested sections (e.g., incident timelines).
+- **Design System Drift**: Replaced isolated hardcoded color classes (`from-white`, `text-slate-500`) in `FeaturedIncident` and `Projects` with native theme-aware tokens (`text-app-text`, `text-app-muted`).
+
+#### Changed
+- Removed leftover internal development scripts (`fix_db.py`, `scratch_rename.py`) to enforce a clean project root.
+
+---
+
 ## [1.7.0] - 2026-05-04
 
 ### Final Professionalization & SRE Evidence

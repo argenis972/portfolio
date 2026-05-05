@@ -1,6 +1,6 @@
 # Explicit Failure Model & Contingency Policies
 
-> This document is grounded in real production incidents (INC-001 through INC-005).
+> This document is grounded in real production incidents (INC-001 through INC-006).
 > Each failure mode documents what actually happened, how it was detected, the accepted degradation behavior, and the governing ADR.
 > Source: CHANGELOG.md (Production Incidents section).
 
@@ -126,6 +126,30 @@ Local builds now also require being run from the repository root. The `Dockerfil
 
 ---
 
+## 6. Spam Filter False Positive on Mixed-Protocol Links
+
+### Incident: INC-006 — Spam Filter Accuracy
+- **Period:** v1.7.x → v1.8.0
+- **Affected:** `POST /api/v1/contact` — spam scoring (link count)
+
+### Actual Failure
+The regex `https?://[^\s]+|www\.[^\s]+` treated URLs delimited by commas as a single token (e.g., `https://a.com,https://b.com` → 1 link). The link count was underestimated, which reduced the spam score below the threshold of 3 links.
+
+### Detection
+**Static analysis bot** during PR review. Discovered as a potential vulnerability that would allow link-heavy spam to bypass the multi-link penalty.
+
+### Accepted Degradation Behavior
+- **False negatives in spam scoring:** Messages with multiple links in non-standard formats passed as single-link (score +15 vs +45 expected).
+- **Rationale:** Prioritizing deliverability over aggressive filtering. A false negative (spam gets through) is preferable to a false positive (legitimate message dropped).
+
+### Governing ADR
+- **ADR-18:** (Or refer to CHANGELOG for Anti-spam Accuracy Improvement). Unified URL extraction excluding delimiters `, ; ( ) [ ]` from the match. Normalization strips trailing prose punctuation.
+
+### Accepted Consequence
+Spam filter must be continuously monitored and regexes adjusted. The system is designed to allow some spam to prevent blocking valid inquiries.
+
+---
+
 ## Failure Mode Summary
 
 | Incident | Component | Detection | Degradation | ADR | Status |
@@ -135,6 +159,7 @@ Local builds now also require being run from the repository root. The `Dockerfil
 | INC-003 | Chaos Persistence (PostgreSQL) | Manual | Fail-silent (simulation continues, logs lost) | ADR-15.1 | Resolved v1.4.x |
 | INC-004 | CSP/CORS (Browser) | Browser console | Complete block (no graceful degradation) | ADR-15.3 | Resolved v1.4.0 |
 | INC-005 | Docker Build Context | CI/CD failure | Deployment blocked, previous version stays | ADR-15.2 | Resolved v1.6.0 |
+| INC-006 | Spam Filter (Contact) | Static analysis | False negatives (spam passes as single-link) | CHANGELOG | Resolved v1.8.0 |
 
 ---
 

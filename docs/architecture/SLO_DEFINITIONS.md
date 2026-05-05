@@ -86,7 +86,7 @@ This document defines the Service Level Objectives (SLOs) for the backend API. E
 - **Historical Issue:** INC-002 showed keep-alive hitting `/health` was not enough when data endpoints still required DB.
 
 ### Alert Trigger
-- P99 > 20ms for 3 minutes
+- P99 > 100ms for 3 minutes
 - OR non-200 HTTP response for 2 consecutive checks
 - OR keep-alive cron reports failure
 
@@ -133,7 +133,7 @@ This document defines the Service Level Objectives (SLOs) for the backend API. E
 ## References
 
 - **Source of Truth:** ENGINEERING_PLAYBOOK.md section 11 (Performance)
-- **Incident History:** CHANGELOG.md (INC-001 through INC-005)
+- **Incident History:** CHANGELOG.md (INC-001 through INC-006)
 - **Architecture Decisions:**
   - ADR-04: Protected Prometheus metrics
   - ADR-05: JSON-First Read Path

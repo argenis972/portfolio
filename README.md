@@ -33,6 +33,8 @@ This project didn't start production-ready. It evolved through real production i
 | **v1.5.0** | Chaos Engineering | Deterministic chaos presets + stateful decision engine (ADR-14) |
 | **v1.5.1** | Honest Telemetry | Synthetic vs. real labels + confidence indicator (ADR-13) |
 | **v1.6.0** | Build Standardization | Modular API layer + root-context Dockerfile (ADR-15.2) — fixed INC-005 |
+| **v1.7.0** | SRE Evidence | Minimum Viable IaC (Terraform) + Weekly Chaos CI (ADR-17/18) |
+| **v1.8.0** | System Closure | Typography audit + Anti-spam accuracy fix (INC-006) |
 
 See [CHANGELOG.md](CHANGELOG.md) for full details.
 

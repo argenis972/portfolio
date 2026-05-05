@@ -159,7 +159,7 @@ export default function Projects() {
                 </div>
 
                 <div className="rounded-xl border border-app-border/60 bg-[#0F141A] p-4 mb-5 font-mono text-xs text-slate-300">
-                  <div className="text-[10px] uppercase tracking-[0.22em] text-slate-500 mb-3">{t('projects.stack')}</div>
+                  <div className="text-[10px] uppercase tracking-[0.22em] text-app-muted mb-3">{t('projects.stack')}</div>
                   <div className="flex flex-wrap gap-x-6 gap-y-2">
                     <div>
                       <span className="text-slate-400">{t('projects.runtime')}:</span>

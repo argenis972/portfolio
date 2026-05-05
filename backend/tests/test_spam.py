@@ -107,3 +107,59 @@ def test_honeypot_is_triggered_with_spam_fields():
     assert is_honeypot_triggered({"fax": "12345"}) is True
     assert is_honeypot_triggered({"company": "Spam Corp"}) is True
     assert is_honeypot_triggered({"middle_name": "Danger"}) is True
+
+
+# ── P2 Regression Tests ────────────────────────────────────────────────────
+
+
+def test_spam_score_www_and_https_different_domains_no_false_penalty():
+    """
+    P2 regression: https://foo.com + www.bar.com are DIFFERENT domains.
+    Must NOT trigger the 'repeated same domain' penalty (+15 pts).
+
+    Before the fix, all_links counted protocol prefixes (len=2) while
+    unique_domains only extracted from https:// URLs (len=1), incorrectly
+    satisfying the same-domain condition.
+
+    Expected: score <= 30 (15 pts for 2 links, no same-domain penalty, no keywords).
+    """
+    from app.core.spam_check import calculate_spam_score
+
+    score = calculate_spam_score(
+        message="Check https://foo.com and also www.bar.com for details.",
+        email="user@example.com",
+    )
+    assert score <= 30, f"Expected score <= 30 for different domains, got {score}"
+
+
+def test_spam_score_www_and_https_same_domain_triggers_penalty():
+    """
+    P2 regression: www.foo.com and https://foo.com are the SAME domain.
+    Must correctly trigger the 'repeated same domain' penalty (+15 pts).
+
+    Expected: score >= 30 (15 pts for 2 links + 15 pts same-domain penalty).
+    """
+    from app.core.spam_check import calculate_spam_score
+
+    score = calculate_spam_score(
+        message="See https://foo.com/page1 and www.foo.com/page2 for more info.",
+        email="user@example.com",
+    )
+    assert score >= 30, f"Expected same-domain penalty applied, got {score}"
+
+
+def test_spam_score_url_with_trailing_punctuation_no_false_penalty():
+    """
+    Edge case: URLs ending a sentence carry trailing punctuation (e.g., 'www.foo.com.').
+    The trailing dot must be stripped before domain comparison so that
+    'www.beta.com.' and 'https://alpha.com' are not counted as one unique domain.
+
+    Expected: score <= 30 (2 different domains, no same-domain penalty).
+    """
+    from app.core.spam_check import calculate_spam_score
+
+    score = calculate_spam_score(
+        message="Visit https://alpha.com or www.beta.com.",
+        email="user@example.com",
+    )
+    assert score <= 30, f"Expected score <= 30 for different domains with trailing punct, got {score}"

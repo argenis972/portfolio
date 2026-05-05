@@ -173,6 +173,7 @@ def test_spam_score_adjacent_urls_with_comma_are_separated():
     como dos enlaces distintos, no uno solo fusionado.
     """
     from app.core.spam_check import calculate_spam_score
+
     # https://a.com,https://b.com -> 2 links, 2 unique domains
     # No debería aplicar la penalización de mismo dominio (+15).
     # Pero sí debería contar como 2 links para la regla de >=3 links.

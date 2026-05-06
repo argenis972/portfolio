@@ -158,9 +158,16 @@ def _configure_cors(application: FastAPI) -> None:
         # Explicit allowlist instead of ["*"] to reduce attack surface.
         # Methods: GET (portfolio reads), POST (/contact), OPTIONS (CORS preflight).
         # Headers: Content-Type (JSON body), Idempotency-Key (contact dedup),
-        #          Authorization (Basic Auth for /metrics).
+        #          Authorization (Basic Auth for /metrics), X-Chaos-Preset (telemetry).
         allow_methods=["GET", "POST", "OPTIONS"],
-        allow_headers=["Content-Type", "Idempotency-Key", "Authorization"],
+        allow_headers=[
+            "Content-Type",
+            "Idempotency-Key",
+            "Authorization",
+            "X-Chaos-Preset",
+            "X-Debug-Mode",
+        ],
+        expose_headers=["X-Trace-ID", "X-Request-ID", "X-Response-Time"],
     )
 
 

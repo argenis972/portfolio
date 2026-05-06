@@ -37,7 +37,6 @@ class EmailAdapter(ABC):
         pass
 
 
-
 class ResendEmailAdapter(EmailAdapter):
     """
     EmailAdapter implementation using Resend API.

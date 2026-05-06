@@ -52,9 +52,7 @@ async def check_health(
     db_health = await repository.check_health()
 
     # Check email configuration
-    email_configured = bool(
-        settings.resend_api_key and settings.resend_api_key.strip()
-    )
+    email_configured = bool(settings.resend_api_key and settings.resend_api_key.strip())
 
     details = {
         "database": db_health["status"],
@@ -66,9 +64,11 @@ async def check_health(
 
     return HealthResponse(
         status="ok" if is_healthy else "degraded",
-        message="API functioning normally"
-        if is_healthy
-        else "API degraded (fail-silent mode active)",
+        message=(
+            "API functioning normally"
+            if is_healthy
+            else "API degraded (fail-silent mode active)"
+        ),
         api_version="1.7.0",
         environment=settings.environment,
         uptime_seconds=uptime,

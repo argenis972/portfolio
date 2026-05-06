@@ -1,4 +1,10 @@
 terraform {
+  cloud {
+    organization = "portafolio"
+    workspaces {
+      name = "portfolio-infra"
+    }
+  }
   required_providers {
     koyeb = {
       source  = "koyeb/koyeb"

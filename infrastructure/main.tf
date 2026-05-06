@@ -2,7 +2,7 @@ terraform {
   required_providers {
     koyeb = {
       source  = "koyeb/koyeb"
-      version = "~> 0.2"
+      version = "~> 0.1"
     }
   }
 }
@@ -16,11 +16,11 @@ resource "koyeb_app" "portfolio" {
 }
 
 resource "koyeb_service" "backend" {
-  app_id = koyeb_app.portfolio.id
-  name   = "api"
+  app_name = koyeb_app.portfolio.name
 
   definition {
-    type = "GIT"
+    name = "api"
+    type = "WEB"
 
     git {
       repository = "github.com/Argenis1412/portfolio"
@@ -30,7 +30,7 @@ resource "koyeb_service" "backend" {
 
     ports {
       port     = 8000
-      protocol = "HTTP"
+      protocol = "http"
     }
 
     routes {
@@ -63,13 +63,21 @@ resource "koyeb_service" "backend" {
         path = "/health"
         port = 8000
       }
-      grace_period = 30
-      interval     = 30
+      grace_period  = 30
+      interval      = 30
       restart_limit = 3
-      timeout      = 10
+      timeout       = 10
+    }
+
+    scalings {
+      min = 1
+      max = 1
+    }
+
+    instance_types {
+      type = "nano"
     }
 
     regions = ["fra"]
-    instance_types = ["free"]
   }
 }

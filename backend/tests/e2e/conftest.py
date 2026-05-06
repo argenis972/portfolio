@@ -9,7 +9,7 @@ BASE_URL = os.getenv("BASE_URL", "http://localhost:8000")
 @pytest.fixture(scope="session")
 def api_client():
     try:
-        with httpx.Client(base_url=BASE_URL, timeout=2.0) as client:
+        with httpx.Client(base_url=BASE_URL, timeout=0.5) as client:
             client.get("/health")
     except httpx.RequestError:
         pytest.skip(f"Backend not running at {BASE_URL}. Skipping E2E tests.")

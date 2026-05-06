@@ -11,7 +11,6 @@ Pattern: Interface (ABC) + Concrete implementation.
 
 from app.adapters.email_adapter import (
     EmailAdapter,
-    FormspreeEmailAdapter,
     ResendEmailAdapter,
 )
 from app.adapters.logger_adapter import LoggerAdapter, StructuredLogger
@@ -20,7 +19,6 @@ from app.adapters.sql_repository import SqlRepository
 
 __all__ = [
     "EmailAdapter",
-    "FormspreeEmailAdapter",
     "ResendEmailAdapter",
     "PortfolioRepository",
     "JsonRepository",

@@ -17,8 +17,6 @@ class Settings(BaseSettings):
         app_name: Name displayed in OpenAPI documentation.
         environment: Execution environment (local, staging, production).
         allowed_origins: List of comma-separated CORS origins.
-        formspree_url: Formspree endpoint URL for sending emails.
-        formspree_form_id: Formspree form ID.
     """
 
     model_config = SettingsConfigDict(
@@ -42,14 +40,6 @@ class Settings(BaseSettings):
     regex_allowed_origins: str | None = Field(
         default=r"^(https://(?:[a-zA-Z0-9\-]+\.)?argenisbackend\.com|https://portfolio(?:-[a-zA-Z0-9\-]+)?-argenis1412s-projects\.vercel\.app|http://localhost:\d+|http://127\.0\.0\.1:\d+)$",
         alias="REGEX_ORIGENS_PERMITIDAS",
-    )
-    formspree_url: str = Field(
-        default="https://formspree.io/f",
-        alias="FORMSPREE_URL",
-    )
-    formspree_form_id: str = Field(
-        default="",
-        alias="FORMSPREE_FORM_ID",
     )
     resend_api_key: str = Field(
         default="",
@@ -88,10 +78,6 @@ class Settings(BaseSettings):
         default="",
         alias="OTLP_ENDPOINT",
         description="OTLP endpoint to export traces (e.g., http://jaeger:4318). Empty = ConsoleExporter.",
-    )
-    formspree_timeout_seconds: float = Field(
-        default=10.0,
-        alias="FORMSPREE_TIMEOUT_SECONDS",
     )
     redis_socket_timeout_seconds: float = Field(
         default=5.0,

@@ -197,3 +197,20 @@ test_out.txt
 # Generated documentation
 docs/_build/
 site/
+
+# ===========================
+# TERRAFORM
+# ===========================
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# NOTA: .terraform.lock.hcl NO se ignora, se debe subir a git.

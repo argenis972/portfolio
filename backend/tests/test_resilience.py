@@ -1,6 +1,6 @@
 """
 Resilience tests: Redis failures, Supabase transient errors,
-Formspree timeouts, and concurrent idempotency conflicts.
+email adapter timeouts, and concurrent idempotency conflicts.
 """
 
 import time
@@ -117,13 +117,13 @@ async def test_supabase_transient_failure_health_check(client):
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Formspree timeout
+# Email adapter timeout
 # ──────────────────────────────────────────────────────────────────────────────
 
 
-async def test_formspree_timeout_returns_200_backgrounded(client):
+async def test_email_adapter_timeout_returns_200_backgrounded(client):
     """
-    A ConnectTimeout from Formspree must produce HTTP 200 because the delivery
+    A ConnectTimeout from the Email Adapter must produce HTTP 200 because the delivery
     happens in the background. The error is only logged.
     """
     from httpx import ConnectTimeout
@@ -132,7 +132,7 @@ async def test_formspree_timeout_returns_200_backgrounded(client):
     from app.controllers.dependencies import get_send_contact_use_case
 
     mock_uc = AsyncMock(spec=SendContactUseCase)
-    mock_uc.execute.side_effect = ConnectTimeout("Formspree timed out")
+    mock_uc.execute.side_effect = ConnectTimeout("Email timed out")
 
     app.dependency_overrides[get_send_contact_use_case] = lambda: mock_uc
 

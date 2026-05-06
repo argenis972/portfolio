@@ -60,6 +60,9 @@ This document defines the Service Level Objectives (SLOs) for the backend API. E
 - P95 > 200ms for 5 minutes
 - OR 5xx error rate > 0.5% for 15 minutes
 - OR Redis connection failures > 1% for 5 minutes
+- **Structured log event:** `rate_limiter_redis_fallback_open` → configure as a
+  critical alert in Sentry/Grafana. When this fires, anti-spam and rate limiting
+  on `/contact` are non-functional (fail-open). See INC-001 / FAILURE_MODEL.md §1.
 
 ---
 

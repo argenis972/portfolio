@@ -232,6 +232,12 @@ class ChaosMonkeyMiddleware(BaseHTTPMiddleware):
     """
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
+        # Only active in non-production environments (settings.debug == True).
+        # In production, X-Debug-Mode headers are unconditionally ignored to prevent
+        # external actors from inducing synthetic 429/500 responses.
+        if not settings.debug:
+            return await call_next(request)
+
         # Simulate Rate Limit (429)
         if request.headers.get("X-Debug-Mode") == "simulate-429":
             logger.warning(

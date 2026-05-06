@@ -155,8 +155,12 @@ def _configure_cors(application: FastAPI) -> None:
         allow_origins=origins,
         allow_origin_regex=settings.regex_allowed_origins,
         allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        # Explicit allowlist instead of ["*"] to reduce attack surface.
+        # Methods: GET (portfolio reads), POST (/contact), OPTIONS (CORS preflight).
+        # Headers: Content-Type (JSON body), Idempotency-Key (contact dedup),
+        #          Authorization (Basic Auth for /metrics).
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["Content-Type", "Idempotency-Key", "Authorization"],
     )
 
 

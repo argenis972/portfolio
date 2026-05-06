@@ -53,7 +53,7 @@ async def check_health(
 
     # Check email configuration
     email_configured = bool(
-        settings.formspree_form_id and settings.formspree_form_id.strip()
+        settings.resend_api_key and settings.resend_api_key.strip()
     )
 
     details = {
@@ -69,7 +69,7 @@ async def check_health(
         message="API functioning normally"
         if is_healthy
         else "API degraded (fail-silent mode active)",
-        api_version="1.0.0",
+        api_version="1.7.0",
         environment=settings.environment,
         uptime_seconds=uptime,
         details=details,

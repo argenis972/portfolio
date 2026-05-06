@@ -1,9 +1,3 @@
-variable "koyeb_token" {
-  description = "Koyeb API token"
-  type        = string
-  sensitive   = true
-}
-
 variable "database_url" {
   description = "PostgreSQL Database URL (Supabase)"
   type        = string

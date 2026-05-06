@@ -8,7 +8,6 @@ from functools import lru_cache
 
 from app.adapters.email_adapter import (
     EmailAdapter,
-    FormspreeEmailAdapter,
     ConsoleEmailAdapter,
     ResendEmailAdapter,
 )
@@ -91,15 +90,9 @@ def get_send_contact_use_case() -> SendContactUseCase:
             settings.resend_from_email,
             settings.resend_to_email,
         )
-    # Priority 2: Console (Local development)
-    elif settings.environment == "local" and not settings.formspree_form_id.strip():
-        email_adapter = ConsoleEmailAdapter()
-    # Priority 3: Formspree (Legacy/Fallback)
+    # Priority 2: Console (Fallback / Local development)
     else:
-        email_adapter = FormspreeEmailAdapter(
-            settings.formspree_url,
-            settings.formspree_form_id,
-        )
+        email_adapter = ConsoleEmailAdapter()
 
     logger = StructuredLogger()
     return SendContactUseCase(email_adapter, logger)

@@ -381,7 +381,7 @@ def override_dependencies(setup_database):
         repo_real_test
     )
 
-    # Mock for email sending to avoid real calls (Formspree) in tests
+    # Mock for email sending to avoid real calls in tests
     from app.use_cases.send_contact import SendContactUseCase
 
     mock_email = AsyncMock(spec=EmailAdapter)

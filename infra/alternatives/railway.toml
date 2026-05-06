@@ -7,14 +7,14 @@ dockerfilePath = "backend/Dockerfile"
 
 [deploy]
 numReplicas = 1
-healthcheckPath = "/saude"
+healthcheckPath = "/health"
 healthcheckTimeout = 100
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
 
 [[deploy.environmentVariables]]
 name = "AMBIENTE"
-value = "producao"
+value = "production"
 
 [[deploy.environmentVariables]]
 name = "VERSAO_API"
@@ -24,8 +24,8 @@ value = "1.0.0"
 name = "PORT"
 value = "${{ PORT }}"
 
-# Variáveis secretas devem ser configuradas no dashboard da Railway:
-# - FORMSPREE_FORM_ID
+# Secret variables must be configured in the Railway dashboard:
+# - RESEND_API_KEY
 # - ORIGENS_PERMITIDAS
 
 [service]

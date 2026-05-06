@@ -11,12 +11,12 @@ services:
     region: oregon
     
     # Health Check
-    healthCheckPath: /saude
+    healthCheckPath: /health
     
     # Environment Variables
     envVars:
       - key: AMBIENTE
-        value: producao
+        value: production
       
       - key: VERSAO_API
         value: 1.0.0
@@ -24,12 +24,12 @@ services:
       - key: PORT
         value: 10000
       
-      # Secrets (configure no dashboard da Render)
-      - key: FORMSPREE_FORM_ID
+      # Secrets (configure in Render dashboard)
+      - key: RESEND_API_KEY
         sync: false
       
       - key: ORIGENS_PERMITIDAS
-        sync: false # Configurar en el dashboard de Render con el dominio del frontend
+        sync: false # Configure in Render dashboard with frontend domain
     
     # Auto-deploy
     autoDeploy: true

@@ -1,7 +1,7 @@
 """
 Adapter for sending emails.
 
-Abstract interface + implementation with Formspree and Resend.
+Abstract interface + implementation with Resend.
 """
 
 from abc import ABC, abstractmethod
@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 import httpx
 import structlog
 
-from app.settings import settings
+
 from app.entities.message import Message
 from app.utils.email import mask_email
 
@@ -20,7 +20,7 @@ class EmailAdapter(ABC):
     """
     Abstract interface for sending emails.
 
-    Allows easy implementation swaps (Formspree → SendGrid → SES).
+    Allows easy implementation swaps (Resend → SendGrid → SES).
     """
 
     @abstractmethod

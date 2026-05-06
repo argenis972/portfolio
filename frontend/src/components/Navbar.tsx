@@ -1,4 +1,4 @@
-import { Sun, Moon } from 'lucide-react';
+import { Sun, Moon, Languages } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useQueryClient } from '@tanstack/react-query';
@@ -79,16 +79,21 @@ export default function Navbar() {
                 <Moon className="w-5 h-5" />
               )}
             </button>
-            <select
-              aria-label="Select Language"
-              value={language}
-              onChange={(e) => setLanguage(e.target.value as 'pt' | 'en' | 'es')}
-              className="bg-app-surface border border-app-border text-sm rounded-lg focus:ring-app-primary focus:border-app-primary block p-2 transition-smooth shadow-sm text-app-text"
-            >
-              <option value="pt">PT</option>
-              <option value="en">EN</option>
-              <option value="es">ES</option>
-            </select>
+            <div className="relative flex items-center">
+              <div className="absolute left-2.5 pointer-events-none text-app-text/70">
+                <Languages className="w-4 h-4" />
+              </div>
+              <select
+                aria-label="Select Language"
+                value={language}
+                onChange={(e) => setLanguage(e.target.value as 'pt' | 'en' | 'es')}
+                className="bg-app-surface border border-app-border text-sm rounded-lg focus:ring-app-primary focus:border-app-primary block pl-9 pr-3 py-2 transition-smooth shadow-sm text-app-text"
+              >
+                <option value="pt">PT</option>
+                <option value="en">EN</option>
+                <option value="es">ES</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>

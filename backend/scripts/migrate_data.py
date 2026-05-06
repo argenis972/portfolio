@@ -1,5 +1,5 @@
 """
-Script para migrar dados de arquivos JSON para o banco de dados SQL.
+Script to migrate data from JSON files to the SQL database.
 """
 
 import json
@@ -9,7 +9,7 @@ from pathlib import Path
 
 from sqlmodel import Session, SQLModel, create_engine, text
 
-# Adicionar o diretório backend ao sys.path
+# Add the backend directory to sys.path
 current_dir = Path(__file__).parent.absolute()
 backend_dir = current_dir.parent
 if str(backend_dir) not in sys.path:
@@ -24,7 +24,7 @@ from app.adapters.sql_models import (  # noqa: E402
 )
 from app.settings import settings  # noqa: E402
 
-# Usar engine síncrona
+# Use synchronous engine
 DATABASE_URL_SYNC = settings.database_url.replace("+aiosqlite", "")
 engine = create_engine(DATABASE_URL_SYNC)
 
@@ -34,17 +34,17 @@ DADOS_PATH = backend_dir / "dados"
 def carregar_json(nome: str):
     caminho = DADOS_PATH / nome
     if not caminho.exists():
-        print(f"Aviso: Arquivo {nome} não encontrado em {DADOS_PATH}")
+        print(f"Warning: File {nome} not found in {DADOS_PATH}")
         return None
     with open(caminho, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
 def migrar():
-    """Executa a migração de dados com serialização JSON manual em todos os campos complexos."""
-    print(f"--- Iniciando Migração para {DATABASE_URL_SYNC} ---")
+    """Executes data migration with manual JSON serialization on all complex fields."""
+    print(f"--- Starting Migration to {DATABASE_URL_SYNC} ---")
 
-    # Criar tabelas se não existirem
+    # Create tables if they don't exist
     SQLModel.metadata.create_all(engine)
 
     with Session(engine) as session:
@@ -55,10 +55,10 @@ def migrar():
         session.execute(text("DELETE FROM formacoes"))
         session.execute(text("DELETE FROM stack"))
 
-        # 1. Seção Sobre
+        # 1. About Section
         about_dados = carregar_json("about.json")
         if about_dados:
-            # Serialização manual
+            # Manual serialization
             if isinstance(about_dados.get("descricao"), (dict, list)):
                 about_dados["descricao"] = json.dumps(
                     about_dados["descricao"], ensure_ascii=False
@@ -70,7 +70,7 @@ def migrar():
 
             about = AboutModel(**about_dados)
             session.add(about)
-            print("✓ Dados da seção 'Sobre' migrados.")
+            print("✓ 'About' section data migrated.")
 
         # 2. Projects
         projects_dados = carregar_json("projects.json")
@@ -87,7 +87,7 @@ def migrar():
                         p[field] = json.dumps(p[field], ensure_ascii=False)
                 project = ProjectModel(**p)
                 session.add(project)
-            print(f"✓ {len(projects_dados)} projects migrados.")
+            print(f"✓ {len(projects_dados)} projects migrated.")
 
         # 3. Experiências Profissionais
         exp_dados = carregar_json("experiences.json")
@@ -98,16 +98,16 @@ def migrar():
                 if e.get("data_fim"):
                     e["data_fim"] = date.fromisoformat(e["data_fim"])
 
-                # Serialização manual de campos complexos
+                # Manual serialization of complex fields
                 for field in ["cargo", "descricao", "tecnologias"]:
                     if field in e and isinstance(e[field], (dict, list)):
                         e[field] = json.dumps(e[field], ensure_ascii=False)
 
                 exp = ExperienceModel(**e)
                 session.add(exp)
-            print(f"✓ {len(exp_dados)} experiências migradas.")
+            print(f"✓ {len(exp_dados)} experiences migrated.")
 
-        # 4. Formação Acadêmica
+        # 4. Academic Formation
         form_dados = carregar_json("formation.json")
         if form_dados:
             for f in form_dados:
@@ -115,33 +115,33 @@ def migrar():
                 if f.get("data_fim"):
                     f["data_fim"] = date.fromisoformat(f["data_fim"])
 
-                # Serialização manual de campos complexos
+                # Manual serialization of complex fields
                 for field in ["curso", "descricao"]:
                     if field in f and isinstance(f[field], (dict, list)):
                         f[field] = json.dumps(f[field], ensure_ascii=False)
 
                 form = FormationModel(**f)
                 session.add(form)
-            print(f"✓ {len(form_dados)} itens de formação migrados.")
+            print(f"✓ {len(form_dados)} formation items migrated.")
 
-        # 5. Stack Tecnológico
+        # 5. Technological Stack
         stack_dados = carregar_json("stack.json")
         if stack_dados:
             for s in stack_dados:
                 stack = StackModel(**s)
                 session.add(stack)
-            print(f"✓ {len(stack_dados)} tecnologias do stack migradas.")
+            print(f"✓ {len(stack_dados)} stack technologies migrated.")
 
         session.commit()
 
-    print("\n--- Migração concluída com sucesso! ---")
+    print("\n--- Migration completed successfully! ---")
 
 
 if __name__ == "__main__":
     try:
         migrar()
     except Exception as e:
-        print(f"\n❌ Erro durante a migração: {e}")
+        print(f"\n❌ Error during migration: {e}")
         import traceback
 
         traceback.print_exc()

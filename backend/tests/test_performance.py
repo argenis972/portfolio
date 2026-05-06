@@ -3,7 +3,7 @@ from app.main import app
 
 def test_etag_and_304_not_modified(client):
     """
-    Testa se o backend gera ETags e responde com 304 quando o conteúdo não mudou.
+    Tests if backend generates ETags and responds with 304 when content hasn't changed.
     """
     # 1. First request to obtain ETag
     resp1 = client.get("/api/v1/about")
@@ -12,21 +12,21 @@ def test_etag_and_304_not_modified(client):
     assert etag is not None
     assert resp1.headers.get("Cache-Control") is not None
 
-    # 2. Segunda requisição enviando If-None-Match
+    # 2. Second request sending If-None-Match
     resp2 = client.get("/api/v1/about", headers={"If-None-Match": etag})
 
     # Should return 304 Not Modified
     assert resp2.status_code == 304
-    # 304 NÃO deve ter corpo
+    # 304 MUST NOT have a body
     assert resp2.text == ""
-    # Deve manter os headers de cache
+    # Must maintain cache headers
     assert resp2.headers.get("ETag") == etag
     assert "public" in resp2.headers.get("Cache-Control")
 
 
 def test_etag_changes_when_content_changes(client):
     """
-    Verifica se o ETag muda quando o payload é diferente.
+    Verifies if ETag changes when the payload is different.
     """
     # Mocking different data to force ETag change
     from unittest.mock import AsyncMock

@@ -12,7 +12,7 @@ from app.main import app
 
 
 def test_idempotency_contact(client):
-    """Testa se o envio duplicado com mesma chave retorna cache."""
+    """Tests if duplicate send with same key returns cache."""
     payload = {
         "name": "Test User",
         "email": "test@example.com",
@@ -21,25 +21,25 @@ def test_idempotency_contact(client):
     }
     headers = {"Idempotency-Key": "unique-key-123"}
 
-    # Mock do Use Case
+    # Use Case Mock
     mock_uc = AsyncMock()
     mock_uc.execute.return_value = True
 
     app.dependency_overrides[get_send_contact_use_case] = lambda: mock_uc
 
     try:
-        # Primeira tentativa
+        # First attempt
         resp1 = client.post("/api/v1/contact", json=payload, headers=headers)
         assert resp1.status_code == 200
         assert resp1.headers.get("X-Cache-Idempotency") is None
 
-        # Segunda tentativa (deve ser cache)
+        # Second attempt (must be cache)
         resp2 = client.post("/api/v1/contact", json=payload, headers=headers)
         assert resp2.status_code == 200
         assert resp2.headers.get("X-Cache-Idempotency") == "HIT"
         assert resp2.json() == resp1.json()
 
-        # Verificar que o Use Case só foi chamado UMA vez
+        # Verify that the Use Case was called only ONCE
         assert mock_uc.execute.call_count == 1
 
     finally:
@@ -73,13 +73,13 @@ def test_idempotency_contact_accepts_legacy_header(client):
 
 
 def test_rate_limiting_projects(client):
-    """Testa se o limite de 20/minuto funciona para projects."""
-    # Fazer 20 requisições rápidas (limite é 20/min)
+    """Tests if the 20/minute limit works for projects."""
+    # Make 20 rapid requests (limit is 20/min)
     for i in range(20):
         resp = client.get("/api/v1/projects")
         assert resp.status_code == 200
 
-    # A 21ª deve falhar
+    # The 21st must fail
     resp = client.get("/api/v1/projects")
     assert resp.status_code == 429, (
         f"Expected 429, got {resp.status_code}. Body: {resp.text}"
@@ -111,7 +111,7 @@ def test_idempotency_without_key_works_normally(client):
         resp2 = client.post("/api/v1/contact", json=payload)
         assert resp2.status_code == 200
 
-        # Sem chave, deve ter chamado duas vezes
+        # Without key, it should have been called twice
         assert mock_uc.execute.call_count == 2
 
     finally:
@@ -119,7 +119,7 @@ def test_idempotency_without_key_works_normally(client):
 
 
 def test_idempotency_in_progress(client):
-    """Testa se requisições simultâneas com mesma chave retornam 409."""
+    """Tests if simultaneous requests with the same key return 409."""
     payload = {
         "name": "Test User",
         "email": "test@example.com",
@@ -128,7 +128,7 @@ def test_idempotency_in_progress(client):
     }
     headers = {"Idempotency-Key": "progress-key-456"}
 
-    # Simular em progresso manualmente no store
+    # Manually simulate in progress in the store
     import time
 
     from app.core.idempotency import IdempotencyRecord
@@ -146,7 +146,7 @@ def test_idempotency_in_progress(client):
 
 
 def test_rate_limiting_contact_by_email(client):
-    """Testa se o limite de 10/dia por e-mail funciona."""
+    """Tests if the 10/day per email limit works."""
     payload = {
         "name": "Test User",
         "email": "limite@example.com",
@@ -166,7 +166,7 @@ def test_rate_limiting_contact_by_email(client):
             resp = client.post("/api/v1/contact", json=payload)
             assert resp.status_code == 200, f"Error at request {i}: {resp.text}"
 
-        # A 11ª deve falhar com 429
+        # The 11th must fail with 429
         payload["message"] = "Final message that should be blocked."
         resp = client.post("/api/v1/contact", json=payload)
         assert resp.status_code == 429
@@ -177,9 +177,9 @@ def test_rate_limiting_contact_by_email(client):
 
 
 def test_rate_limiter_redis_fallback(client, monkeypatch):
-    """Testa se uma falha no Redis faz o RateLimiter falhar estaticamente permitindo a request."""
+    """Tests if a Redis failure causes the RateLimiter to fail statically, allowing the request."""
 
-    # Fazer a hit connection lançar Exception genérica simulando `redis.exceptions.ConnectionError`.
+    # Make the connection hit throw a generic Exception simulating `redis.exceptions.ConnectionError`.
     def mock_hit(*args, **kwargs):
         raise ConnectionError("Redis is down")
 

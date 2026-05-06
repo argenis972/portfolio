@@ -26,7 +26,7 @@ def mock_use_case():
 
 
 def test_honeypot_triggered(mock_use_case):
-    """Verifica se o honeypot bloqueia o envio mas retorna sucesso falso."""
+    """Verifies if the honeypot blocks the send but returns fake success."""
     payload = {
         "name": "Bot",
         "email": "bot@spam.com",
@@ -39,12 +39,12 @@ def test_honeypot_triggered(mock_use_case):
 
     assert response.status_code == 200
     assert response.json()["success"] is True
-    # O Caso de Uso NÃO deve ter sido chamado
+    # The Use Case MUST NOT have been called
     mock_use_case.execute.assert_not_called()
 
 
 def test_spam_score_high_silent_drop(mock_use_case):
-    """Verifica se score muito alto (>70) causa drop silencioso."""
+    """Verifies if a very high score (>70) causes a silent drop."""
     payload = {
         "name": "Spammer",
         "email": "spammer@temp-mail.org",  # +40 pts
@@ -56,12 +56,12 @@ def test_spam_score_high_silent_drop(mock_use_case):
 
     assert response.status_code == 200
     assert response.json()["success"] is True
-    # O Caso de Uso NÃO deve ter sido chamado
+    # The Use Case MUST NOT have been called
     mock_use_case.execute.assert_not_called()
 
 
 def test_spam_score_medium_suspect(mock_use_case):
-    """Verifica se score médio (>30) marca como [SUSPECT]."""
+    """Verifies if a medium score (>30) marks it as [SUSPECT]."""
     payload = {
         "name": "Suspicious User",
         "email": "user@gmail.com",
@@ -72,7 +72,7 @@ def test_spam_score_medium_suspect(mock_use_case):
     response = client.post("/api/v1/contact", json=payload)
 
     assert response.status_code == 200
-    # O Caso de Uso deve ter sido chamado com is_suspicious=True
+    # The Use Case should have been called with is_suspicious=True
     mock_use_case.execute.assert_called_once()
     args, kwargs = mock_use_case.execute.call_args
     assert kwargs["is_suspicious"] is True
@@ -80,7 +80,7 @@ def test_spam_score_medium_suspect(mock_use_case):
 
 
 def test_normal_message_not_suspect(mock_use_case):
-    """Verifica se message normal passa sem marcação."""
+    """Verifies if a normal message passes without marking."""
     payload = {
         "name": "Argenis",
         "email": "argenis@example.com",
@@ -97,12 +97,12 @@ def test_normal_message_not_suspect(mock_use_case):
 
 
 def test_honeypot_is_triggered_with_empty_data():
-    """Verifica retorno False cuando los datos no tienen spam fields."""
+    """Verifies False return when data has no spam fields."""
     assert is_honeypot_triggered({"name": "John", "email": "j@mock.com"}) is False
 
 
 def test_honeypot_is_triggered_with_spam_fields():
-    """Verifica retorno True al alimentar arrays conteniendo campos como website, fax, company, middle_name."""
+    """Verifies True return when feeding arrays containing fields like website, fax, company, middle_name."""
     assert is_honeypot_triggered({"website": "http://spam.com"}) is True
     assert is_honeypot_triggered({"fax": "12345"}) is True
     assert is_honeypot_triggered({"company": "Spam Corp"}) is True
@@ -169,14 +169,14 @@ def test_spam_score_url_with_trailing_punctuation_no_false_penalty():
 
 def test_spam_score_adjacent_urls_with_comma_are_separated():
     """
-    Regressión para P1: URLs adyacentes separadas por coma deben contarse
-    como dos enlaces distintos, no uno solo fusionado.
+    P1 regression: adjacent URLs separated by a comma should be counted
+    as two distinct links, not a single merged one.
     """
     from app.core.spam_check import calculate_spam_score
 
     # https://a.com,https://b.com -> 2 links, 2 unique domains
-    # No debería aplicar la penalización de mismo dominio (+15).
-    # Pero sí debería contar como 2 links para la regla de >=3 links.
+    # Should not apply the same domain penalty (+15).
+    # But it should count as 2 links for the rule of >=3 links.
     msg = "Check https://a.com,https://b.com,www.c.com"
     score = calculate_spam_score(msg, "valid@email.com")
 

@@ -213,4 +213,4 @@ override.tf.json
 *_override.tf
 *_override.tf.json
 
-# NOTA: .terraform.lock.hcl NO se ignora, se debe subir a git.
+# NOTE: .terraform.lock.hcl is NOT ignored, it must be committed to git.

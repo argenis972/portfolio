@@ -8,9 +8,9 @@ rule_files:
 
 scrape_configs:
   # -------------------------------------------------------
-  # Backend API (FastAPI rodando no Koyeb / localmente)
-  # Em desenvolvimento local: api:8000 (via docker-compose)
-  # Em produção: substitua pelo URL do Koyeb ou use Pushgateway
+  # Backend API (FastAPI running on Koyeb / locally)
+  # In local development: api:8000 (via docker-compose)
+  # In production: replace with Koyeb URL or use Pushgateway
   # -------------------------------------------------------
   - job_name: 'portafolio-api'
     static_configs:

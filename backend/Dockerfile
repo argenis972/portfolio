@@ -43,7 +43,7 @@ LABEL version="1.0.0"
 # Environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    AMBIENTE=producao \
+    ENVIRONMENT=production \
     API_HOST=0.0.0.0 \
     API_PORT=8000
 

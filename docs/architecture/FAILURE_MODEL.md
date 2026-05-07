@@ -1,6 +1,6 @@
 # Explicit Failure Model & Contingency Policies
 
-> This document is grounded in real production incidents (INC-001 through INC-006).
+> This document is grounded in real production incidents (INC-001 through INC-008).
 > Each failure mode documents what actually happened, how it was detected, the accepted degradation behavior, and the governing ADR.
 > Source: CHANGELOG.md (Production Incidents section).
 
@@ -150,6 +150,54 @@ Spam filter must be continuously monitored and regexes adjusted. The system is d
 
 ---
 
+## 7. Koyeb Terraform Provider Schema Incompatibility
+
+### Incident: INC-007 — Infrastructure Provisioning Blocked by Provider Limitation
+- **Period:** v1.7.0 → v1.8.1
+- **Affected:** Infrastructure Provisioning CI/CD (Terraform)
+
+### Actual Failure
+The migration to Terraform was blocked by a `400 Bad Request` from the Koyeb API: `env type is required`. The official Terraform provider (v0.1.11) lacked the schema fields to send this mandatory metadata for literal environment variables, making the standard `env` block unusable.
+
+### Detection
+**CI/CD pipeline failure.** Terraform apply failed with an API error during the first automated provisioning attempt.
+
+### Accepted Degradation Behavior
+- **Deployment blocked:** New infrastructure changes cannot be applied until the configuration is refactored to bypass the limitation.
+- **Architectural pivot:** Pivoted to "Secret-First Orchestration". All configuration is now vaulted as Koyeb Secrets, which have an implicit type in the API, bypassing the provider's literal `env` schema bug.
+
+### Governing ADR
+- **ADR-18:** Infrastructure as Code (IaC) — specifically the "Secret-First" pivot documented in the changelog.
+
+### Accepted Consequence
+All configuration variables (including non-sensitive ones) are now managed as secrets. This increases the manual effort to rotate or view variables in the UI but improves the security posture.
+
+---
+
+## 8. Destructive IaC Migration (Free Tier Constraints)
+
+### Incident: INC-008 — Cold Migration Downtime
+- **Period:** v1.7.1 → v1.8.1 (Migration Window)
+- **Affected:** Global API Availability (`api.argenisbackend.com`)
+
+### Actual Failure
+Koyeb Free Tier prevents multiple services from claiming the same custom domain. To move from manual management to Terraform ownership, the manual service had to be deleted before the Terraform one could be created. This resulted in a 14-hour downtime window.
+
+### Detection
+**Planned maintenance.** Discovered during the trial import of the custom domain into Terraform state.
+
+### Accepted Degradation Behavior
+- **Intentional downtime:** A "Cold Migration" strategy was chosen over zero-downtime to ensure 100% operational consistency and eliminate all legacy "shadow" configuration.
+- **Rationale:** For a portfolio/SRE demo project, full reproducibility and IaC integrity are higher priorities than 99.9% uptime during a one-time migration.
+
+### Governing ADR
+- **ADR-18:** Infrastructure as Code (IaC) — transition from manual to automated management.
+
+### Accepted Consequence
+Downtime is accepted for destructive reconciliation when provider ownership constraints prevent seamless imports.
+
+---
+
 ## Failure Mode Summary
 
 | Incident | Component | Detection | Degradation | ADR | Status |
@@ -160,6 +208,8 @@ Spam filter must be continuously monitored and regexes adjusted. The system is d
 | INC-004 | CSP/CORS (Browser) | Browser console | Complete block (no graceful degradation) | ADR-15.3 | Resolved v1.4.0 |
 | INC-005 | Docker Build Context | CI/CD failure | Deployment blocked, previous version stays | ADR-15.2 | Resolved v1.6.0 |
 | INC-006 | Spam Filter (Contact) | Static analysis | False negatives (spam passes as single-link) | CHANGELOG | Resolved v1.8.0 |
+| INC-007 | Terraform Provider | CI/CD failure | Deployment blocked (Architectural pivot to Secrets) | ADR-18 | Resolved v1.8.1 |
+| INC-008 | IaC Migration | Manual | Intentional downtime (Cold Migration) | ADR-18 | Resolved v1.8.1 |
 
 ---
 

@@ -7,33 +7,33 @@ from app.settings import Settings
 
 def test_debug_disabled_in_production():
     """Ensures debug is disabled in production."""
-    os.environ["AMBIENTE"] = "producao"
+    os.environ["ENVIRONMENT"] = "production"
     settings = Settings()
     assert settings.debug is False
-    if "AMBIENTE" in os.environ:
-        del os.environ["AMBIENTE"]
+    if "ENVIRONMENT" in os.environ:
+        del os.environ["ENVIRONMENT"]
 
 
 def test_debug_enabled_in_development():
     """Ensures debug is enabled in development."""
-    os.environ["AMBIENTE"] = "desenvolvimento"
+    os.environ["ENVIRONMENT"] = "development"
     settings = Settings()
     assert settings.debug is True
-    if "AMBIENTE" in os.environ:
-        del os.environ["AMBIENTE"]
+    if "ENVIRONMENT" in os.environ:
+        del os.environ["ENVIRONMENT"]
 
 
 def test_debug_enabled_in_local():
     """Ensures debug is enabled in local environment."""
-    os.environ["AMBIENTE"] = "local"
+    os.environ["ENVIRONMENT"] = "local"
     settings = Settings()
     assert settings.debug is True
-    if "AMBIENTE" in os.environ:
-        del os.environ["AMBIENTE"]
+    if "ENVIRONMENT" in os.environ:
+        del os.environ["ENVIRONMENT"]
 
 
 def test_validate_production_fails_without_redis_and_metrics_auth():
-    os.environ["AMBIENTE"] = "producao"
+    os.environ["ENVIRONMENT"] = "production"
     os.environ["DATABASE_URL"] = (
         "postgresql+asyncpg://postgres:secret@db.example.com:5432/postgres"
     )
@@ -47,7 +47,7 @@ def test_validate_production_fails_without_redis_and_metrics_auth():
         settings.validate_production()
 
     for key in [
-        "AMBIENTE",
+        "ENVIRONMENT",
         "DATABASE_URL",
         "REDIS_URL",
         "METRICS_BASIC_AUTH_USERNAME",
@@ -57,7 +57,7 @@ def test_validate_production_fails_without_redis_and_metrics_auth():
 
 
 def test_validate_production_accepts_supabase_and_metrics_auth():
-    os.environ["AMBIENTE"] = "producao"
+    os.environ["ENVIRONMENT"] = "production"
     os.environ["DATABASE_URL"] = (
         "postgresql+asyncpg://postgres:secret@db.example.com:5432/postgres"
     )
@@ -69,7 +69,7 @@ def test_validate_production_accepts_supabase_and_metrics_auth():
     settings.validate_production()
 
     for key in [
-        "AMBIENTE",
+        "ENVIRONMENT",
         "DATABASE_URL",
         "REDIS_URL",
         "METRICS_BASIC_AUTH_USERNAME",

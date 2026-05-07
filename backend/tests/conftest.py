@@ -321,15 +321,20 @@ def reset_global_state():
 
     # Clear rate limiter storage (slowapi)
     if hasattr(limiter, "_storage") and hasattr(limiter._storage, "storage"):
-        # For limits MemoryStorage, which slowapi uses
-        limiter._storage.storage.clear()
-    elif hasattr(limiter, "_storage"):
-        # Generic attempt if structure changes
-        try:
-            limiter._storage.clear()
-        except TypeError:
-            # If clear() requires arguments, ignore or try another way
-            pass
+        storage_obj = limiter._storage.storage
+        # MemoryStorage uses a dict
+        if isinstance(storage_obj, dict):
+            storage_obj.clear()
+        # RedisStorage uses a redis-py client
+        elif hasattr(storage_obj, "flushdb"):
+            # We only flush if we are in a test environment and we really need to.
+            # However, for unit tests, we usually want to avoid touching real Redis.
+            # If we are here, it means Limiter was initialized with a Redis URL.
+            try:
+                storage_obj.flushdb()
+            except Exception:
+                # If Redis is down, just ignore
+                pass
 
     if hasattr(spam_dedup_store, "_memory_store"):
         spam_dedup_store._memory_store.clear()

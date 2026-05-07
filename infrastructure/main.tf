@@ -27,17 +27,17 @@ resource "koyeb_domain" "backend" {
 locals {
   # All potential environment variables
   all_env_vars = {
-    "AMBIENTE"                    = var.ambiente
+    "ENVIRONMENT"                 = var.environment
     "API_HOST"                    = var.api_host
     "API_PORT"                    = var.api_port
     "DATABASE_URL"                = var.database_url
     "METRICS_BASIC_AUTH_USERNAME" = var.metrics_basic_auth_username
     "METRICS_BASIC_AUTH_PASSWORD" = var.metrics_basic_auth_password
-    "NOME_APP"                    = var.nome_app
-    "ORIGENS_PERMITIDAS"          = var.origens_permitidas
+    "APP_NAME"                    = var.app_name
+    "ALLOWED_ORIGINS"             = var.allowed_origins
     "OTLP_ENDPOINT"               = var.otlp_endpoint
     "REDIS_URL"                   = var.redis_url
-    "REGEX_ORIGENS_PERMITIDAS"    = var.regex_origens_permitidas
+    "REGEX_ALLOWED_ORIGINS"       = var.regex_allowed_origins
     "RESEND_API_KEY"              = var.resend_api_key
     "RESEND_FROM_EMAIL"           = var.resend_from_email
     "RESEND_TO_EMAIL"             = var.resend_to_email

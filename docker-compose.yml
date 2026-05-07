@@ -26,7 +26,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - AMBIENTE=desenvolvimento
+      - ENVIRONMENT=development
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-portafolio}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@db:5432/${POSTGRES_DB:-portafolio_db}
       - REDIS_URL=redis://redis:6379/0
     # volumes:

@@ -5,7 +5,7 @@ Uses pydantic-settings for automatic validation and default values.
 All settings can be overridden via .env or environment variables.
 """
 
-from pydantic import Field
+from pydantic import Field, AliasChoices
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -27,19 +27,21 @@ class Settings(BaseSettings):
 
     app_name: str = Field(
         default="Portfolio Backend API",
-        alias="NOME_APP",
+        validation_alias=AliasChoices("APP_NAME", "NOME_APP"),
     )
     environment: str = Field(
         default="local",
-        alias="AMBIENTE",
+        validation_alias=AliasChoices("ENVIRONMENT", "AMBIENTE"),
     )
     allowed_origins: str = Field(
         default="http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174,http://localhost:5175,http://127.0.0.1:5175,http://localhost:4173,http://127.0.0.1:4173",
-        alias="ORIGENS_PERMITIDAS",
+        validation_alias=AliasChoices("ALLOWED_ORIGINS", "ORIGENS_PERMITIDAS"),
     )
     regex_allowed_origins: str | None = Field(
         default=r"^(https://(?:[a-zA-Z0-9\-]+\.)?argenisbackend\.com|https://portfolio(?:-[a-zA-Z0-9\-]+)?-argenis1412s-projects\.vercel\.app|http://localhost:\d+|http://127\.0\.0\.1:\d+)$",
-        alias="REGEX_ORIGENS_PERMITIDAS",
+        validation_alias=AliasChoices(
+            "REGEX_ALLOWED_ORIGINS", "REGEX_ORIGENS_PERMITIDAS"
+        ),
     )
     resend_api_key: str = Field(
         default="",
@@ -159,7 +161,7 @@ class Settings(BaseSettings):
 
     @property
     def is_production(self) -> bool:
-        return self.environment in ("production", "producao")
+        return self.environment in ("production", "producao", "producción")
 
     @property
     def metrics_basic_auth_enabled(self) -> bool:
@@ -202,7 +204,7 @@ class Settings(BaseSettings):
             raise RuntimeError("Invalid production configuration: " + "; ".join(errors))
 
     def validate_staging(self) -> None:
-        if self.environment == "staging" and not self.redis_url:
+        if self.environment in ("staging", "homologação") and not self.redis_url:
             import warnings
 
             warnings.warn(

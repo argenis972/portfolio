@@ -50,7 +50,7 @@ No merge to `main` without passing:
 2. **`test`** — Full suite, coverage threshold enforced. A threshold that's never failed is too low.
 3. **`build`** — Docker build succeeds. This proves the artifact is deployable, not just that the code compiles.
 
-**Why this matters in this project**: The `/saude` → `/health` rename in v1.4.1 required updating the Dockerfile `HEALTHCHECK`, the keep-alive cron, GitHub Actions healthcheck, and three test fixtures. Missing any one of them caused a silent CI pass but a broken production deploy. The build step catches this class of failure.
+**Why this matters in this project**: The `/health` → `/health` rename in v1.4.1 required updating the Dockerfile `HEALTHCHECK`, the keep-alive cron, GitHub Actions healthcheck, and three test fixtures. Missing any one of them caused a silent CI pass but a broken production deploy. The build step catches this class of failure.
 
 ---
 
@@ -240,7 +240,7 @@ Accepted side effects: what the fix broke or constrained
 **Bootstrap Flow**:
 1. Manual: Create external stateful resources (Supabase, Upstash Redis).
 2. Export secrets to the local environment (`TF_VAR_*`).
-3. Execute `terraform init` -> `terraform apply` en el directorio `infrastructure/`.
+3. Execute `terraform init` -> `terraform apply` in the `infrastructure/` directory.
 
 ### Troubleshooting & Lessons Learned: Terraform CI/CD Integration
 
@@ -255,7 +255,7 @@ During the implementation of GitHub Actions for Terraform, several critical arch
 
 ---
 
-*Last updated: v1.7.0*
+*Last updated: v1.8.1*
 
 ---
 

@@ -10,7 +10,7 @@ This document details the reasoning behind the architectural choices found in th
 
 ## 3. Managed Database and One-Off Seeding
 **Decision**: In production, the managed PostgreSQL database is not committed to Git and is not reseeded on every boot.
-**Why?** Committing databases is an anti-pattern, and reseeding on every Koyeb cold start increases readiness time. Schema migrations should run during deploy/release steps, while `python scripts/migrar_dados.py` should be used as a one-off refresh task only when static SQL data needs to be rebuilt.
+**Why?** Committing databases is an anti-pattern, and reseeding on every Koyeb cold start increases readiness time. Schema migrations should run during deploy/release steps, while `python backend/scripts/migrate_data.py` should be used as a one-off refresh task only when static SQL data needs to be rebuilt.
 
 ## 4. Observability and Protected Metrics
 **Decision**: Exposing Prometheus metrics at `/metrics` but requiring Basic Auth in production.

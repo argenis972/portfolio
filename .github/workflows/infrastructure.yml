@@ -3,12 +3,8 @@ name: 🏗️ Infrastructure CI/CD
 on:
   push:
     branches: [main]
-    paths:
-      - 'infrastructure/**'
   pull_request:
     branches: [main]
-    paths:
-      - 'infrastructure/**'
 
 jobs:
   terraform:

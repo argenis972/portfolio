@@ -148,47 +148,47 @@ def _seed_database(session: Session) -> None:
     session.add(StackModel(name="React", category="frontend", level=3, icon="react"))
 
 
-# ─── Testes: check_health ───────────────────────────────────────────────────
+# ─── Tests: check_health ───────────────────────────────────────────────────
 
 
 async def test_check_health_returns_ok(seeded_repo):
     """Health check should return status 'ok' when the database is accessible."""
-    resultado = await seeded_repo.check_health()
-    assert resultado["status"] == "ok"
+    result = await seeded_repo.check_health()
+    assert result["status"] == "ok"
 
 
-# ─── Testes: get_about ───────────────────────────────────────────────────────
+# ─── Tests: get_about ───────────────────────────────────────────────────────
 
 
 async def test_get_about_returns_basic_data(seeded_repo):
     """get_about should return a dict with the model fields."""
-    resultado = await seeded_repo.get_about()
+    result = await seeded_repo.get_about()
 
-    assert isinstance(resultado, dict)
-    assert resultado["name"] == "Argenis Teste"
-    assert resultado["email"] == "teste@example.com"
-    assert resultado["title"] == "Backend Developer"
+    assert isinstance(result, dict)
+    assert result["name"] == "Argenis Teste"
+    assert result["email"] == "teste@example.com"
+    assert result["title"] == "Backend Developer"
 
 
 async def test_get_about_deserializes_description(seeded_repo):
     """The 'description' field should be deserialized from JSON string to dict."""
-    resultado = await seeded_repo.get_about()
+    result = await seeded_repo.get_about()
 
-    assert isinstance(resultado["description"], dict)
-    assert resultado["description"]["pt"] == "Descrição PT"
-    assert resultado["description"]["en"] == "Description EN"
-    assert resultado["description"]["es"] == "Descripción ES"
+    assert isinstance(result["description"], dict)
+    assert result["description"]["pt"] == "Descrição PT"
+    assert result["description"]["en"] == "Description EN"
+    assert result["description"]["es"] == "Descripción ES"
 
 
 async def test_get_about_deserializes_availability(seeded_repo):
     """The 'availability' field should be deserialized from JSON string to dict."""
-    resultado = await seeded_repo.get_about()
+    result = await seeded_repo.get_about()
 
-    assert isinstance(resultado["availability"], dict)
-    assert resultado["availability"]["en"] == "Remote"
+    assert isinstance(result["availability"], dict)
+    assert result["availability"]["en"] == "Remote"
 
 
-# ─── Testes: get_projects ────────────────────────────────────────────────────
+# ─── Tests: get_projects ────────────────────────────────────────────────────
 
 
 async def test_get_projects_returns_list(seeded_repo):
@@ -247,7 +247,7 @@ async def test_get_project_by_id_not_found(seeded_repo):
     assert project is None
 
 
-# ─── Testes: get_stack ──────────────────────────────────────────────────────
+# ─── Tests: get_stack ──────────────────────────────────────────────────────
 
 
 async def test_get_stack_returns_list(seeded_repo):
@@ -272,14 +272,14 @@ async def test_get_stack_returns_correct_fields(seeded_repo):
 async def test_get_stack_returns_correct_values(seeded_repo):
     """Stack should contain the inserted technologies."""
     stack = await seeded_repo.get_stack()
-    nomes = [s["name"] for s in stack]
+    names = [s["name"] for s in stack]
 
-    assert "Python" in nomes
-    assert "FastAPI" in nomes
-    assert "React" in nomes
+    assert "Python" in names
+    assert "FastAPI" in names
+    assert "React" in names
 
 
-# ─── Testes: get_experiences ───────────────────────────────────────────────
+# ─── Tests: get_experiences ───────────────────────────────────────────────
 
 
 async def test_get_experiences_returns_list(seeded_repo):
@@ -318,7 +318,7 @@ async def test_get_experiences_current_is_true(seeded_repo):
     assert exp.end_date is None
 
 
-# ─── Testes: get_formation ───────────────────────────────────────────────────
+# ─── Tests: get_formation ───────────────────────────────────────────────────
 
 
 async def test_get_formation_returns_list(seeded_repo):

@@ -12,42 +12,42 @@ from app.entities.message import Message
 
 async def test_resend_connection():
     """
-    Teste manual para verificar se o Resend está bem configurado.
+    Manual test to verify if Resend is properly configured.
     """
-    print("\nIniciando teste do Resend...")
+    print("\nStarting Resend test...")
 
     api_key = settings.resend_api_key
     from_email = settings.resend_from_email
     to_email = settings.resend_to_email
 
-    if not api_key or "tu_api_key" in api_key:
-        print("ERRO: configure RESEND_API_KEY no arquivo .env")
+    if not api_key or "your_api_key" in api_key:
+        print("ERROR: configure RESEND_API_KEY in the .env file")
         return
 
-    print(f"Usando API Key: {api_key[:6]}...{api_key[-4:]}")
-    print(f"De (From): {from_email}")
-    print(f"Para (To): {to_email}")
+    print(f"Using API Key: {api_key[:6]}...{api_key[-4:]}")
+    print(f"From: {from_email}")
+    print(f"To: {to_email}")
 
-    adaptador = ResendEmailAdapter(api_key, from_email, to_email)
+    adapter = ResendEmailAdapter(api_key, from_email, to_email)
 
-    mensaje_prueba = Message(
+    test_message = Message(
         name="Argenis Test",
         email="test@example.com",
-        subject="Teste de Sistema - Resend Live",
-        message="Se você recebeu isso, sua configuração do Resend e Cloudflare funciona perfeitamente!",
+        subject="System Test - Resend Live",
+        message="If you received this, your Resend and Cloudflare configuration works perfectly!",
     )
 
-    print("Enviando e-mail de teste...")
-    sucesso = await adaptador.send_message(mensaje_prueba)
+    print("Sending test email...")
+    success = await adapter.send_message(test_message)
 
-    if sucesso:
-        print("SUCESSO! O e-mail foi enviado conforme o log do Resend.")
+    if success:
+        print("SUCCESS! The email was sent as per the Resend log.")
     else:
-        print("FALHA: Não foi possível enviar o e-mail.")
+        print("FAILURE: Could not send the email.")
 
 
 if __name__ == "__main__":
-    # Garantir compatibilidade com Windows e Python 3.10+
+    # Ensure compatibility with Windows and Python 3.10+
     if sys.platform == "win32":
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     asyncio.run(test_resend_connection())

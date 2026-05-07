@@ -19,7 +19,8 @@ provider "koyeb" {
 # Triggering deployment with Local Execution Mode to ensure secrets are passed correctly.
 
 resource "koyeb_domain" "backend" {
-  name = "api.argenisbackend.com"
+  name     = "api.argenisbackend.com"
+  app_name = koyeb_app.portfolio.name
 }
 
 locals {
@@ -60,6 +61,9 @@ resource "koyeb_app" "portfolio" {
 
 resource "koyeb_service" "backend" {
   app_name = koyeb_app.portfolio.name
+
+  # Ensure all secrets are fully created before trying to reference them in the service
+  depends_on = [koyeb_secret.vars]
 
   definition {
     name = "api"

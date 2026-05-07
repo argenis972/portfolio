@@ -1,4 +1,4 @@
-# 🏛️ Backend-Focused Full-Stack System
+# 🏛️ Cloud-Native Backend: Resiliency & Infrastructure Laboratory
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-gold.svg)](LICENSE)
 [![Backend CI](https://github.com/Argenis1412/portfolio/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/Argenis1412/portfolio/actions)
@@ -11,16 +11,15 @@
 
 ---
 
-## ⚡ TL;DR
-A **production-grade backend system** disguised as a portfolio — a system built to simulate real-world backend challenges:
+A **Cloud-Native payment backend** focused on resiliency, idempotency, and infrastructure automation. This isn't just a portfolio; it's a system built to survive and be managed at scale:
 
-- ✅ **JSON-First Read Path** — eliminates Database cold-starts for portfolio data
-- ✅ **React 19 + TanStack Query** — Optimized caching (15min) and zero-refetch on mount
-- ✅ **HTTP Caching (ETags)** — 304 Not Modified support for zero-bandwidth revalidation
-- ✅ **Observability stack** — Sentry + Prometheus + OpenTelemetry
-- ✅ **CI/CD with quality gates** — 80% coverage threshold, ruff/mypy checks
-- ✅ **Multi-layer anti-abuse** — Honeypot + Spam Scoring + Redis-backed deduplication + Rate Limiting (10/day per email, 30/hour per IP)
-- ✅ **Reproducible benchmarks** — k6 scripts archived per commit in [`/benchmarks`](benchmarks/README.md); results include trade-offs, not just passing numbers
+- 🏗️ **Infrastructure as Code (IaC)** — Fully managed via Terraform with automated CI/CD provisioning.
+- 🌪️ **Chaos-Tested** — Automated weekly E2E stress tests to verify degradation and recovery.
+- ✅ **Secret-First Orchestration** — All environment variables managed as Koyeb Secrets for maximum security.
+- ✅ **Observability stack** — Sentry + Prometheus + OpenTelemetry for full system transparency.
+- ✅ **Multi-layer anti-abuse** — Honeypot + Spam Scoring + Redis-backed deduplication + Rate Limiting.
+- ✅ **JSON-First Read Path** — Eliminates Database cold-starts for public-facing data.
+- ✅ **React 19 + TanStack Query** — Optimized frontend with zero-refetch and 15min caching.
 
 ---
 
@@ -39,6 +38,15 @@ This project didn't start production-ready. It evolved through real production i
 See [CHANGELOG.md](CHANGELOG.md) for full details.
 
 ---
+
+## 🏗️ Infrastructure & Reliability
+This project follows a **Failure-Resilient** deployment model where infrastructure is treated as code.
+
+- **Terraform-Managed Infrastructure**: Every resource (App, Service, Domain, Secrets) is provisioned via HCL code.
+- **Secret-First Orchestration**: By-passing provider limitations through a pivot to Koyeb Secrets vault for all configuration.
+- **Resilient Provisioning**: CI/CD pipelines that automatically filter missing/optional secrets to prevent deployment locks.
+- **HCP Terraform Local Execution**: Optimized execution boundary where secrets are injected safely via GitHub Actions runners.
+- **Automated Chaos E2E**: Weekly suites validating system survival during simulated dependency failures.
 
 ## 🧠 Engineering Highlights
 
@@ -103,9 +111,10 @@ See [CHANGELOG.md](CHANGELOG.md) for full details.
 | **INC-003** | Chaos Playground crash on DB unavailability | Manual testing | Fail-silent persistence (v1.4.x) |
 | **INC-004** | CSP blocking all API calls in production | Browser console | CSP/CORS synchronization (v1.4.0) |
 | **INC-005** | Docker build context mismatch across environments | CI/CD failure | Root-context standardization (v1.6.0) |
-| **INC-006** | Spam filter false positive on mixed-protocol links (`https://` + `www.`) | Static analysis bot | Unified URL extraction + hostname normalization (v1.8.0) |
+| **INC-006** | Spam filter false positive on mixed-protocol links | Static analysis | Unified URL hostname normalization (v1.8.0) |
+| **INC-007** | Koyeb Terraform Provider Schema Incompatibility | API 400 Bad Request | [Architectural pivot to Secret-First Orchestration](docs/architecture/INCIDENT_KOYEB_TERRAFORM.md) |
 
-See [FAILURE_MODEL.md](docs/architecture/FAILURE_MODEL.md) for full degradation behaviors and governing ADRs (INC-001–INC-006).
+See [FAILURE_MODEL.md](docs/architecture/FAILURE_MODEL.md) for full degradation behaviors and governing ADRs (INC-001–INC-007).
 
 ---
 

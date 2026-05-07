@@ -23,9 +23,8 @@ resource "koyeb_domain" "backend" {
 }
 
 locals {
-  # Map of all environment variables to be managed as Koyeb Secrets
-  # This avoids the "env type is required" error in the 0.1.11 provider
-  env_vars = {
+  # All potential environment variables
+  all_env_vars = {
     "AMBIENTE"                    = var.ambiente
     "API_HOST"                    = var.api_host
     "API_PORT"                    = var.api_port
@@ -43,6 +42,10 @@ locals {
     "SENTRY_DSN"                  = var.sentry_dsn
     "TRUSTED_PROXY_DEPTH"         = tostring(var.trusted_proxy_depth)
   }
+
+  # Filter out empty variables to avoid "cannot use <nil>" error in Koyeb Secrets
+  # This ensures we only create secrets for variables that actually have a value in GitHub
+  env_vars = { for k, v in local.all_env_vars : k => v if v != "" && v != null }
 }
 
 resource "koyeb_secret" "vars" {

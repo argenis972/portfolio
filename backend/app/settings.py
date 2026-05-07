@@ -39,7 +39,9 @@ class Settings(BaseSettings):
     )
     regex_allowed_origins: str | None = Field(
         default=r"^(https://(?:[a-zA-Z0-9\-]+\.)?argenisbackend\.com|https://portfolio(?:-[a-zA-Z0-9\-]+)?-argenis1412s-projects\.vercel\.app|http://localhost:\d+|http://127\.0\.0\.1:\d+)$",
-        validation_alias=AliasChoices("REGEX_ALLOWED_ORIGINS", "REGEX_ORIGENS_PERMITIDAS"),
+        validation_alias=AliasChoices(
+            "REGEX_ALLOWED_ORIGINS", "REGEX_ORIGENS_PERMITIDAS"
+        ),
     )
     resend_api_key: str = Field(
         default="",

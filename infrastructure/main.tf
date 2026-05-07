@@ -78,7 +78,7 @@ resource "koyeb_service" "backend" {
     }
 
     scalings {
-      min = 1
+      min = 0
       max = 1
     }
 

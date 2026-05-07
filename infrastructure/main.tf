@@ -5,6 +5,7 @@ terraform {
       name = "portfolio-infra"
     }
   }
+
   required_providers {
     koyeb = {
       source  = "koyeb/koyeb"
@@ -30,70 +31,22 @@ locals {
   # and Koyeb secret names STABLE, even if we change the key name the application sees.
 
   raw_secrets_registry = {
-    "AMBIENTE" = {
-      app_key = "ENVIRONMENT"
-      value   = var.environment
-    }
-    "NOME_APP" = {
-      app_key = "APP_NAME"
-      value   = var.app_name
-    }
-    "ORIGENS_PERMITIDAS" = {
-      app_key = "ALLOWED_ORIGINS"
-      value   = var.origens_permitidas
-    }
-    "REGEX_ORIGENS_PERMITIDAS" = {
-      app_key = "REGEX_ALLOWED_ORIGINS"
-      value   = var.regex_allowed_origins
-    }
-    "DATABASE_URL" = {
-      app_key = "DATABASE_URL"
-      value   = var.database_url
-    }
-    "REDIS_URL" = {
-      app_key = "REDIS_URL"
-      value   = var.redis_url
-    }
-    "SENTRY_DSN" = {
-      app_key = "SENTRY_DSN"
-      value   = var.sentry_dsn
-    }
-    "METRICS_BASIC_AUTH_USERNAME" = {
-      app_key = "METRICS_BASIC_AUTH_USERNAME"
-      value   = var.metrics_basic_auth_username
-    }
-    "METRICS_BASIC_AUTH_PASSWORD" = {
-      app_key = "METRICS_BASIC_AUTH_PASSWORD"
-      value   = var.metrics_basic_auth_password
-    }
-    "RESEND_API_KEY" = {
-      app_key = "RESEND_API_KEY"
-      value   = var.resend_api_key
-    }
-    "RESEND_FROM_EMAIL" = {
-      app_key = "RESEND_FROM_EMAIL"
-      value   = var.resend_from_email
-    }
-    "RESEND_TO_EMAIL" = {
-      app_key = "RESEND_TO_EMAIL"
-      value   = var.resend_to_email
-    }
-    "OTLP_ENDPOINT" = {
-      app_key = "OTLP_ENDPOINT"
-      value   = var.otlp_endpoint
-    }
-    "API_HOST" = {
-      app_key = "API_HOST"
-      value   = var.api_host
-    }
-    "API_PORT" = {
-      app_key = "API_PORT"
-      value   = var.api_port
-    }
-    "TRUSTED_PROXY_DEPTH" = {
-      app_key = "TRUSTED_PROXY_DEPTH"
-      value   = tostring(var.trusted_proxy_depth)
-    }
+    "AMBIENTE"                    = { app_key = "ENVIRONMENT", value = var.environment }
+    "NOME_APP"                    = { app_key = "APP_NAME", value = var.app_name }
+    "ORIGENS_PERMITIDAS"          = { app_key = "ALLOWED_ORIGINS", value = var.origens_permitidas }
+    "REGEX_ORIGENS_PERMITIDAS"    = { app_key = "REGEX_ALLOWED_ORIGINS", value = var.regex_allowed_origins }
+    "DATABASE_URL"                = { app_key = "DATABASE_URL", value = var.database_url }
+    "REDIS_URL"                   = { app_key = "REDIS_URL", value = var.redis_url }
+    "SENTRY_DSN"                  = { app_key = "SENTRY_DSN", value = var.sentry_dsn }
+    "METRICS_BASIC_AUTH_USERNAME" = { app_key = "METRICS_BASIC_AUTH_USERNAME", value = var.metrics_basic_auth_username }
+    "METRICS_BASIC_AUTH_PASSWORD" = { app_key = "METRICS_BASIC_AUTH_PASSWORD", value = var.metrics_basic_auth_password }
+    "RESEND_API_KEY"              = { app_key = "RESEND_API_KEY", value = var.resend_api_key }
+    "RESEND_FROM_EMAIL"           = { app_key = "RESEND_FROM_EMAIL", value = var.resend_from_email }
+    "RESEND_TO_EMAIL"             = { app_key = "RESEND_TO_EMAIL", value = var.resend_to_email }
+    "OTLP_ENDPOINT"               = { app_key = "OTLP_ENDPOINT", value = var.otlp_endpoint }
+    "API_HOST"                    = { app_key = "API_HOST", value = var.api_host }
+    "API_PORT"                    = { app_key = "API_PORT", value = var.api_port }
+    "TRUSTED_PROXY_DEPTH"         = { app_key = "TRUSTED_PROXY_DEPTH", value = tostring(var.trusted_proxy_depth) }
   }
 
   # Filter only non-empty secrets to avoid creating empty ones

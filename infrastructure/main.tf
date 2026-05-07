@@ -17,6 +17,7 @@ provider "koyeb" {
 }
 
 # Triggering deployment with Local Execution Mode to ensure secrets are passed correctly.
+# Final sync to include Resend configuration.
 
 resource "koyeb_domain" "backend" {
   name     = "api.argenisbackend.com"

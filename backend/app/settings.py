@@ -27,19 +27,19 @@ class Settings(BaseSettings):
 
     app_name: str = Field(
         default="Portfolio Backend API",
-        alias="NOME_APP",
+        alias="APP_NAME",
     )
     environment: str = Field(
         default="local",
-        alias="AMBIENTE",
+        alias="ENVIRONMENT",
     )
     allowed_origins: str = Field(
         default="http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174,http://localhost:5175,http://127.0.0.1:5175,http://localhost:4173,http://127.0.0.1:4173",
-        alias="ORIGENS_PERMITIDAS",
+        alias="ALLOWED_ORIGINS",
     )
     regex_allowed_origins: str | None = Field(
         default=r"^(https://(?:[a-zA-Z0-9\-]+\.)?argenisbackend\.com|https://portfolio(?:-[a-zA-Z0-9\-]+)?-argenis1412s-projects\.vercel\.app|http://localhost:\d+|http://127\.0\.0\.1:\d+)$",
-        alias="REGEX_ORIGENS_PERMITIDAS",
+        alias="REGEX_ALLOWED_ORIGINS",
     )
     resend_api_key: str = Field(
         default="",
@@ -155,11 +155,11 @@ class Settings(BaseSettings):
         Returns True if the environment is development or local.
         This prevents leaking stack traces in production.
         """
-        return self.environment in ("development", "local", "desenvolvimento")
+        return self.environment in ("development", "local")
 
     @property
     def is_production(self) -> bool:
-        return self.environment in ("production", "producao")
+        return self.environment == "production"
 
     @property
     def metrics_basic_auth_enabled(self) -> bool:

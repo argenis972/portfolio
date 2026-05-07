@@ -26,9 +26,9 @@ resource "koyeb_domain" "backend" {
 
 locals {
   # --- INFRASTRUCTURE STABILITY REGISTRY ---
-  # To avoid "Secrets do not exist" errors, we must keep Terraform resource keys (the keys in for_each) 
+  # To avoid "Secrets do not exist" errors, we must keep Terraform resource keys (the keys in for_each)
   # and Koyeb secret names STABLE, even if we change the key name the application sees.
-  
+
   raw_secrets_registry = {
     "AMBIENTE" = {
       app_key = "ENVIRONMENT"
@@ -98,7 +98,7 @@ locals {
 
   # Filter only non-empty secrets to avoid creating empty ones
   secrets_registry = {
-    for k, v in local.raw_secrets_registry : k => v 
+    for k, v in local.raw_secrets_registry : k => v
     if v.value != "" && v.value != null
   }
 }
@@ -106,7 +106,7 @@ locals {
 resource "koyeb_secret" "vars" {
   # We use the STABLE legacy key as the Terraform resource key to prevent deletion/recreation
   for_each = local.secrets_registry
-  
+
   # Secret name in Koyeb remains stable (using the legacy key name)
   name  = "portfolio-${lower(replace(each.key, "_", "-"))}"
   value = each.value.value

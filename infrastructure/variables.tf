@@ -28,7 +28,7 @@ variable "metrics_basic_auth_password" {
   sensitive   = true
 }
 
-variable "ambiente" {
+variable "environment" {
   description = "Environment (development, production)"
   type        = string
   default     = "production"
@@ -46,18 +46,18 @@ variable "api_port" {
   default     = "8000"
 }
 
-variable "nome_app" {
+variable "app_name" {
   description = "Application Name"
   type        = string
   default     = "Portfolio Backend API"
 }
 
-variable "origens_permitidas" {
+variable "allowed_origins" {
   description = "CORS Allowed Origins"
   type        = string
 }
 
-variable "regex_origens_permitidas" {
+variable "regex_allowed_origins" {
   description = "CORS Allowed Origins Regex"
   type        = string
 }

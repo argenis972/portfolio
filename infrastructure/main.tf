@@ -45,15 +45,24 @@ locals {
     "TRUSTED_PROXY_DEPTH"         = tostring(var.trusted_proxy_depth)
   }
 
-  # Identify which keys have non-empty values (this list of names is NOT sensitive)
-  # We use nonsensitive() to tell Terraform it's safe to use these as resource keys
+  # Mapping to keep the secret names stable in the Koyeb vault even when keys change.
+  # This prevents "Secrets do not exist" errors during migration.
+  secret_name_mapping = {
+    "ENVIRONMENT"           = "ambiente"
+    "APP_NAME"              = "nome-app"
+    "ALLOWED_ORIGINS"       = "origens-permitidas"
+    "REGEX_ALLOWED_ORIGINS" = "regex-origens-permitidas"
+  }
+
+  # Identify which keys have non-empty values
   env_vars_to_create = nonsensitive([for k, v in local.all_env_vars : k if v != "" && v != null])
 }
 
 resource "koyeb_secret" "vars" {
   for_each = toset(local.env_vars_to_create)
-  name     = "portfolio-${lower(replace(each.key, "_", "-"))}"
-  value    = local.all_env_vars[each.key]
+  # Use the legacy name if it exists in the map, otherwise use the lowercased key
+  name  = "portfolio-${lower(replace(lookup(local.secret_name_mapping, each.key, each.key), "_", "-"))}"
+  value = local.all_env_vars[each.key]
 }
 
 resource "koyeb_app" "portfolio" {

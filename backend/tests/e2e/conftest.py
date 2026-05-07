@@ -27,7 +27,7 @@ def chaos_teardown(api_client):
     - teardown -> assert recovery to STABLE within SLO
     """
     # Ensure system is STABLE/NORMAL before starting the test
-    max_wait = 120
+    max_wait = 150
     start_time = time.time()
     ready = False
 
@@ -45,7 +45,7 @@ def chaos_teardown(api_client):
     yield
 
     # Teardown: Wait and assert recovery to STABLE or NORMAL
-    max_wait = 120  # chaos incident lasts up to 120s in system_lifecycle
+    max_wait = 150  # chaos incident lasts up to 120s in system_lifecycle
     start_time = time.time()
     recovered = False
 

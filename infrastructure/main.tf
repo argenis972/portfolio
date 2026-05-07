@@ -44,15 +44,15 @@ locals {
     "TRUSTED_PROXY_DEPTH"         = tostring(var.trusted_proxy_depth)
   }
 
-  # Filter out empty variables to avoid "cannot use <nil>" error in Koyeb Secrets
-  # This ensures we only create secrets for variables that actually have a value in GitHub
-  env_vars = { for k, v in local.all_env_vars : k => v if v != "" && v != null }
+  # Identify which keys have non-empty values (this list of names is NOT sensitive)
+  # We use nonsensitive() to tell Terraform it's safe to use these as resource keys
+  env_vars_to_create = nonsensitive([for k, v in local.all_env_vars : k if v != "" && v != null])
 }
 
 resource "koyeb_secret" "vars" {
-  for_each = local.env_vars
+  for_each = toset(local.env_vars_to_create)
   name     = "portfolio-${lower(replace(each.key, "_", "-"))}"
-  value    = each.value
+  value    = local.all_env_vars[each.key]
 }
 
 resource "koyeb_app" "portfolio" {
@@ -90,10 +90,10 @@ resource "koyeb_service" "backend" {
 
     # Dynamic generation of environment variables using Secret references
     dynamic "env" {
-      for_each = local.env_vars
+      for_each = local.env_vars_to_create
       content {
-        key    = env.key
-        secret = koyeb_secret.vars[env.key].name
+        key    = env.value
+        secret = koyeb_secret.vars[env.value].name
       }
     }
 

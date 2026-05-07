@@ -22,6 +22,35 @@ resource "koyeb_domain" "backend" {
   name = "api.argenisbackend.com"
 }
 
+locals {
+  # Map of all environment variables to be managed as Koyeb Secrets
+  # This avoids the "env type is required" error in the 0.1.11 provider
+  env_vars = {
+    "AMBIENTE"                    = var.ambiente
+    "API_HOST"                    = var.api_host
+    "API_PORT"                    = var.api_port
+    "DATABASE_URL"                = var.database_url
+    "METRICS_BASIC_AUTH_USERNAME" = var.metrics_basic_auth_username
+    "METRICS_BASIC_AUTH_PASSWORD" = var.metrics_basic_auth_password
+    "NOME_APP"                    = var.nome_app
+    "ORIGENS_PERMITIDAS"          = var.origens_permitidas
+    "OTLP_ENDPOINT"               = var.otlp_endpoint
+    "REDIS_URL"                   = var.redis_url
+    "REGEX_ORIGENS_PERMITIDAS"    = var.regex_origens_permitidas
+    "RESEND_API_KEY"              = var.resend_api_key
+    "RESEND_FROM_EMAIL"           = var.resend_from_email
+    "RESEND_TO_EMAIL"             = var.resend_to_email
+    "SENTRY_DSN"                  = var.sentry_dsn
+    "TRUSTED_PROXY_DEPTH"         = tostring(var.trusted_proxy_depth)
+  }
+}
+
+resource "koyeb_secret" "vars" {
+  for_each = local.env_vars
+  name     = "portfolio-${lower(replace(each.key, "_", "-"))}"
+  value    = each.value
+}
+
 resource "koyeb_app" "portfolio" {
   name = "argenis-portfolio"
 }
@@ -52,84 +81,13 @@ resource "koyeb_service" "backend" {
       port = 8000
     }
 
-    env {
-      key   = "AMBIENTE"
-      value = var.ambiente
-    }
-
-    env {
-      key   = "API_HOST"
-      value = var.api_host
-    }
-
-    env {
-      key   = "API_PORT"
-      value = var.api_port
-    }
-
-    env {
-      key   = "DATABASE_URL"
-      value = var.database_url
-    }
-
-    env {
-      key   = "METRICS_BASIC_AUTH_USERNAME"
-      value = var.metrics_basic_auth_username
-    }
-
-    env {
-      key   = "METRICS_BASIC_AUTH_PASSWORD"
-      value = var.metrics_basic_auth_password
-    }
-
-    env {
-      key   = "NOME_APP"
-      value = var.nome_app
-    }
-
-    env {
-      key   = "ORIGENS_PERMITIDAS"
-      value = var.origens_permitidas
-    }
-
-    env {
-      key   = "OTLP_ENDPOINT"
-      value = var.otlp_endpoint
-    }
-
-    env {
-      key   = "REDIS_URL"
-      value = var.redis_url
-    }
-
-    env {
-      key   = "REGEX_ORIGENS_PERMITIDAS"
-      value = var.regex_origens_permitidas
-    }
-
-    env {
-      key   = "RESEND_API_KEY"
-      value = var.resend_api_key
-    }
-
-    env {
-      key   = "RESEND_FROM_EMAIL"
-      value = var.resend_from_email
-    }
-
-    env {
-      key   = "RESEND_TO_EMAIL"
-      value = var.resend_to_email
-    }
-
-    env {
-      key   = "SENTRY_DSN"
-      value = var.sentry_dsn
-    }
-
-    env {
-      key   = "TRUSTED_PROXY_DEPTH"
-      value = tostring(var.trusted_proxy_depth)
+    # Dynamic generation of environment variables using Secret references
+    dynamic "env" {
+      for_each = local.env_vars
+      content {
+        key    = env.key
+        secret = koyeb_secret.vars[env.key].name
+      }
     }
 
     health_checks {

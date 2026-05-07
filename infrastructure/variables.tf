@@ -15,3 +15,15 @@ variable "sentry_dsn" {
   type        = string
   sensitive   = true
 }
+
+variable "metrics_basic_auth_username" {
+  description = "Basic auth username for Prometheus metrics"
+  type        = string
+  sensitive   = true
+}
+
+variable "metrics_basic_auth_password" {
+  description = "Basic auth password for Prometheus metrics"
+  type        = string
+  sensitive   = true
+}

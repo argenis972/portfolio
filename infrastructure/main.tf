@@ -66,6 +66,16 @@ resource "koyeb_service" "backend" {
       value = var.sentry_dsn
     }
 
+    env {
+      key   = "METRICS_BASIC_AUTH_USERNAME"
+      value = var.metrics_basic_auth_username
+    }
+
+    env {
+      key   = "METRICS_BASIC_AUTH_PASSWORD"
+      value = var.metrics_basic_auth_password
+    }
+
     health_checks {
       http {
         path = "/health"

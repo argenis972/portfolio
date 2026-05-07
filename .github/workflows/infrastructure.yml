@@ -43,6 +43,8 @@ jobs:
           TF_VAR_database_url: ${{ secrets.DATABASE_URL }}
           TF_VAR_redis_url: ${{ secrets.REDIS_URL }}
           TF_VAR_sentry_dsn: ${{ secrets.SENTRY_DSN }}
+          TF_VAR_metrics_basic_auth_username: ${{ secrets.METRICS_BASIC_AUTH_USERNAME }}
+          TF_VAR_metrics_basic_auth_password: ${{ secrets.METRICS_BASIC_AUTH_PASSWORD }}
 
       - name: 🚀 Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -52,3 +54,5 @@ jobs:
           TF_VAR_database_url: ${{ secrets.DATABASE_URL }}
           TF_VAR_redis_url: ${{ secrets.REDIS_URL }}
           TF_VAR_sentry_dsn: ${{ secrets.SENTRY_DSN }}
+          TF_VAR_metrics_basic_auth_username: ${{ secrets.METRICS_BASIC_AUTH_USERNAME }}
+          TF_VAR_metrics_basic_auth_password: ${{ secrets.METRICS_BASIC_AUTH_PASSWORD }}

@@ -45,6 +45,17 @@ jobs:
           TF_VAR_sentry_dsn: ${{ secrets.SENTRY_DSN }}
           TF_VAR_metrics_basic_auth_username: ${{ secrets.METRICS_BASIC_AUTH_USERNAME }}
           TF_VAR_metrics_basic_auth_password: ${{ secrets.METRICS_BASIC_AUTH_PASSWORD }}
+          TF_VAR_ambiente: ${{ secrets.AMBIENTE }}
+          TF_VAR_api_host: ${{ secrets.API_HOST }}
+          TF_VAR_api_port: ${{ secrets.API_PORT }}
+          TF_VAR_nome_app: ${{ secrets.NOME_APP }}
+          TF_VAR_origens_permitidas: ${{ secrets.ORIGENS_PERMITIDAS }}
+          TF_VAR_regex_origens_permitidas: ${{ secrets.REGEX_ORIGENS_PERMITIDAS }}
+          TF_VAR_otlp_endpoint: ${{ secrets.OTLP_ENDPOINT }}
+          TF_VAR_resend_api_key: ${{ secrets.RESEND_API_KEY }}
+          TF_VAR_resend_from_email: ${{ secrets.RESEND_FROM_EMAIL }}
+          TF_VAR_resend_to_email: ${{ secrets.RESEND_TO_EMAIL }}
+          TF_VAR_trusted_proxy_depth: ${{ secrets.TRUSTED_PROXY_DEPTH }}
 
       - name: 🚀 Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -56,3 +67,14 @@ jobs:
           TF_VAR_sentry_dsn: ${{ secrets.SENTRY_DSN }}
           TF_VAR_metrics_basic_auth_username: ${{ secrets.METRICS_BASIC_AUTH_USERNAME }}
           TF_VAR_metrics_basic_auth_password: ${{ secrets.METRICS_BASIC_AUTH_PASSWORD }}
+          TF_VAR_ambiente: ${{ secrets.AMBIENTE }}
+          TF_VAR_api_host: ${{ secrets.API_HOST }}
+          TF_VAR_api_port: ${{ secrets.API_PORT }}
+          TF_VAR_nome_app: ${{ secrets.NOME_APP }}
+          TF_VAR_origens_permitidas: ${{ secrets.ORIGENS_PERMITIDAS }}
+          TF_VAR_regex_origens_permitidas: ${{ secrets.REGEX_ORIGENS_PERMITIDAS }}
+          TF_VAR_otlp_endpoint: ${{ secrets.OTLP_ENDPOINT }}
+          TF_VAR_resend_api_key: ${{ secrets.RESEND_API_KEY }}
+          TF_VAR_resend_from_email: ${{ secrets.RESEND_FROM_EMAIL }}
+          TF_VAR_resend_to_email: ${{ secrets.RESEND_TO_EMAIL }}
+          TF_VAR_trusted_proxy_depth: ${{ secrets.TRUSTED_PROXY_DEPTH }}

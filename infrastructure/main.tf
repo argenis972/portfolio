@@ -16,6 +16,10 @@ terraform {
 provider "koyeb" {
 }
 
+resource "koyeb_domain" "backend" {
+  name = "api.argenisbackend.com"
+}
+
 resource "koyeb_app" "portfolio" {
   name = "argenis-portfolio"
 }
@@ -47,23 +51,23 @@ resource "koyeb_service" "backend" {
     }
 
     env {
-      key   = "ENVIRONMENT"
-      value = "production"
+      key   = "AMBIENTE"
+      value = var.ambiente
+    }
+
+    env {
+      key   = "API_HOST"
+      value = var.api_host
+    }
+
+    env {
+      key   = "API_PORT"
+      value = var.api_port
     }
 
     env {
       key   = "DATABASE_URL"
       value = var.database_url
-    }
-
-    env {
-      key   = "REDIS_URL"
-      value = var.redis_url
-    }
-
-    env {
-      key   = "SENTRY_DSN"
-      value = var.sentry_dsn
     }
 
     env {
@@ -74,6 +78,56 @@ resource "koyeb_service" "backend" {
     env {
       key   = "METRICS_BASIC_AUTH_PASSWORD"
       value = var.metrics_basic_auth_password
+    }
+
+    env {
+      key   = "NOME_APP"
+      value = var.nome_app
+    }
+
+    env {
+      key   = "ORIGENS_PERMITIDAS"
+      value = var.origens_permitidas
+    }
+
+    env {
+      key   = "OTLP_ENDPOINT"
+      value = var.otlp_endpoint
+    }
+
+    env {
+      key   = "REDIS_URL"
+      value = var.redis_url
+    }
+
+    env {
+      key   = "REGEX_ORIGENS_PERMITIDAS"
+      value = var.regex_origens_permitidas
+    }
+
+    env {
+      key   = "RESEND_API_KEY"
+      value = var.resend_api_key
+    }
+
+    env {
+      key   = "RESEND_FROM_EMAIL"
+      value = var.resend_from_email
+    }
+
+    env {
+      key   = "RESEND_TO_EMAIL"
+      value = var.resend_to_email
+    }
+
+    env {
+      key   = "SENTRY_DSN"
+      value = var.sentry_dsn
+    }
+
+    env {
+      key   = "TRUSTED_PROXY_DEPTH"
+      value = tostring(var.trusted_proxy_depth)
     }
 
     health_checks {

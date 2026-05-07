@@ -83,7 +83,7 @@ resource "koyeb_service" "backend" {
     }
 
     instance_types {
-      type = "nano"
+      type = "free"
     }
 
     regions = ["fra"]

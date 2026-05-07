@@ -42,3 +42,19 @@ def test_settings_accepts_legacy_cors_origins():
     settings = Settings()
     assert settings.allowed_origins == "http://legacy.com"
     os.environ.pop("ORIGENS_PERMITIDAS", None)
+
+def test_settings_detects_legacy_production_value():
+    """Verifies that legacy 'producao' is detected as production."""
+    os.environ["ENVIRONMENT"] = "producao"
+    settings = Settings()
+    assert settings.is_production is True
+    assert settings.debug is False
+    os.environ.pop("ENVIRONMENT", None)
+
+def test_settings_detects_legacy_development_value():
+    """Verifies that legacy 'desenvolvimento' is detected as debug mode."""
+    os.environ["ENVIRONMENT"] = "desenvolvimento"
+    settings = Settings()
+    assert settings.is_production is False
+    assert settings.debug is True
+    os.environ.pop("ENVIRONMENT", None)

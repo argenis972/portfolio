@@ -155,11 +155,11 @@ class Settings(BaseSettings):
         Returns True if the environment is development or local.
         This prevents leaking stack traces in production.
         """
-        return self.environment in ("development", "local")
+        return self.environment in ("development", "local", "desenvolvimento")
 
     @property
     def is_production(self) -> bool:
-        return self.environment == "production"
+        return self.environment in ("production", "producao", "producción")
 
     @property
     def metrics_basic_auth_enabled(self) -> bool:
@@ -202,7 +202,7 @@ class Settings(BaseSettings):
             raise RuntimeError("Invalid production configuration: " + "; ".join(errors))
 
     def validate_staging(self) -> None:
-        if self.environment == "staging" and not self.redis_url:
+        if self.environment in ("staging", "homologação") and not self.redis_url:
             import warnings
 
             warnings.warn(

@@ -31,6 +31,9 @@ resource "koyeb_service" "backend" {
       repository = "github.com/Argenis1412/portfolio"
       branch     = "main"
       workdir    = "/"
+      dockerfile {
+        dockerfile = "backend/Dockerfile"
+      }
     }
 
     ports {

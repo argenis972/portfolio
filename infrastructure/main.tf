@@ -8,7 +8,7 @@ terraform {
   required_providers {
     koyeb = {
       source  = "koyeb/koyeb"
-      version = "~> 0.6"
+      version = "~> 0.1"
     }
   }
 }

@@ -25,44 +25,91 @@ resource "koyeb_domain" "backend" {
 }
 
 locals {
-  # All potential environment variables
-  all_env_vars = {
-    "ENVIRONMENT"                 = var.environment
-    "API_HOST"                    = var.api_host
-    "API_PORT"                    = var.api_port
-    "DATABASE_URL"                = var.database_url
-    "METRICS_BASIC_AUTH_USERNAME" = var.metrics_basic_auth_username
-    "METRICS_BASIC_AUTH_PASSWORD" = var.metrics_basic_auth_password
-    "APP_NAME"                    = var.app_name
-    "ALLOWED_ORIGINS"             = var.allowed_origins
-    "OTLP_ENDPOINT"               = var.otlp_endpoint
-    "REDIS_URL"                   = var.redis_url
-    "REGEX_ALLOWED_ORIGINS"       = var.regex_allowed_origins
-    "RESEND_API_KEY"              = var.resend_api_key
-    "RESEND_FROM_EMAIL"           = var.resend_from_email
-    "RESEND_TO_EMAIL"             = var.resend_to_email
-    "SENTRY_DSN"                  = var.sentry_dsn
-    "TRUSTED_PROXY_DEPTH"         = tostring(var.trusted_proxy_depth)
+  # --- INFRASTRUCTURE STABILITY REGISTRY ---
+  # To avoid "Secrets do not exist" errors, we must keep Terraform resource keys (the keys in for_each) 
+  # and Koyeb secret names STABLE, even if we change the key name the application sees.
+  
+  raw_secrets_registry = {
+    "AMBIENTE" = {
+      app_key = "ENVIRONMENT"
+      value   = var.environment
+    }
+    "NOME_APP" = {
+      app_key = "APP_NAME"
+      value   = var.app_name
+    }
+    "ORIGENS_PERMITIDAS" = {
+      app_key = "ALLOWED_ORIGINS"
+      value   = var.origens_permitidas
+    }
+    "REGEX_ORIGENS_PERMITIDAS" = {
+      app_key = "REGEX_ALLOWED_ORIGINS"
+      value   = var.regex_allowed_origins
+    }
+    "DATABASE_URL" = {
+      app_key = "DATABASE_URL"
+      value   = var.database_url
+    }
+    "REDIS_URL" = {
+      app_key = "REDIS_URL"
+      value   = var.redis_url
+    }
+    "SENTRY_DSN" = {
+      app_key = "SENTRY_DSN"
+      value   = var.sentry_dsn
+    }
+    "METRICS_BASIC_AUTH_USERNAME" = {
+      app_key = "METRICS_BASIC_AUTH_USERNAME"
+      value   = var.metrics_basic_auth_username
+    }
+    "METRICS_BASIC_AUTH_PASSWORD" = {
+      app_key = "METRICS_BASIC_AUTH_PASSWORD"
+      value   = var.metrics_basic_auth_password
+    }
+    "RESEND_API_KEY" = {
+      app_key = "RESEND_API_KEY"
+      value   = var.resend_api_key
+    }
+    "RESEND_FROM_EMAIL" = {
+      app_key = "RESEND_FROM_EMAIL"
+      value   = var.resend_from_email
+    }
+    "RESEND_TO_EMAIL" = {
+      app_key = "RESEND_TO_EMAIL"
+      value   = var.resend_to_email
+    }
+    "OTLP_ENDPOINT" = {
+      app_key = "OTLP_ENDPOINT"
+      value   = var.otlp_endpoint
+    }
+    "API_HOST" = {
+      app_key = "API_HOST"
+      value   = var.api_host
+    }
+    "API_PORT" = {
+      app_key = "API_PORT"
+      value   = var.api_port
+    }
+    "TRUSTED_PROXY_DEPTH" = {
+      app_key = "TRUSTED_PROXY_DEPTH"
+      value   = tostring(var.trusted_proxy_depth)
+    }
   }
 
-  # Mapping to keep the secret names stable in the Koyeb vault even when keys change.
-  # This prevents "Secrets do not exist" errors during migration.
-  secret_name_mapping = {
-    "ENVIRONMENT"           = "ambiente"
-    "APP_NAME"              = "nome-app"
-    "ALLOWED_ORIGINS"       = "origens-permitidas"
-    "REGEX_ALLOWED_ORIGINS" = "regex-origens-permitidas"
+  # Filter only non-empty secrets to avoid creating empty ones
+  secrets_registry = {
+    for k, v in local.raw_secrets_registry : k => v 
+    if v.value != "" && v.value != null
   }
-
-  # Identify which keys have non-empty values
-  env_vars_to_create = nonsensitive([for k, v in local.all_env_vars : k if v != "" && v != null])
 }
 
 resource "koyeb_secret" "vars" {
-  for_each = toset(local.env_vars_to_create)
-  # Use the legacy name if it exists in the map, otherwise use the lowercased key
-  name  = "portfolio-${lower(replace(lookup(local.secret_name_mapping, each.key, each.key), "_", "-"))}"
-  value = local.all_env_vars[each.key]
+  # We use the STABLE legacy key as the Terraform resource key to prevent deletion/recreation
+  for_each = local.secrets_registry
+  
+  # Secret name in Koyeb remains stable (using the legacy key name)
+  name  = "portfolio-${lower(replace(each.key, "_", "-"))}"
+  value = each.value.value
 }
 
 resource "koyeb_app" "portfolio" {
@@ -100,10 +147,12 @@ resource "koyeb_service" "backend" {
 
     # Dynamic generation of environment variables using Secret references
     dynamic "env" {
-      for_each = local.env_vars_to_create
+      for_each = local.secrets_registry
       content {
-        key    = env.value
-        secret = koyeb_secret.vars[env.value].name
+        # The key the application sees (English standard)
+        key    = env.value.app_key
+        # Reference the secret by its stable Terraform key
+        secret = koyeb_secret.vars[env.key].name
       }
     }
 

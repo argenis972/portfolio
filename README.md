@@ -113,8 +113,9 @@ This project follows a **Failure-Resilient** deployment model where infrastructu
 | **INC-005** | Docker build context mismatch across environments | CI/CD failure | Root-context standardization (v1.6.0) |
 | **INC-006** | Spam filter false positive on mixed-protocol links | Static analysis | Unified URL hostname normalization (v1.8.0) |
 | **INC-007** | Koyeb Terraform Provider Schema Incompatibility | API 400 Bad Request | [Architectural pivot to Secret-First Orchestration](docs/architecture/INCIDENT_KOYEB_TERRAFORM.md) |
+| **INC-008** | Destructive IaC Migration (Free Tier Constraints) | 14-hour Downtime | [Cold migration for operational consistency](docs/architecture/INCIDENT_DESTRUCTIVE_IAC_MIGRATION.md) |
 
-See [FAILURE_MODEL.md](docs/architecture/FAILURE_MODEL.md) for full degradation behaviors and governing ADRs (INC-001–INC-007).
+See [FAILURE_MODEL.md](docs/architecture/FAILURE_MODEL.md) for full degradation behaviors and governing ADRs (INC-001–INC-008).
 
 ---
 

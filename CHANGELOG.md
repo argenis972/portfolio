@@ -157,6 +157,26 @@ All configuration variables are now treated as secrets in the Koyeb UI, which ac
 
 ---
 
+### INC-008 · Destructive IaC Migration (Free Tier Constraints)
+**Period**: v1.7.1 → v1.8.1 (Migration Window)
+**Affected**: Global API Availability (`api.argenisbackend.com`)
+**Downtime**: 14 hours
+
+**What happened**
+To finalize the transition to IaC, the existing manual infrastructure was decommissioned. Due to Koyeb Free Tier limitations (1-service limit and strict domain exclusivity), a zero-downtime migration was impossible. The system underwent a "Cold Migration" to ensure 100% operational consistency and reproducibility.
+
+**Root cause**
+Koyeb prevented Terraform from claiming the custom domain while the legacy manual service still held the CNAME hook. Provider ownership constraints forced a "Delete-before-Create" strategy.
+
+**Resolution**
+Full infrastructure wipe followed by a clean Terraform provision. This verified that the entire stack is now 100% reproducible from code, eliminating all "shadow configuration" and unmanaged resources.
+
+**Lessons Learned**
+*   **Infrastructure Consistency over Uptime**: In restricted environments, maintenance windows are a necessary trade-off for long-term reproducibility.
+*   **Reconciliation Tax**: Migrating unmanaged infrastructure into IaC may require destructive reconciliation steps when provider ownership cannot be safely imported.
+
+---
+
 ## [1.8.1] - 2026-05-07
 
 ### IaC Automation & Regional Migration

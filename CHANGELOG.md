@@ -128,28 +128,52 @@ The antispam filter incorrectly penalized legitimate messages containing one `ht
 **How it was discovered**
 Static analysis by an automated code review bot. No user complaints received — but the failure mode was systematically biased against any message linking to two different sites when one used a bare `www.` prefix.
 
-**What was tried first (didn't work)**
-N/A — the bug was caught before any mitigation attempt. No rollback required.
-
 **Root cause**
-`all_links` used `re.findall(r"https?://|www\.")` — capturing protocol/prefix *patterns*, not full URL tokens. `unique_domains` used a separate regex that only processed `https://` URLs. The two variables were not measuring the same thing:
-
-```
-Input: "Check https://foo.com and www.bar.com"
-all_links      → ["https://", "www."]  → len=2
-unique_domains → {"foo.com"}           → len=1
-Condition: len>=2 AND unique==1        → True → +15 pts INCORRECTLY
-```
+`all_links` used `re.findall(r"https?://|www\.")` — capturing protocol/prefix *patterns*, not full URL tokens. `unique_domains` used a separate regex that only processed `https://` URLs. The two variables were not measuring the same thing.
 
 **Resolution (v1.8.0)**
-Unified extraction: both regexes replaced with a single `re.findall(r"https?://[^\s]+|www\.[^\s]+")` that captures full URL tokens. A `_extract_domain()` helper normalizes both formats to bare hostnames — strips protocol prefix, strips `www.`, and strips trailing prose punctuation (`. , ; !`) that can appear when a URL ends a sentence. `unique_domains` is now derived from the same source set as `all_links`.
+Unified extraction: both regexes replaced with a single `re.findall(r"https?://[^\s]+|www\.[^\s]+")` that captures full URL tokens. Normalization now strips protocol prefixes, `www.`, and trailing prose punctuation. Three regression tests added to `test_spam.py` cover the corrected behavior.
 
 **Accepted side effect**
-None. The fix is strictly more accurate. Three regression tests added to `test_spam.py` cover the corrected behavior.
+None. The fix is strictly more accurate.
 
 ---
 
-## 🚀 Releases
+### INC-007 · Koyeb Terraform Provider Schema Incompatibility
+**Period**: v1.7.0 → v1.8.1
+**Affected**: Infrastructure Provisioning CI/CD
+
+**What happened**
+The migration to Terraform was blocked by a `400 Bad Request` from the Koyeb API: `env type is required`. The official Terraform provider (v0.1.11) lacked the schema fields to send this mandatory metadata, making the standard `env` block unusable for literal values.
+
+**Root cause**
+A version mismatch between a stagnant provider (last updated 2024) and an evolving API (2026 requirements).
+
+**Resolution (v1.8.1)**
+Implemented **Secret-First Orchestration**. Every environment variable was moved to a `koyeb_secret` resource. The service definition was refactored to use `secret` references instead of `value` keys. Since secret references in the Koyeb API have an implicit type, this bypassed the provider's schema limitation.
+
+**Accepted side effect**
+All configuration variables are now treated as secrets in the Koyeb UI, which actually improves the overall security posture (SRE best practice).
+
+---
+
+## [1.8.1] - 2026-05-07
+
+### IaC Automation & Regional Migration
+
+> This release marks the full transition to Infrastructure as Code (IaC). We automated the entire backend provisioning using Terraform, resolved a critical provider-level failure through architectural adaptation, and optimized the system's physical location for better latency.
+
+#### Added
+- **Full Terraform Automation**: Managed provisioning of Koyeb App, Service, Domain, and Secrets Vault.
+- **Secret-First Orchestration (INC-007)**: Workaround for provider schema limitations by vaulting all environment variables as secrets.
+- **Resilient Provisioning**: Terraform logic that automatically filters missing optional secrets to prevent deployment locks.
+
+#### Changed
+- **Regional Migration**: Moved the production backend from `fra` (Frankfurt) to `was` (Washington D.C.) to co-locate with the database and reduce cross-region latency.
+- **HCP Terraform Context**: Switched to Local Execution Mode to allow secure secret injection from GitHub Actions runners.
+
+#### Fixed
+- **Domain Identity Assignment**: Fixed a missing link between the custom domain and the application in the Terraform configuration.
 
 ---
 

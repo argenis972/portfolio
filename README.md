@@ -102,7 +102,7 @@ This project follows a **Failure-Resilient** deployment model where infrastructu
 ---
 
 ## 📊 Production Incident Track Record
-*6 real production incidents documented with post-mortems:*
+*8 real production incidents documented with post-mortems:*
 
 | Incident | Failure | Detection | Resolution |
 |---|---|---|---|
@@ -171,7 +171,7 @@ cd backend
 py -3.12 -m venv .venv && .venv\Scripts\activate  # Windows
 pip install -r requirements.txt
 python -m alembic upgrade head
-uvicorn app.principal:app --reload --port 8000
+uvicorn app.main:app --reload --port 8000
 
 # Frontend (separate terminal)
 cd frontend
@@ -180,7 +180,7 @@ npm install && npm run dev
 
 > Run database migrations as part of deploy/release automation, not on every Koyeb application boot.
 > 
-> **Note**: Interactive documentation (Swagger/ReDoc) is disabled in production for security. To view the API contract, run the project locally in `desenvolvimento` mode and access `localhost:8000/docs`.
+> **Note**: Interactive documentation (Swagger/ReDoc) is disabled in production for security. To view the API contract, run the project locally in `development` mode and access `localhost:8000/docs`.
 
 ---
 
@@ -212,10 +212,10 @@ portfolio/
 ├── docs/
 │   └── architecture/
 │       ├── SLO_DEFINITIONS.md    # Per-endpoint SLOs with measurement methods
-│       └── FAILURE_MODEL.md      # Production incident failure model (INC-001–INC-006)
+│       └── FAILURE_MODEL.md      # Production incident failure model (INC-001–INC-008)
 ├── .github/              # GitHub Actions CI/CD workflows
 ├── ARCHITECTURE.md       # ADR-01 through ADR-16
-├── CHANGELOG.md          # Release history + 6 production incidents
+├── CHANGELOG.md          # Release history + 8 production incidents
 ├── ENGINEERING_PLAYBOOK.md  # SLOs, standards, incident protocol
 └── docker-compose.yml
 ```

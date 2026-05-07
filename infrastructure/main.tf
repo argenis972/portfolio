@@ -117,6 +117,6 @@ resource "koyeb_service" "backend" {
       type = "free"
     }
 
-    regions = ["fra"]
+    regions = ["was"]
   }
 }

@@ -276,7 +276,7 @@ def _request_hook(span, scope: dict) -> None:
 
 
 # ===========================================================================
-# ENTRY POINT — called in principal.py startup
+# ENTRY POINT — called in main.py startup
 # ===========================================================================
 
 

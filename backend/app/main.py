@@ -42,7 +42,7 @@ def create_app() -> FastAPI:
     settings.validate_production()
 
     # Disable interactive docs in production — no red flags for attackers,
-    # no accidental schema leaks. Run locally with AMBIENTE=local to access /docs.
+    # no accidental schema leaks. Run locally with ENVIRONMENT=local to access /docs.
     _is_prod = settings.is_production
     application = FastAPI(
         title=settings.app_name,

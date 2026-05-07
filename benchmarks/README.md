@@ -30,7 +30,7 @@ benchmarks/
 ```powershell
 # 1. Start the backend
 cd backend
-uvicorn app.principal:app --port 8000
+uvicorn app.main:app --port 8000
 
 # 2. Run all benchmarks (separate terminal)
 .\benchmarks\run.ps1
@@ -49,7 +49,7 @@ uvicorn app.principal:app --port 8000
 
 | Endpoint | Metric | Target | Source |
 |----------|--------|--------|--------|
-| `/health` | P99 | < 20ms | SLO_DEFINITIONS.md |
+| `/health` | P99 | < 100ms | SLO_DEFINITIONS.md |
 | `/about`, `/projects`, `/stack` | P95 | < 50ms | SLO_DEFINITIONS.md |
 | `/contact` | P95 | < 200ms | SLO_DEFINITIONS.md |
 | All endpoints | Error rate | < 1% (5xx) | SLO_DEFINITIONS.md |

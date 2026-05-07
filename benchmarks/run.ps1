@@ -142,7 +142,7 @@ $(if ($failed -gt 0) { "`n> [WARN] $failed script(s) breached thresholds - revie
 \`\`\`powershell
 # Start backend first:
 cd backend
-uvicorn app.principal:app --port 8000
+uvicorn app.main:app --port 8000
 
 # Then run benchmarks:
 .\benchmarks\run.ps1 -BaseUrl http://localhost:8000

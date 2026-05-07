@@ -97,10 +97,7 @@ locals {
   }
 
   # Filter only non-empty secrets to avoid creating empty ones
-  secrets_registry = {
-    for k, v in local.raw_secrets_registry : k => v
-    if v.value != "" && v.value != null
-  }
+  secrets_registry = { for k, v in local.raw_secrets_registry : k => v if v.value != "" && v.value != null }
 }
 
 resource "koyeb_secret" "vars" {

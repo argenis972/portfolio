@@ -240,7 +240,18 @@ Accepted side effects: what the fix broke or constrained
 **Bootstrap Flow**:
 1. Manual: Create external stateful resources (Supabase, Upstash Redis).
 2. Export secrets to the local environment (`TF_VAR_*`).
-3. Execute `terraform init` -> `terraform apply` in the `infrastructure/` directory.
+3. Execute `terraform init` -> `terraform apply` en el directorio `infrastructure/`.
+
+### Troubleshooting & Lessons Learned: Terraform CI/CD Integration
+
+During the implementation of GitHub Actions for Terraform, several critical architecture boundaries were tested:
+
+1. **Provider Authentication vs. Arguments**: The `koyeb/koyeb` provider strictly relies on the `KOYEB_TOKEN` environment variable and rejects the `token` argument in the `provider` block. Explicitly declaring the token in `main.tf` caused `terraform plan` to fail with "Unsupported argument". The fix required removing the explicit assignment and trusting the environment injection.
+2. **Execution Contexts (Remote vs. Local)**: When using HCP Terraform (Terraform Cloud) as the backend, the default execution mode is "Remote". This means `terraform plan/apply` run on HashiCorp servers, not the GitHub Actions runner. Consequently, environment variables defined in GitHub Actions (`env: KOYEB_TOKEN: ...`) were completely invisible to the execution context, resulting in "Empty KOYEB_TOKEN" errors.
+3. **The Resolution**: Instead of duplicating secrets in both GitHub and HCP Terraform, the workspace execution mode was changed to **"Local"**. This architecture pattern ensures:
+   - **Compute**: Runs on GitHub Actions (where the CI/CD pipeline and secrets already live).
+   - **State**: Is securely stored and locked remotely in HCP Terraform.
+   - **Secrets Management**: Remains unified in GitHub Secrets without duplication.
 
 ---
 

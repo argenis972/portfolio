@@ -101,7 +101,7 @@ This project follows a **Failure-Resilient** deployment model where infrastructu
 ---
 
 ## 📊 Production Incident Track Record
-*8 real production incidents documented with post-mortems:*
+*9 real production incidents documented with post-mortems:*
 
 | Incident | Failure | Detection | Resolution |
 |---|---|---|---|
@@ -113,8 +113,9 @@ This project follows a **Failure-Resilient** deployment model where infrastructu
 | **INC-006** | Spam filter false positive on mixed-protocol links | Static analysis | Unified URL hostname normalization (v1.8.0) |
 | **INC-007** | Koyeb Terraform Provider Schema Incompatibility | API 400 Bad Request | [Architectural pivot to Secret-First Orchestration](docs/architecture/INCIDENT_KOYEB_TERRAFORM.md) |
 | **INC-008** | Destructive IaC Migration (Free Tier Constraints) | 14-hour Downtime | [Cold migration for operational consistency](docs/architecture/INCIDENT_DESTRUCTIVE_IAC_MIGRATION.md) |
+| **INC-009** | Terraform Secret Identity Collision (Rename Race) | Deployment Blocked | [State migration via moved blocks](docs/architecture/INC-009-terraform-resource-collision.md) |
 
-See [FAILURE_MODEL.md](docs/architecture/FAILURE_MODEL.md) for full degradation behaviors and governing ADRs (INC-001–INC-008).
+See [FAILURE_MODEL.md](docs/architecture/FAILURE_MODEL.md) for full degradation behaviors and governing ADRs (INC-001–INC-009).
 
 ---
 

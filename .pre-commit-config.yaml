@@ -1,0 +1,25 @@
+# Pre-commit configuration for SRE Portfolio
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.96.0
+    hooks:
+      - id: terraform_fmt
+      - id: terraform_validate
+      - id: terraform_tflint
+        args:
+          - "--args=--only=terraform_documented_outputs"
+          - "--args=--only=terraform_documented_variables"
+          - "--args=--only=terraform_typed_variables"
+          - "--args=--only=terraform_module_pinned_source"
+        # tflint is set to run but we prioritize fmt and validate for blocking

@@ -12,7 +12,21 @@ This changelog separates three categories intentionally:
 
 ## 🔥 Production Incidents
 
-> Incidents are documented separately from releases because they represent real system behavior under failure — not planned work.
+### INC-009 · Terraform Secret Identity Collision
+**Period**: v1.8.1 → v1.8.2
+**Affected**: Infrastructure Provisioning CI/CD
+
+**What happened**
+While standardizing the infrastructure code to "English-First", several keys in the `for_each` map for Koyeb secrets were renamed (e.g., `ENVIRONMENT` → `AMBIENTE`). Terraform interpreted these key changes as a `destroy + create` operation. Since both keys mapped to the same physical secret name in the Koyeb API, the creation of the new secret failed because the name was still occupied by the old one (or the API returned a conflict during the parallel cycle).
+
+**How it was discovered**
+CI/CD pipeline failure during the `terraform apply` step.
+
+**Root cause**
+Terraform resource identity is tied to the map key in `for_each`. Renaming a key destroys the old identity and creates a new one.
+
+**Resolution (v1.8.2)**
+Implemented explicit `moved` blocks to migrate the state identity without destructive actions. Established the "Zero to Destroy" principle for stable infrastructure components.
 
 ---
 
@@ -174,6 +188,22 @@ Full infrastructure wipe followed by a clean Terraform provision. This verified 
 **Lessons Learned**
 *   **Infrastructure Consistency over Uptime**: In restricted environments, maintenance windows are a necessary trade-off for long-term reproducibility.
 *   **Reconciliation Tax**: Migrating unmanaged infrastructure into IaC may require destructive reconciliation steps when provider ownership cannot be safely imported.
+
+---
+
+## [1.8.2] - 2026-05-08
+
+### IaC Stability & Local Guardrails
+
+> This release stabilizes the Terraform state after the identity collision incident (INC-009) and implements local development safety measures (pre-commit) to ensure long-term infrastructure reliability.
+
+#### Added
+- **Infrastructure State Migration**: Added `moved` blocks to preserve secret identities during key refactors.
+- **Git Hygiene**: Added `.gitattributes` to enforce `LF` line endings across all platforms, preventing "newline hell" in linters.
+- **Local Safety (Pre-commit)**: Configured `.pre-commit-config.yaml` to run `terraform fmt`, `validate`, and `tflint` automatically before commits.
+
+#### Fixed
+- **Secret Identity Collision (INC-009)**: Resolved the race condition during secret renaming by decoupling Terraform keys from Koyeb names via state moves.
 
 ---
 

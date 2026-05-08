@@ -33,7 +33,7 @@ locals {
   raw_secrets_registry = {
     "AMBIENTE"                    = { app_key = "ENVIRONMENT", value = var.environment }
     "NOME_APP"                    = { app_key = "APP_NAME", value = var.app_name }
-    "ORIGENS_PERMITIDAS"          = { app_key = "ALLOWED_ORIGINS", value = var.origens_permitidas }
+    "ORIGENS_PERMITIDAS"          = { app_key = "ALLOWED_ORIGINS", value = var.allowed_origins }
     "REGEX_ORIGENS_PERMITIDAS"    = { app_key = "REGEX_ALLOWED_ORIGINS", value = var.regex_allowed_origins }
     "DATABASE_URL"                = { app_key = "DATABASE_URL", value = var.database_url }
     "REDIS_URL"                   = { app_key = "REDIS_URL", value = var.redis_url }

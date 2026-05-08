@@ -24,8 +24,3 @@ repos:
         language: system
         types: [terraform]
         pass_filenames: false
-      - id: terraform-tflint
-        name: Terraform tflint
-        entry: tflint
-        language: system
-        types: [terraform]

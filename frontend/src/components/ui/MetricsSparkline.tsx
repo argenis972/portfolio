@@ -231,7 +231,7 @@ export default function MetricsSparkline({
         const laneHeights = [18, 38, 58];
         const labelX = previous && isCrowded && clampedX <= previous.point.x ? Math.max(6, clampedX - 20) : clampedX;
         const labelY = Math.max(16, Math.min(laneHeights[lane], height - (metaText ? 34 : 20)));
-        
+
         return (
           <g key={trace.id}>
             <line
@@ -246,8 +246,8 @@ export default function MetricsSparkline({
             />
             {!compact && (
               <g transform={`translate(${labelX}, ${labelY})`}>
-                 <rect 
-                    x="-2" y="-10" width={boxWidth} height="14" 
+                 <rect
+                    x="-2" y="-10" width={boxWidth} height="14"
                     fill={markerColor} rx="2" fillOpacity="0.82"
                  />
                  <text x="2" y="1" fontSize="9" fontWeight="bold" fill="#000" fontFamily="monospace">
@@ -255,9 +255,9 @@ export default function MetricsSparkline({
                  </text>
                 {metaText && (
                    <g transform="translate(0, 14)">
-                     <rect 
-                       x="-2" y="0" width={boxWidth} height="12" 
-                       fill="#000" fillOpacity="0.6" rx="2" 
+                     <rect
+                       x="-2" y="0" width={boxWidth} height="12"
+                       fill="#000" fillOpacity="0.6" rx="2"
                      />
                      <text x="2" y="9" fontSize="7" fill="#fff" fontFamily="monospace opacity-80">
                        {metaText}

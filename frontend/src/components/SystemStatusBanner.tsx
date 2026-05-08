@@ -26,7 +26,7 @@ function causeKey(lastIncident: string): string {
 
 const SystemStatusBanner = React.memo(() => {
   const { t, metrics, data } = useMetricsDisplay();
-  
+
   if (!data) return null;
 
   const { status, displayLifecycle, effectiveP95, strategyProfile } = metrics;
@@ -65,7 +65,7 @@ const SystemStatusBanner = React.memo(() => {
                   {t(`metrics.status.${status}`)}
                 </span>
               </div>
-              
+
               {showCause && (
                 <>
                   <span className="text-current/45">·</span>
@@ -75,7 +75,7 @@ const SystemStatusBanner = React.memo(() => {
                   </span>
                 </>
               )}
-              
+
               {showImpact && (
                 <>
                   <span className="text-current/45">·</span>
@@ -100,4 +100,3 @@ const SystemStatusBanner = React.memo(() => {
 });
 
 export default SystemStatusBanner;
-

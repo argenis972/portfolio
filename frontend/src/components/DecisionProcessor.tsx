@@ -15,7 +15,7 @@ export default function DecisionProcessor() {
         active_path: strategyProfile.activePath,
       }
     : undefined;
-  
+
   // The hook handles comparison, hysteresis, and log emission
   useDecisionEngine(effectiveData);
 

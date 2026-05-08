@@ -9,34 +9,34 @@ services:
     dockerContext: ./backend
     plan: free
     region: oregon
-    
+
     # Health Check
     healthCheckPath: /health
-    
+
     # Environment Variables
     envVars:
       - key: AMBIENTE
         value: production
-      
+
       - key: VERSAO_API
         value: 1.0.0
-      
+
       - key: PORT
         value: 10000
-      
+
       # Secrets (configure in Render dashboard)
       - key: RESEND_API_KEY
         sync: false
-      
+
       - key: ORIGENS_PERMITIDAS
         sync: false # Configure in Render dashboard with frontend domain
-    
+
     # Auto-deploy
     autoDeploy: true
     branch: main
-    
+
     # Build settings
     buildCommand: echo "Building with Docker..."
-    
+
     # Scaling
     numInstances: 1

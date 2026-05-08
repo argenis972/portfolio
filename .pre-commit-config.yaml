@@ -11,15 +11,21 @@ repos:
       - id: check-yaml
       - id: check-added-large-files
 
-  - repo: https://github.com/antonbabenko/pre-commit-terraform
-    rev: v1.96.0
+  - repo: local
     hooks:
-      - id: terraform_fmt
-      - id: terraform_validate
-      - id: terraform_tflint
-        args:
-          - "--args=--only=terraform_documented_outputs"
-          - "--args=--only=terraform_documented_variables"
-          - "--args=--only=terraform_typed_variables"
-          - "--args=--only=terraform_module_pinned_source"
-        # tflint is set to run but we prioritize fmt and validate for blocking
+      - id: terraform-fmt
+        name: Terraform fmt
+        entry: terraform fmt -recursive
+        language: system
+        types: [terraform]
+      - id: terraform-validate
+        name: Terraform validate
+        entry: terraform validate
+        language: system
+        types: [terraform]
+        pass_filenames: false
+      - id: terraform-tflint
+        name: Terraform tflint
+        entry: tflint
+        language: system
+        types: [terraform]

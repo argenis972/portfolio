@@ -42,4 +42,3 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </Sentry.ErrorBoundary>
   </React.StrictMode>,
 )
-

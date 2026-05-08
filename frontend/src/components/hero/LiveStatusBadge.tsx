@@ -23,7 +23,7 @@ interface LiveStatusBadgeProps {
 export const LiveStatusBadge = React.memo(({ status, latencyMs, source }: LiveStatusBadgeProps) => {
   const { t } = useLanguage();
   const cfg = BADGE_CONFIG[status];
-  
+
   return (
     <span
       title={t('metrics.latency_tooltip')}

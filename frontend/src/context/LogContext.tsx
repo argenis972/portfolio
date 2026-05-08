@@ -94,12 +94,12 @@ export function LogProvider({ children }: { children: React.ReactNode }) {
 
   const clear = useCallback(() => dispatch({ type: 'CLEAR' }), []);
 
-  const value: LogContextValue = useMemo(() => ({ 
-    entries: state.entries, 
+  const value: LogContextValue = useMemo(() => ({
+    entries: state.entries,
     incidents: state.incidents,
-    addEntry, 
+    addEntry,
     addIncident,
-    clear 
+    clear
   }), [
     state.entries,
     state.incidents,

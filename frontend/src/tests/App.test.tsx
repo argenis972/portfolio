@@ -26,7 +26,7 @@ describe('App Component', () => {
       </QueryClientProvider>
     );
 
-    
+
     // Using findAllByText() waits for async state updates triggered by initial fetches,
     // preventing React's "not wrapped in act(...)" warnings.
     const navItems = await screen.findAllByRole('navigation');

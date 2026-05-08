@@ -1,9 +1,9 @@
 # Incident Post-Mortem: INC-008
 ## 🛑 Destructive IaC Migration (Free Tier Constraints)
 
-**Date:** 2026-05-07  
-**Severity:** P2 (Planned Maintenance / Migration Downtime)  
-**Status:** Resolved (Migration Complete)  
+**Date:** 2026-05-07
+**Severity:** P2 (Planned Maintenance / Migration Downtime)
+**Status:** Resolved (Migration Complete)
 **Downtime:** 14 Hours
 
 ---

@@ -109,9 +109,9 @@ export default function ChaosPlayground() {
               ))}
             </div>
           </div>
-          
+
           {preset !== 'off' && (
-            <m.div 
+            <m.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               className="mt-3 pt-3 border-t border-app-border/40 text-[10px] font-mono text-[var(--color-status-synthetic)] italic"
@@ -178,7 +178,7 @@ export default function ChaosPlayground() {
                 <span className="w-2 h-2 rounded-full bg-status-warn animate-pulse" />
               )}
             </div>
-            
+
             {incidents.length === 0 ? (
               <p className="text-xs font-mono text-app-muted/50">{t('chaos.incidents.empty')}</p>
             ) : (
@@ -190,7 +190,7 @@ export default function ChaosPlayground() {
                       const elapsed = now - inc.startedAt;
                       const remaining = Math.max(0, Math.ceil((inc.ttl - elapsed) / 1000));
                       const isInvestigating = elapsed < 5000;
-                      
+
                       return (
                         <div key={inc.id} className="flex flex-col gap-1 border-l-2 border-status-warn/30 pl-3">
                           <div className="flex items-center justify-between">
@@ -203,8 +203,8 @@ export default function ChaosPlayground() {
                           </div>
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded border ${
-                              isInvestigating 
-                                ? 'bg-status-warn-soft border-status-warn/20 text-status-warn' 
+                              isInvestigating
+                                ? 'bg-status-warn-soft border-status-warn/20 text-status-warn'
                                 : 'bg-status-ok-soft border-status-ok/20 text-status-ok'
                             }`}>
                               {isInvestigating ? 'INVESTIGATING' : 'MITIGATING'}
@@ -225,7 +225,7 @@ export default function ChaosPlayground() {
                               </span>
                             )}
                             <div className="flex-grow h-[2px] bg-app-border/30 rounded-full overflow-hidden">
-                              <m.div 
+                              <m.div
                                 initial={{ width: '100%' }}
                                 animate={{ width: `${(remaining / (inc.ttl/1000)) * 100}%` }}
                                 className="h-full bg-status-warn/40"

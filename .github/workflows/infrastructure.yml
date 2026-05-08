@@ -10,7 +10,7 @@ jobs:
   terraform:
     name: 🌍 Terraform
     runs-on: ubuntu-latest
-    
+
     defaults:
       run:
         working-directory: ./infrastructure

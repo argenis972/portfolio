@@ -74,9 +74,7 @@ export function usePhilosophy() {
 
 export function useContactMutation() {
   return useMutation({
-    mutationFn: ({ data, idempotencyKey }: { data: Parameters<typeof postContact>[0], idempotencyKey: string }) => 
+    mutationFn: ({ data, idempotencyKey }: { data: Parameters<typeof postContact>[0], idempotencyKey: string }) =>
       postContact(data, idempotencyKey),
   });
 }
-
-

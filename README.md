@@ -130,7 +130,7 @@ See [FAILURE_MODEL.md](docs/architecture/FAILURE_MODEL.md) for full degradation 
 | Error Rate | < 0.5% 5xx | **0%** (steady) / **~9%** (ramp-up DoS) — Koyeb Free Tier limits observed ✅ |
 
 > See [`benchmarks/results/02c08d3/summary.md`](benchmarks/results/02c08d3/summary.md) for full analysis including why local breaches are expected.
-> Reproduce: `k6 run --env BASE_URL=https://api.argenisbackend.com benchmarks/scripts/health.js` 
+> Reproduce: `k6 run --env BASE_URL=https://api.argenisbackend.com benchmarks/scripts/health.js`
 
 ---
 
@@ -179,7 +179,7 @@ npm install && npm run dev
 ```
 
 > Run database migrations as part of deploy/release automation, not on every Koyeb application boot.
-> 
+>
 > **Note**: Interactive documentation (Swagger/ReDoc) is disabled in production for security. To view the API contract, run the project locally in `development` mode and access `localhost:8000/docs`.
 
 ---

@@ -30,105 +30,41 @@ Implemented explicit `moved` blocks to migrate the state identity without destru
 
 ---
 
-### INC-001 · Rate Limiter Silently Disabled in Production
-**Period**: v1.2.0 → v1.3.0 (approximately 2 weeks)
-**Affected**: `POST /api/v1/contact` — anti-spam protection
+### INC-008 · Destructive IaC Migration (Free Tier Constraints)
+**Period**: v1.7.1 → v1.8.1 (Migration Window)
+**Affected**: Global API Availability (`api.argenisbackend.com`)
+**Downtime**: 14 hours
 
 **What happened**
-The `/contact` endpoint had rate limiting configured via `slowapi` with in-memory storage. Tests passed. Staging passed. In production on Koyeb, the free tier restarts containers on inactivity, redeploys, and occasionally without visible reason. Every restart zeroed the in-memory counters. The anti-spam protection was effectively non-functional in production — a user could bypass the limit by waiting for a natural container cycle, which happened every few hours.
-
-**How it was discovered**
-Not by an alert. Discovered manually during a routine test of the contact endpoint the day after a redeploy, when the rate limit counter had clearly reset.
-
-**What was tried first (didn't work)**
-Increased the in-memory TTL to 24 hours. This only masked the symptom — the counter still zeroed on any restart, regardless of TTL.
+To finalize the transition to IaC, the existing manual infrastructure was decommissioned. Due to Koyeb Free Tier limitations (1-service limit and strict domain exclusivity), a zero-downtime migration was impossible. The system underwent a "Cold Migration" to ensure 100% operational consistency and reproducibility.
 
 **Root cause**
-Koyeb free tier ephemeral containers. Any in-memory state is container-local and not persisted across the container lifecycle.
-
-**Resolution (v1.3.0)**
-Migrated rate limiting storage to Redis (Upstash). Counters now survive container restarts and are consistent across replicas.
-
-**Accepted side effect**
-Redis is now in the critical path for `/contact`. If Upstash is unavailable, the rate limiter fails open — requests pass through unthrottled. This failure mode is documented and accepted (failing closed would block legitimate contact attempts during an infrastructure outage).
-
----
-
-### INC-002 · Cold Start Latency Making Keep-Alive Useless
-**Period**: v1.2.0 → v1.4.1
-**Affected**: First real request after Koyeb container sleep
-
-**What happened**
-A cron-based keep-alive pinged `/health` every 14 minutes to prevent Koyeb from sleeping the container. The strategy worked — the container stayed warm. However, P95 on the first *portfolio data* request after sleep was still 280–400ms. The keep-alive was hitting `/health`, but the actual slow path was the PostgreSQL connection being re-established for the data endpoints.
-
-**What was tried first (didn't work)**
-Reducing the keep-alive interval to 10 minutes. The container stayed awake, but the latency problem persisted. The bottleneck was not sleep — it was the Supabase connection overhead on every cold data read, regardless of whether the container was warm.
-
-**Root cause**
-Static portfolio data (projects, about, stack) was being served from PostgreSQL. Every read required a connection round-trip to Supabase, adding 200–350ms to the response time.
-
-**Resolution (ADR-05 + v1.4.1)**
-Migrated all static portfolio reads to `JSONRepository` — files loaded into memory at startup. PostgreSQL now only handles transactional data (contact submissions, chaos records). P95 on data reads dropped from ~320ms to <50ms.
-
-**Accepted side effect**
-Updating portfolio content now requires a container redeploy, not a database update. This is intentional.
-
----
-
-### INC-003 · Chaos Playground Crashing on Database Unavailability
-**Period**: v1.4.x
-**Affected**: Entire Chaos Playground UI
-
-**What happened**
-The Chaos Playground simulates failures and records each incident to PostgreSQL. During a brief Supabase connectivity issue, the database write raised an unhandled exception that propagated up through the entire chaos action handler. The playground crashed completely — not because the simulation failed, but because a *secondary* operation (recording the incident) failed.
-
-**The irony**
-A tool designed to demonstrate failure resilience was itself not resilient to a single downstream failure.
-
-**Resolution (ADR-14)**
-Wrapped all chaos persistence calls in try/except. Database write failures are logged but do not interrupt the simulation. The playground now completes its primary job (running the simulation) even when its secondary job (recording to DB) fails.
-
-**Accepted side effect**
-Incidents that occur during a database outage are silently lost from the history panel. Acceptable — this is a demo tool, not a production incident recorder.
-
----
-
-### INC-004 · CSP Blocking Frontend ↔ Backend Communication in Production
-**Period**: v1.3.x → v1.4.0
-**Affected**: All API calls from the deployed frontend
-
-**What happened**
-After setting up the custom domain `argenisbackend.com`, the Vercel-deployed frontend started blocking its own API calls in production. The browser console showed CSP violations: the Content Security Policy on the frontend didn't include `api.argenisbackend.com` as an allowed `connect-src`. All API requests were blocked at the browser level.
-
-**Why it wasn't caught earlier**
-Development used `localhost`. Staging used the Vercel preview URL, which had a different CSP config. The production CSP was only applied after the custom domain was configured — the first time anyone tested the full production path.
-
-**Root cause**
-CSP in `vercel.json` had not been updated to include the production API subdomain. Vercel and Koyeb each managed their own security headers independently, with no single source of truth.
-
-**Resolution (ADR-15.3)**
-CSP in `vercel.json` explicitly whitelists `api.argenisbackend.com`. CORS regex in `settings.py` covers the corresponding origin. Both are now updated together — separate changes to either without the other will cause this failure to recur.
-
----
-
-### INC-005 · Monorepo Build Context Mismatch (Deployment Blocker)
-**Period**: v1.6.0 (Current session)
-**Affected**: CI/CD Pipeline & Deployment (Koyeb + GitHub Actions)
-
-**What happened**
-Deployments started failing on Koyeb with `file not found` errors for `requirements.txt` and `app/`. Fixing it for Koyeb (by building from root) broke GitHub Actions, which was configured to build from inside the `/backend` directory.
-
-**What was tried first (didn't work)**
-We tried to force the "Work Directory" to `/backend` in the Koyeb service configuration. This not only failed to fix the build but **made things worse** by creating an absolute discrepancy between the Dockerfile context and the runner's actual filesystem, making local and CI paths completely incompatible.
-
-**Root cause**
-Inconsistent Docker build contexts across environments. The `Dockerfile` used relative paths that were context-dependent.
+Koyeb prevented Terraform from claiming the custom domain while the legacy manual service still held the CNAME hook. Provider ownership constraints forced a "Delete-before-Create" strategy.
 
 **Resolution**
-Standardized the build context to the **repository root** for all environments. Updated the `Dockerfile` to use prefixed paths (`COPY backend/requirements.txt`) and modified the GitHub Action to point to the root context with `-f backend/Dockerfile .`.
+Full infrastructure wipe followed by a clean Terraform provision. This verified that the entire stack is now 100% reproducible from code, eliminating all "shadow configuration" and unmanaged resources.
+
+**Lessons Learned**
+*   **Infrastructure Consistency over Uptime**: In restricted environments, maintenance windows are a necessary trade-off for long-term reproducibility.
+*   **Reconciliation Tax**: Migrating unmanaged infrastructure into IaC may require destructive reconciliation steps when provider ownership cannot be safely imported.
+
+---
+
+### INC-007 · Koyeb Terraform Provider Schema Incompatibility
+**Period**: v1.7.0 → v1.8.1
+**Affected**: Infrastructure Provisioning CI/CD
+
+**What happened**
+The migration to Terraform was blocked by a `400 Bad Request` from the Koyeb API: `env type is required`. The official Terraform provider (v0.1.11) lacked the schema fields to send this mandatory metadata, making the standard `env` block unusable for literal values.
+
+**Root cause**
+A version mismatch between a stagnant provider (last updated 2024) and an evolving API (2026 requirements).
+
+**Resolution (v1.8.1)**
+Implemented **Secret-First Orchestration**. Every environment variable was moved to a `koyeb_secret` resource. The service definition was refactored to use `secret` references instead of `value` keys. Since secret references in the Koyeb API have an implicit type, this bypassed the provider's schema limitation.
 
 **Accepted side effect**
-Local builds now also require being run from the repository root.
+All configuration variables are now treated as secrets in the Koyeb UI, which actually improves the overall security posture (SRE best practice).
 
 ---
 
@@ -153,43 +89,105 @@ None. The fix is strictly more accurate.
 
 ---
 
-### INC-007 · Koyeb Terraform Provider Schema Incompatibility
-**Period**: v1.7.0 → v1.8.1
-**Affected**: Infrastructure Provisioning CI/CD
+### INC-005 · Monorepo Build Context Mismatch (Deployment Blocker)
+**Period**: v1.6.0 (Current session)
+**Affected**: CI/CD Pipeline & Deployment (Koyeb + GitHub Actions)
 
 **What happened**
-The migration to Terraform was blocked by a `400 Bad Request` from the Koyeb API: `env type is required`. The official Terraform provider (v0.1.11) lacked the schema fields to send this mandatory metadata, making the standard `env` block unusable for literal values.
+Deployments started failing on Koyeb with `file not found` errors for `requirements.txt` and `app/`. Fixing it for Koyeb (by building from root) broke GitHub Actions, which was configured to build from inside the `/backend` directory.
+
+**What was tried first (didn't work)**
+We tried to force the "Work Directory" to `/backend` in the Koyeb service configuration. This not only failed to fix the build but **made things worse** by creating an absolute discrepancy between the Dockerfile context and the runner's actual filesystem, making local and CI paths completely incompatible.
 
 **Root cause**
-A version mismatch between a stagnant provider (last updated 2024) and an evolving API (2026 requirements).
-
-**Resolution (v1.8.1)**
-Implemented **Secret-First Orchestration**. Every environment variable was moved to a `koyeb_secret` resource. The service definition was refactored to use `secret` references instead of `value` keys. Since secret references in the Koyeb API have an implicit type, this bypassed the provider's schema limitation.
-
-**Accepted side effect**
-All configuration variables are now treated as secrets in the Koyeb UI, which actually improves the overall security posture (SRE best practice).
-
----
-
-### INC-008 · Destructive IaC Migration (Free Tier Constraints)
-**Period**: v1.7.1 → v1.8.1 (Migration Window)
-**Affected**: Global API Availability (`api.argenisbackend.com`)
-**Downtime**: 14 hours
-
-**What happened**
-To finalize the transition to IaC, the existing manual infrastructure was decommissioned. Due to Koyeb Free Tier limitations (1-service limit and strict domain exclusivity), a zero-downtime migration was impossible. The system underwent a "Cold Migration" to ensure 100% operational consistency and reproducibility.
-
-**Root cause**
-Koyeb prevented Terraform from claiming the custom domain while the legacy manual service still held the CNAME hook. Provider ownership constraints forced a "Delete-before-Create" strategy.
+Inconsistent Docker build contexts across environments. The `Dockerfile` used relative paths that were context-dependent.
 
 **Resolution**
-Full infrastructure wipe followed by a clean Terraform provision. This verified that the entire stack is now 100% reproducible from code, eliminating all "shadow configuration" and unmanaged resources.
+Standardized the build context to the **repository root** for all environments. Updated the `Dockerfile` to use prefixed paths (`COPY backend/requirements.txt`) and modified the GitHub Action to point to the root context with `-f backend/Dockerfile .`.
 
-**Lessons Learned**
-*   **Infrastructure Consistency over Uptime**: In restricted environments, maintenance windows are a necessary trade-off for long-term reproducibility.
-*   **Reconciliation Tax**: Migrating unmanaged infrastructure into IaC may require destructive reconciliation steps when provider ownership cannot be safely imported.
+**Accepted side effect**
+Local builds now also require being run from the repository root.
 
 ---
+
+### INC-004 · CSP Blocking Frontend ↔ Backend Communication in Production
+**Period**: v1.3.x → v1.4.0
+**Affected**: All API calls from the deployed frontend
+
+**What happened**
+After setting up the custom domain `argenisbackend.com`, the Vercel-deployed frontend started blocking its own API calls in production. The browser console showed CSP violations: the Content Security Policy on the frontend didn't include `api.argenisbackend.com` as an allowed `connect-src`. All API requests were blocked at the browser level.
+
+**Why it wasn't caught earlier**
+Development used `localhost`. Staging used the Vercel preview URL, which had a different CSP config. The production CSP was only applied after the custom domain was configured — the first time anyone tested the full production path.
+
+**Root cause**
+CSP in `vercel.json` had not been updated to include the production API subdomain. Vercel and Koyeb each managed their own security headers independently, with no single source of truth.
+
+**Resolution (ADR-15.3)**
+CSP in `vercel.json` explicitly whitelists `api.argenisbackend.com`. CORS regex in `settings.py` covers the corresponding origin. Both are now updated together — separate changes to either without the other will cause this failure to recur.
+
+---
+
+### INC-003 · Chaos Playground Crashing on Database Unavailability
+**Period**: v1.4.x
+**Affected**: Entire Chaos Playground UI
+
+**What happened**
+The Chaos Playground simulates failures and records each incident to PostgreSQL. During a brief Supabase connectivity issue, the database write raised an unhandled exception that propagated up through the entire chaos action handler. The playground crashed completely — not because the simulation failed, but because a *secondary* operation (recording the incident) failed.
+
+**The irony**
+A tool designed to demonstrate failure resilience was itself not resilient to a single downstream failure.
+
+**Resolution (ADR-14)**
+Wrapped all chaos persistence calls in try/except. Database write failures are logged but do not interrupt the simulation. The playground now completes its primary job (running the simulation) even when its secondary job (recording to DB) fails.
+
+**Accepted side effect**
+Incidents that occur during a database outage are silently lost from the history panel. Acceptable — this is a demo tool, not a production incident recorder.
+
+---
+
+### INC-002 · Cold Start Latency Making Keep-Alive Useless
+**Period**: v1.2.0 → v1.4.1
+**Affected**: First real request after Koyeb container sleep
+
+**What happened**
+A cron-based keep-alive pinged `/health` every 14 minutes to prevent Koyeb from sleeping the container. The strategy worked — the container stayed warm. However, P95 on the first *portfolio data* request after sleep was still 280–400ms. The keep-alive was hitting `/health`, but the actual slow path was the PostgreSQL connection being re-established for the data endpoints.
+
+**What was tried first (didn't work)**
+Reducing the keep-alive interval to 10 minutes. The container stayed awake, but the latency problem persisted. The bottleneck was not sleep — it was the Supabase connection overhead on every cold data read, regardless of whether the container was warm.
+
+**Root cause**
+Static portfolio data (projects, about, stack) was being served from PostgreSQL. Every read required a connection round-trip to Supabase, adding 200–350ms to the response time.
+
+**Resolution (ADR-05 + v1.4.1)**
+Migrated all static portfolio reads to `JSONRepository` — files loaded into memory at startup. PostgreSQL now only handles transactional data (contact submissions, chaos records). P95 on data reads dropped from ~320ms to <50ms.
+
+**Accepted side effect**
+Updating portfolio content now requires a container redeploy, not a database update. This is intentional.
+
+---
+
+### INC-001 · Rate Limiter Silently Disabled in Production
+**Period**: v1.2.0 → v1.3.0 (approximately 2 weeks)
+**Affected**: `POST /api/v1/contact` — anti-spam protection
+
+**What happened**
+The `/contact` endpoint had rate limiting configured via `slowapi` with in-memory storage. Tests passed. Staging passed. In production on Koyeb, the free tier restarts containers on inactivity, redeploys, and occasionally without visible reason. Every restart zeroed the in-memory counters. The anti-spam protection was effectively non-functional in production — a user could bypass the limit by waiting for a natural container cycle, which happened every few hours.
+
+**How it was discovered**
+Not by an alert. Discovered manually during a routine test of the contact endpoint the day after a redeploy, when the rate limit counter had clearly reset.
+
+**What was tried first (didn't work)**
+Increased the in-memory TTL to 24 hours. This only masked the symptom — the counter still zeroed on any restart, regardless of TTL.
+
+**Root cause**
+Koyeb free tier ephemeral containers. Any in-memory state is container-local and not persisted across the container lifecycle.
+
+**Resolution (v1.3.0)**
+Migrated rate limiting storage to Redis (Upstash). Counters now survive container restarts and are consistent across replicas.
+
+**Accepted side effect**
+Redis is now in the critical path for `/contact`. If Upstash is unavailable, the rate limiter fails open — requests pass through unthrottled. This failure mode is documented and accepted (failing closed would block legitimate contact attempts during an infrastructure outage).
 
 ## [1.8.2] - 2026-05-08
 

@@ -44,7 +44,7 @@ function App() {
           <LazyMotion features={domAnimation}>
             <div className="min-h-screen flex flex-col pt-16 selection:bg-app-primary/30 selection:text-app-text transition-colors duration-300">
               <Navbar />
-              
+
               <Suspense fallback={null}>
                 <ChaosModeBanner />
               </Suspense>
@@ -52,25 +52,25 @@ function App() {
               <Suspense fallback={null}>
                 <DecisionProcessor />
               </Suspense>
-  
+
               <Suspense fallback={null}>
                 <SocialRail />
               </Suspense>
-  
+
               {/* System Status Banner — appears only when degraded/down */}
               <Suspense fallback={null}>
                 <SystemStatusBanner />
               </Suspense>
-  
+
               <main className="flex-grow">
                 {/* 1 — Hero: KPI strip above the fold */}
                 <Hero />
-  
+
                 <Suspense fallback={<SectionFallback />}>
-  
+
                   {/* 2 — About: bio + photo + links */}
                   <About />
-  
+
                   {/* 3 — Live Metrics: tiles + sparkline */}
                   <LiveMetricsBento />
 
@@ -79,32 +79,32 @@ function App() {
 
                   {/* 5 — Chaos Playground: control panel */}
                   <ChaosPlayground />
-  
+
                   {/* 5 — Trace Viewer: per-request waterfall */}
                   <TraceViewer />
-  
+
                   {/* 6 — Log Stream: terminal event stream */}
                   <LogStream />
 
                   {/* 7 — Featured Incident: Production Post-Mortems (INC-001, INC-002, INC-005) */}
                   <FeaturedIncident />
-  
-  
+
+
                   {/* 8 — Experience + Education */}
                   <Experience />
-  
-  
+
+
                   {/* 10 — Projects */}
                   <Projects />
-  
+
                   {/* 11 — Contact */}
                   <Contact />
-  
+
                   {/* Server wakeup notice (cold start UX) */}
                   <ServerWakeupNotice />
                 </Suspense>
               </main>
-  
+
               <Suspense fallback={null}>
                 <Footer />
               </Suspense>

@@ -6,7 +6,7 @@ Frontend application built with **React 19** and **Vite**. Engineered as a **str
 
 ## ✨ Key Features
 
-- **💎 TanStack Query (v5)**: 
+- **💎 TanStack Query (v5)**:
     - **Predictive Prefetching**: Data is pre-loaded on Link hover/focus.
     - **Background Sync**: Silent revalidation on window focus.
     - **Centralized Mutations**: Robust state management for the contact form.

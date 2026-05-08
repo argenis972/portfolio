@@ -29,4 +29,3 @@ groups:
         annotations:
           summary: "P95 latency threshold exceeded"
           description: "95% of requests are slower than 500ms. Check for N+1 queries or resource exhaustion."
-

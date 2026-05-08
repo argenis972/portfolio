@@ -45,7 +45,7 @@ Global Edge UI deployment.
 ## 🛠️ Architecture Notes
 *   **Database (PostgreSQL/SQLite)**: The system is designed for **Managed PostgreSQL** in production (recommended: **Supabase Postgres**) to ensure data persistence across container restarts. It gracefully falls back to **SQLite** if no `DATABASE_URL` is provided. We do **not** commit the database file to Git. Run `alembic upgrade head` during deploy/release tasks, not on every container boot.
 *   **Active Security**: Built-in protection includes a 5-minute deduplication window, honeypot traps, and heuristic spam scoring.
-*   **Instant Availability (Fixing the 15s Cold Start)**: Cloud platforms like Koyeb hibernate free web services, which causes a 10-15s cold start. To prevent this, configure an **external cron service** (like [cron-job.org](https://cron-job.org/en/)) to send a `GET` request to `https://api.argenisbackend.com/health` every **3 minutes**. 
+*   **Instant Availability (Fixing the 15s Cold Start)**: Cloud platforms like Koyeb hibernate free web services, which causes a 10-15s cold start. To prevent this, configure an **external cron service** (like [cron-job.org](https://cron-job.org/en/)) to send a `GET` request to `https://api.argenisbackend.com/health` every **3 minutes**.
     > ⚠️ *Note*: GitHub Actions `cron` was previously used but is highly unreliable (often delayed in the queue up to 15+ minutes), defeating the purpose of a keep-alive ping. Always use a dedicated uptime service.
 
 ### Recommended Koyeb Deploy Flow

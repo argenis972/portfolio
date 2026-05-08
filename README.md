@@ -10,7 +10,7 @@
 
 ---
 
-A **Cloud-Native payment backend** focused on resiliency, idempotency, and infrastructure automation. This isn't just a portfolio; it's a system built to survive and be managed at scale:
+A **Cloud-Native SRE Portfolio System** focused on resiliency, idempotency, and infrastructure automation. This isn't just a portfolio; it's a system built to survive and be managed at scale:
 
 - 🏗️ **Infrastructure as Code (IaC)** — Fully managed via Terraform with automated CI/CD provisioning.
 - 🌪️ **Chaos-Tested** — Automated weekly E2E stress tests to verify degradation and recovery.

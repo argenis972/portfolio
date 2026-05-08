@@ -12,7 +12,158 @@ This changelog separates three categories intentionally:
 
 ## 🔥 Production Incidents
 
-> Incidents are documented separately from releases because they represent real system behavior under failure — not planned work.
+### INC-009 · Terraform Secret Identity Collision
+**Period**: v1.8.1 → v1.8.2
+**Affected**: Infrastructure Provisioning CI/CD
+
+**What happened**
+While standardizing the infrastructure code to "English-First", several keys in the `for_each` map for Koyeb secrets were renamed (e.g., `ENVIRONMENT` → `AMBIENTE`). Terraform interpreted these key changes as a `destroy + create` operation. Since both keys mapped to the same physical secret name in the Koyeb API, the creation of the new secret failed because the name was still occupied by the old one (or the API returned a conflict during the parallel cycle).
+
+**How it was discovered**
+CI/CD pipeline failure during the `terraform apply` step.
+
+**Root cause**
+Terraform resource identity is tied to the map key in `for_each`. Renaming a key destroys the old identity and creates a new one.
+
+**Resolution (v1.8.2)**
+Implemented explicit `moved` blocks to migrate the state identity without destructive actions. Established the "Zero to Destroy" principle for stable infrastructure components.
+
+---
+
+### INC-008 · Destructive IaC Migration (Free Tier Constraints)
+**Period**: v1.7.1 → v1.8.1 (Migration Window)
+**Affected**: Global API Availability (`api.argenisbackend.com`)
+**Downtime**: 14 hours
+
+**What happened**
+To finalize the transition to IaC, the existing manual infrastructure was decommissioned. Due to Koyeb Free Tier limitations (1-service limit and strict domain exclusivity), a zero-downtime migration was impossible. The system underwent a "Cold Migration" to ensure 100% operational consistency and reproducibility.
+
+**Root cause**
+Koyeb prevented Terraform from claiming the custom domain while the legacy manual service still held the CNAME hook. Provider ownership constraints forced a "Delete-before-Create" strategy.
+
+**Resolution**
+Full infrastructure wipe followed by a clean Terraform provision. This verified that the entire stack is now 100% reproducible from code, eliminating all "shadow configuration" and unmanaged resources.
+
+**Lessons Learned**
+*   **Infrastructure Consistency over Uptime**: In restricted environments, maintenance windows are a necessary trade-off for long-term reproducibility.
+*   **Reconciliation Tax**: Migrating unmanaged infrastructure into IaC may require destructive reconciliation steps when provider ownership cannot be safely imported.
+
+---
+
+### INC-007 · Koyeb Terraform Provider Schema Incompatibility
+**Period**: v1.7.0 → v1.8.1
+**Affected**: Infrastructure Provisioning CI/CD
+
+**What happened**
+The migration to Terraform was blocked by a `400 Bad Request` from the Koyeb API: `env type is required`. The official Terraform provider (v0.1.11) lacked the schema fields to send this mandatory metadata, making the standard `env` block unusable for literal values.
+
+**Root cause**
+A version mismatch between a stagnant provider (last updated 2024) and an evolving API (2026 requirements).
+
+**Resolution (v1.8.1)**
+Implemented **Secret-First Orchestration**. Every environment variable was moved to a `koyeb_secret` resource. The service definition was refactored to use `secret` references instead of `value` keys. Since secret references in the Koyeb API have an implicit type, this bypassed the provider's schema limitation.
+
+**Accepted side effect**
+All configuration variables are now treated as secrets in the Koyeb UI, which actually improves the overall security posture (SRE best practice).
+
+---
+
+### INC-006 · Spam Filter False Positive on Mixed-Protocol Links
+**Period**: v1.7.0 (antispam enhancement) → v1.8.0
+**Affected**: `POST /api/v1/contact` — spam scoring Rule 2 (excessive links penalty)
+
+**What happened**
+The antispam filter incorrectly penalized legitimate messages containing one `https://` URL and one bare `www.` URL pointing to **different** domains. The filter counted them as "2 links to 1 unique domain" and applied an extra +15 spam score, pushing some legitimate multi-link messages into the SUSPECT tier.
+
+**How it was discovered**
+Static analysis by an automated code review bot. No user complaints received — but the failure mode was systematically biased against any message linking to two different sites when one used a bare `www.` prefix.
+
+**Root cause**
+`all_links` used `re.findall(r"https?://|www\.")` — capturing protocol/prefix *patterns*, not full URL tokens. `unique_domains` used a separate regex that only processed `https://` URLs. The two variables were not measuring the same thing.
+
+**Resolution (v1.8.0)**
+Unified extraction: both regexes replaced with a single `re.findall(r"https?://[^\s]+|www\.[^\s]+")` that captures full URL tokens. Normalization now strips protocol prefixes, `www.`, and trailing prose punctuation. Three regression tests added to `test_spam.py` cover the corrected behavior.
+
+**Accepted side effect**
+None. The fix is strictly more accurate.
+
+---
+
+### INC-005 · Monorepo Build Context Mismatch (Deployment Blocker)
+**Period**: v1.6.0 (Current session)
+**Affected**: CI/CD Pipeline & Deployment (Koyeb + GitHub Actions)
+
+**What happened**
+Deployments started failing on Koyeb with `file not found` errors for `requirements.txt` and `app/`. Fixing it for Koyeb (by building from root) broke GitHub Actions, which was configured to build from inside the `/backend` directory.
+
+**What was tried first (didn't work)**
+We tried to force the "Work Directory" to `/backend` in the Koyeb service configuration. This not only failed to fix the build but **made things worse** by creating an absolute discrepancy between the Dockerfile context and the runner's actual filesystem, making local and CI paths completely incompatible.
+
+**Root cause**
+Inconsistent Docker build contexts across environments. The `Dockerfile` used relative paths that were context-dependent.
+
+**Resolution**
+Standardized the build context to the **repository root** for all environments. Updated the `Dockerfile` to use prefixed paths (`COPY backend/requirements.txt`) and modified the GitHub Action to point to the root context with `-f backend/Dockerfile .`.
+
+**Accepted side effect**
+Local builds now also require being run from the repository root.
+
+---
+
+### INC-004 · CSP Blocking Frontend ↔ Backend Communication in Production
+**Period**: v1.3.x → v1.4.0
+**Affected**: All API calls from the deployed frontend
+
+**What happened**
+After setting up the custom domain `argenisbackend.com`, the Vercel-deployed frontend started blocking its own API calls in production. The browser console showed CSP violations: the Content Security Policy on the frontend didn't include `api.argenisbackend.com` as an allowed `connect-src`. All API requests were blocked at the browser level.
+
+**Why it wasn't caught earlier**
+Development used `localhost`. Staging used the Vercel preview URL, which had a different CSP config. The production CSP was only applied after the custom domain was configured — the first time anyone tested the full production path.
+
+**Root cause**
+CSP in `vercel.json` had not been updated to include the production API subdomain. Vercel and Koyeb each managed their own security headers independently, with no single source of truth.
+
+**Resolution (ADR-15.3)**
+CSP in `vercel.json` explicitly whitelists `api.argenisbackend.com`. CORS regex in `settings.py` covers the corresponding origin. Both are now updated together — separate changes to either without the other will cause this failure to recur.
+
+---
+
+### INC-003 · Chaos Playground Crashing on Database Unavailability
+**Period**: v1.4.x
+**Affected**: Entire Chaos Playground UI
+
+**What happened**
+The Chaos Playground simulates failures and records each incident to PostgreSQL. During a brief Supabase connectivity issue, the database write raised an unhandled exception that propagated up through the entire chaos action handler. The playground crashed completely — not because the simulation failed, but because a *secondary* operation (recording the incident) failed.
+
+**The irony**
+A tool designed to demonstrate failure resilience was itself not resilient to a single downstream failure.
+
+**Resolution (ADR-14)**
+Wrapped all chaos persistence calls in try/except. Database write failures are logged but do not interrupt the simulation. The playground now completes its primary job (running the simulation) even when its secondary job (recording to DB) fails.
+
+**Accepted side effect**
+Incidents that occur during a database outage are silently lost from the history panel. Acceptable — this is a demo tool, not a production incident recorder.
+
+---
+
+### INC-002 · Cold Start Latency Making Keep-Alive Useless
+**Period**: v1.2.0 → v1.4.1
+**Affected**: First real request after Koyeb container sleep
+
+**What happened**
+A cron-based keep-alive pinged `/health` every 14 minutes to prevent Koyeb from sleeping the container. The strategy worked — the container stayed warm. However, P95 on the first *portfolio data* request after sleep was still 280–400ms. The keep-alive was hitting `/health`, but the actual slow path was the PostgreSQL connection being re-established for the data endpoints.
+
+**What was tried first (didn't work)**
+Reducing the keep-alive interval to 10 minutes. The container stayed awake, but the latency problem persisted. The bottleneck was not sleep — it was the Supabase connection overhead on every cold data read, regardless of whether the container was warm.
+
+**Root cause**
+Static portfolio data (projects, about, stack) was being served from PostgreSQL. Every read required a connection round-trip to Supabase, adding 200–350ms to the response time.
+
+**Resolution (ADR-05 + v1.4.1)**
+Migrated all static portfolio reads to `JSONRepository` — files loaded into memory at startup. PostgreSQL now only handles transactional data (contact submissions, chaos records). P95 on data reads dropped from ~320ms to <50ms.
+
+**Accepted side effect**
+Updating portfolio content now requires a container redeploy, not a database update. This is intentional.
 
 ---
 
@@ -38,142 +189,19 @@ Migrated rate limiting storage to Redis (Upstash). Counters now survive containe
 **Accepted side effect**
 Redis is now in the critical path for `/contact`. If Upstash is unavailable, the rate limiter fails open — requests pass through unthrottled. This failure mode is documented and accepted (failing closed would block legitimate contact attempts during an infrastructure outage).
 
----
+## [1.8.2] - 2026-05-08
 
-### INC-002 · Cold Start Latency Making Keep-Alive Useless
-**Period**: v1.2.0 → v1.4.1
-**Affected**: First real request after Koyeb container sleep
+### IaC Stability & Local Guardrails
 
-**What happened**
-A cron-based keep-alive pinged `/health` every 14 minutes to prevent Koyeb from sleeping the container. The strategy worked — the container stayed warm. However, P95 on the first *portfolio data* request after sleep was still 280–400ms. The keep-alive was hitting `/health`, but the actual slow path was the PostgreSQL connection being re-established for the data endpoints.
+> This release stabilizes the Terraform state after the identity collision incident (INC-009) and implements local development safety measures (pre-commit) to ensure long-term infrastructure reliability.
 
-**What was tried first (didn't work)**
-Reducing the keep-alive interval to 10 minutes. The container stayed awake, but the latency problem persisted. The bottleneck was not sleep — it was the Supabase connection overhead on every cold data read, regardless of whether the container was warm.
+#### Added
+- **Infrastructure State Migration**: Added `moved` blocks to preserve secret identities during key refactors.
+- **Git Hygiene**: Added `.gitattributes` to enforce `LF` line endings across all platforms, preventing "newline hell" in linters.
+- **Local Safety (Pre-commit)**: Configured `.pre-commit-config.yaml` to run `terraform fmt`, `validate`, and `tflint` automatically before commits.
 
-**Root cause**
-Static portfolio data (projects, about, stack) was being served from PostgreSQL. Every read required a connection round-trip to Supabase, adding 200–350ms to the response time.
-
-**Resolution (ADR-05 + v1.4.1)**
-Migrated all static portfolio reads to `JSONRepository` — files loaded into memory at startup. PostgreSQL now only handles transactional data (contact submissions, chaos records). P95 on data reads dropped from ~320ms to <50ms.
-
-**Accepted side effect**
-Updating portfolio content now requires a container redeploy, not a database update. This is intentional.
-
----
-
-### INC-003 · Chaos Playground Crashing on Database Unavailability
-**Period**: v1.4.x
-**Affected**: Entire Chaos Playground UI
-
-**What happened**
-The Chaos Playground simulates failures and records each incident to PostgreSQL. During a brief Supabase connectivity issue, the database write raised an unhandled exception that propagated up through the entire chaos action handler. The playground crashed completely — not because the simulation failed, but because a *secondary* operation (recording the incident) failed.
-
-**The irony**
-A tool designed to demonstrate failure resilience was itself not resilient to a single downstream failure.
-
-**Resolution (ADR-14)**
-Wrapped all chaos persistence calls in try/except. Database write failures are logged but do not interrupt the simulation. The playground now completes its primary job (running the simulation) even when its secondary job (recording to DB) fails.
-
-**Accepted side effect**
-Incidents that occur during a database outage are silently lost from the history panel. Acceptable — this is a demo tool, not a production incident recorder.
-
----
-
-### INC-004 · CSP Blocking Frontend ↔ Backend Communication in Production
-**Period**: v1.3.x → v1.4.0
-**Affected**: All API calls from the deployed frontend
-
-**What happened**
-After setting up the custom domain `argenisbackend.com`, the Vercel-deployed frontend started blocking its own API calls in production. The browser console showed CSP violations: the Content Security Policy on the frontend didn't include `api.argenisbackend.com` as an allowed `connect-src`. All API requests were blocked at the browser level.
-
-**Why it wasn't caught earlier**
-Development used `localhost`. Staging used the Vercel preview URL, which had a different CSP config. The production CSP was only applied after the custom domain was configured — the first time anyone tested the full production path.
-
-**Root cause**
-CSP in `vercel.json` had not been updated to include the production API subdomain. Vercel and Koyeb each managed their own security headers independently, with no single source of truth.
-
-**Resolution (ADR-15.3)**
-CSP in `vercel.json` explicitly whitelists `api.argenisbackend.com`. CORS regex in `settings.py` covers the corresponding origin. Both are now updated together — separate changes to either without the other will cause this failure to recur.
-
----
-
-### INC-005 · Monorepo Build Context Mismatch (Deployment Blocker)
-**Period**: v1.6.0 (Current session)
-**Affected**: CI/CD Pipeline & Deployment (Koyeb + GitHub Actions)
-
-**What happened**
-Deployments started failing on Koyeb with `file not found` errors for `requirements.txt` and `app/`. Fixing it for Koyeb (by building from root) broke GitHub Actions, which was configured to build from inside the `/backend` directory.
-
-**What was tried first (didn't work)**
-We tried to force the "Work Directory" to `/backend` in the Koyeb service configuration. This not only failed to fix the build but **made things worse** by creating an absolute discrepancy between the Dockerfile context and the runner's actual filesystem, making local and CI paths completely incompatible.
-
-**Root cause**
-Inconsistent Docker build contexts across environments. The `Dockerfile` used relative paths that were context-dependent.
-
-**Resolution**
-Standardized the build context to the **repository root** for all environments. Updated the `Dockerfile` to use prefixed paths (`COPY backend/requirements.txt`) and modified the GitHub Action to point to the root context with `-f backend/Dockerfile .`.
-
-**Accepted side effect**
-Local builds now also require being run from the repository root.
-
----
-
-### INC-006 · Spam Filter False Positive on Mixed-Protocol Links
-**Period**: v1.7.0 (antispam enhancement) → v1.8.0
-**Affected**: `POST /api/v1/contact` — spam scoring Rule 2 (excessive links penalty)
-
-**What happened**
-The antispam filter incorrectly penalized legitimate messages containing one `https://` URL and one bare `www.` URL pointing to **different** domains. The filter counted them as "2 links to 1 unique domain" and applied an extra +15 spam score, pushing some legitimate multi-link messages into the SUSPECT tier.
-
-**How it was discovered**
-Static analysis by an automated code review bot. No user complaints received — but the failure mode was systematically biased against any message linking to two different sites when one used a bare `www.` prefix.
-
-**Root cause**
-`all_links` used `re.findall(r"https?://|www\.")` — capturing protocol/prefix *patterns*, not full URL tokens. `unique_domains` used a separate regex that only processed `https://` URLs. The two variables were not measuring the same thing.
-
-**Resolution (v1.8.0)**
-Unified extraction: both regexes replaced with a single `re.findall(r"https?://[^\s]+|www\.[^\s]+")` that captures full URL tokens. Normalization now strips protocol prefixes, `www.`, and trailing prose punctuation. Three regression tests added to `test_spam.py` cover the corrected behavior.
-
-**Accepted side effect**
-None. The fix is strictly more accurate.
-
----
-
-### INC-007 · Koyeb Terraform Provider Schema Incompatibility
-**Period**: v1.7.0 → v1.8.1
-**Affected**: Infrastructure Provisioning CI/CD
-
-**What happened**
-The migration to Terraform was blocked by a `400 Bad Request` from the Koyeb API: `env type is required`. The official Terraform provider (v0.1.11) lacked the schema fields to send this mandatory metadata, making the standard `env` block unusable for literal values.
-
-**Root cause**
-A version mismatch between a stagnant provider (last updated 2024) and an evolving API (2026 requirements).
-
-**Resolution (v1.8.1)**
-Implemented **Secret-First Orchestration**. Every environment variable was moved to a `koyeb_secret` resource. The service definition was refactored to use `secret` references instead of `value` keys. Since secret references in the Koyeb API have an implicit type, this bypassed the provider's schema limitation.
-
-**Accepted side effect**
-All configuration variables are now treated as secrets in the Koyeb UI, which actually improves the overall security posture (SRE best practice).
-
----
-
-### INC-008 · Destructive IaC Migration (Free Tier Constraints)
-**Period**: v1.7.1 → v1.8.1 (Migration Window)
-**Affected**: Global API Availability (`api.argenisbackend.com`)
-**Downtime**: 14 hours
-
-**What happened**
-To finalize the transition to IaC, the existing manual infrastructure was decommissioned. Due to Koyeb Free Tier limitations (1-service limit and strict domain exclusivity), a zero-downtime migration was impossible. The system underwent a "Cold Migration" to ensure 100% operational consistency and reproducibility.
-
-**Root cause**
-Koyeb prevented Terraform from claiming the custom domain while the legacy manual service still held the CNAME hook. Provider ownership constraints forced a "Delete-before-Create" strategy.
-
-**Resolution**
-Full infrastructure wipe followed by a clean Terraform provision. This verified that the entire stack is now 100% reproducible from code, eliminating all "shadow configuration" and unmanaged resources.
-
-**Lessons Learned**
-*   **Infrastructure Consistency over Uptime**: In restricted environments, maintenance windows are a necessary trade-off for long-term reproducibility.
-*   **Reconciliation Tax**: Migrating unmanaged infrastructure into IaC may require destructive reconciliation steps when provider ownership cannot be safely imported.
+#### Fixed
+- **Secret Identity Collision (INC-009)**: Resolved the race condition during secret renaming by decoupling Terraform keys from Koyeb names via state moves.
 
 ---
 

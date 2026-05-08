@@ -4,7 +4,7 @@ interface SkeletonProps {
 
 export default function Skeleton({ className = '' }: SkeletonProps) {
   return (
-    <div 
+    <div
       className={`animate-pulse bg-app-surface-hover rounded-md ${className}`}
       aria-hidden="true"
     />

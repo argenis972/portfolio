@@ -50,7 +50,7 @@ export default function ErrorNotification({
           initial={{ opacity: 0, y: -20, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -20, scale: 0.95 }}
-          className="fixed top-20 right-4 z-[60] shadow-2xl w-80 
+          className="fixed top-20 right-4 z-[60] shadow-2xl w-80
                      glass rounded-2xl px-5 py-4 flex flex-col gap-2 border border-status-error/30"
         >
           <div className="flex items-start gap-3">

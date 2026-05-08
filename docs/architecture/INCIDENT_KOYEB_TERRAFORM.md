@@ -1,8 +1,8 @@
 # Incident Post-Mortem: INC-007
 ## 🛑 Koyeb Terraform Provider Schema Incompatibility
 
-**Date:** 2026-05-07  
-**Severity:** P1 (Infrastructure Blocked)  
+**Date:** 2026-05-07
+**Severity:** P1 (Infrastructure Blocked)
 **Status:** Resolved (via Architectural Pivot)
 
 ---

@@ -22,14 +22,14 @@ const SUPPRESS_LATENCY_AFTER_ERROR_MS = 30_000;
 
 export function useDecisionEngine(data: MetricsSummary | undefined) {
   const { addEntry } = useLog();
-  
+
   // Track state of each trigger to enable edge-triggering and hysteresis
   const errorActive = useRef(false);
   const latencyActive = useRef(false);
-  
+
   // Lifecycle state tracking for logs
   const lastLifecycle = useRef<string | null>(null);
-  
+
   // Decision suppression timers
   const latencySuppressedUntil = useRef(0);
 

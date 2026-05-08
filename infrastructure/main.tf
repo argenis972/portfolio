@@ -129,3 +129,27 @@ resource "koyeb_service" "backend" {
     regions = ["was"]
   }
 }
+
+# --- INFRASTRUCTURE STATE MIGRATION ---
+# These moved blocks ensure that Terraform renames the resources in the state
+# instead of destroying and recreating them, avoiding "name already exists" errors in Koyeb.
+
+moved {
+  from = koyeb_secret.vars["ENVIRONMENT"]
+  to   = koyeb_secret.vars["AMBIENTE"]
+}
+
+moved {
+  from = koyeb_secret.vars["APP_NAME"]
+  to   = koyeb_secret.vars["NOME_APP"]
+}
+
+moved {
+  from = koyeb_secret.vars["ALLOWED_ORIGINS"]
+  to   = koyeb_secret.vars["ORIGENS_PERMITIDAS"]
+}
+
+moved {
+  from = koyeb_secret.vars["REGEX_ALLOWED_ORIGINS"]
+  to   = koyeb_secret.vars["REGEX_ORIGENS_PERMITIDAS"]
+}

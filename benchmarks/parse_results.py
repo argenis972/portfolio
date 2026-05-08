@@ -3,7 +3,7 @@ import statistics
 
 def parse_k6_results(file_path):
     scenarios = {}
-    
+
     with open(file_path, 'r') as f:
         for line in f:
             try:
@@ -16,7 +16,7 @@ def parse_k6_results(file_path):
                     scenarios[scenario].append(value)
             except:
                 continue
-    
+
     for scenario, values in scenarios.items():
         if values:
             p95 = statistics.quantiles(values, n=20)[18] # 19th 5-percentile is p95

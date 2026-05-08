@@ -35,17 +35,17 @@ graph TD
         C[Controllers / HTTP Layer]
         C -.- note1[Receives requests<br>Validates input<br>Returns HTTP responses]
     end
-    
+
     subgraph Use Case Layer
         UC[Use Cases / Business Logic]
         UC -.- note2[Orchestrates business logic<br>NO framework dependencies<br>Testable in isolation]
     end
-    
+
     subgraph Domain Layer
         E[Entities / Domain Models]
         E -.- note3[Immutable domain models<br>Pure business logic<br>Python Dataclasses]
     end
-    
+
     subgraph External Layer
         A[Adapters / External Services]
         A -.- note4[Email Resend<br>PostgreSQL / Redis<br>Observability Stack]

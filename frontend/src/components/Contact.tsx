@@ -19,12 +19,12 @@ export default function Contact() {
     queueStatus, deliveryMode, downstream, responseTone,
     handleChange, handleSubmit
   } = useContactForm();
-  
+
   const handleWhatsApp = () => {
     if (!about?.phone) return;
     const cleanNumber = about.phone.replace(/\D/g, '');
     const finalNumber = cleanNumber.startsWith('55') ? cleanNumber : `55${cleanNumber}`;
-    const message = language === 'es' 
+    const message = language === 'es'
       ? '¡Hola Argenis! Vi tu portafolio y me gustaría hablar contigo.'
       : language === 'en'
       ? 'Hello Argenis! I saw your portfolio and would like to talk!'
@@ -49,7 +49,7 @@ export default function Contact() {
   return (
     <section id="contato" className="py-16 max-w-6xl mx-auto px-4 relative group overflow-hidden">
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-[var(--glow-primary)] rounded-full blur-[140px] -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.1, margin: "0px 0px -100px 0px" }}

@@ -2,7 +2,7 @@
 
 **Timestamp:** 2026-04-28T15-54-15
 **Base URL:** http://localhost:8000
-**k6 version:** 
+**k6 version:**
 
 ## Results
 

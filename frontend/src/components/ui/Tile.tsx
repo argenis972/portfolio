@@ -26,16 +26,16 @@ const tileVariants: Variants = {
   }
 };
 
-export function Tile({ 
-  index, 
-  label, 
-  children, 
+export function Tile({
+  index,
+  label,
+  children,
   alertState,
   className = ''
-}: { 
-  index: number; 
-  label: string; 
-  children: React.ReactNode; 
+}: {
+  index: number;
+  label: string;
+  children: React.ReactNode;
   alertState?: 'none' | 'alert' | 'critical' | 'chaos',
   className?: string
 }) {
@@ -46,8 +46,8 @@ export function Tile({
       initial="hidden"
       animate={alertState === 'critical' ? 'critical' : alertState === 'alert' ? 'alert' : alertState === 'chaos' ? 'chaos' : 'visible'}
       className={`glass min-h-[120px] rounded-2xl p-5 flex flex-col gap-3 transition-colors duration-300 ${
-        alertState === 'critical' ? 'bg-status-error-soft border-status-error/30' : 
-        alertState === 'alert' ? 'bg-status-warn-soft border-status-warn/20' : 
+        alertState === 'critical' ? 'bg-status-error-soft border-status-error/30' :
+        alertState === 'alert' ? 'bg-status-warn-soft border-status-warn/20' :
         alertState === 'chaos' ? 'bg-[var(--color-status-synthetic-bg)] border-[var(--color-status-synthetic-border)]' :
         ''
       } ${className}`}

@@ -47,12 +47,12 @@ export default function ArchitectureTradeoffs() {
             <div className="absolute top-4 right-4 text-[9px] font-mono text-app-primary/60 border border-app-primary/20 rounded px-1.5 py-0.5">
               {item.status}
             </div>
-            
+
             <h3 className="text-sm font-bold text-app-text mb-3">{item.title}</h3>
             <p className="text-xs text-app-muted leading-relaxed mb-4">
               {item.desc}
             </p>
-            
+
             <div className="pt-4 border-t border-app-border/20">
               <div className="text-[9px] font-mono text-app-muted uppercase tracking-wider mb-1">{t('tradeoffs.impact_label')}</div>
               <div className="text-[11px] font-mono text-app-primary font-bold">
@@ -62,7 +62,7 @@ export default function ArchitectureTradeoffs() {
           </m.div>
         ))}
       </div>
-      
+
       <div className="mt-8 p-4 bg-app-primary/5 border border-app-primary/10 rounded-xl">
         <p className="text-[11px] font-mono text-app-muted leading-relaxed">
           {t('tradeoffs.protip')}

@@ -255,7 +255,25 @@ During the implementation of GitHub Actions for Terraform, several critical arch
 
 ---
 
-*Last updated: v1.8.1*
+---
+
+ ## 17. Infrastructure as Code (IaC) Standards
+
+ **The "Zero to Destroy" Principle**: In a production-ready environment, an unexpected `destroy` in a Terraform plan is a critical incident. Infrastructure should be evolved, not recreated.
+
+ **Rename Protocol**: Terraform does not natively track renames of keys in a `for_each` map. Changing a key (e.g., from `ENV` to `ENVIRONMENT`) will trigger a `destroy + create` cycle.
+ - **Requirement**: Always use `moved { ... }` blocks when refactoring resource IDs to maintain state continuity and prevent "already exists" errors from the cloud provider.
+
+ **Mandatory Local Plan**: Before pushing infrastructure changes to the repository:
+ 1. Execute `terraform plan` locally.
+ 2. Verify that the resource delta matches your intent.
+ 3. Ensure "0 to destroy" unless explicitly intended.
+
+ **Line Endings (LF)**: To prevent linter failures and cross-platform "invisible diffs", all `.tf` and `.sh` files must use `LF` line endings. Enforced via `.gitattributes`.
+
+ ---
+
+ *Last updated: v1.8.2*
 
 ---
 

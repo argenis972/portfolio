@@ -1,0 +1,6 @@
+# Enforce LF for Terraform and Shell scripts to prevent cross-platform line ending issues
+*.tf text eol=lf
+*.sh text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.md text eol=lf

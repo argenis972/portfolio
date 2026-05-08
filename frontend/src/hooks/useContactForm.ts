@@ -9,29 +9,29 @@ import { ApiError } from '../api/client';
 export function useContactForm() {
   const { t } = useLanguage();
   const { mutate, isPending: isMutating, isSuccess: mutationSuccess, error: mutationError, reset } = useContactMutation();
-  
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     subject: '',
     message: '',
   });
-  
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [traceResult, setTraceResult] = useState<{ traceId?: string; durationMs: number; queueStatus?: string; deliveryMode?: string; downstream?: string; message?: string } | null>(null);
-  
+
   const getNewKey = () => {
-    return typeof crypto !== 'undefined' && crypto.randomUUID 
-      ? crypto.randomUUID() 
+    return typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
       : `key-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
   };
- 
+
   const [idempotencyKey, setIdempotencyKey] = useState<string>(getNewKey);
- 
+
   const generateNewKey = () => {
     setIdempotencyKey(getNewKey());
   };
- 
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     if (!formData.name.trim()) newErrors.name = 'name_required';
@@ -52,16 +52,16 @@ export function useContactForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
-    
+
     setErrors({});
-    
+
     const dataToSend = {
       ...formData,
       subject: formData.subject.trim() || t('contact.subject_default') || 'Contact via Portfolio',
       website: (document.getElementById('hp_website') as HTMLInputElement)?.value || '',
       fax: (document.getElementById('hp_fax') as HTMLInputElement)?.value || ''
     };
-    
+
     mutate(
       { data: dataToSend, idempotencyKey },
       {
@@ -91,11 +91,11 @@ export function useContactForm() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    
+
     if (mutationSuccess || mutationError || errors.submit) {
       reset();
     }
-    
+
     if (errors[name]) {
       setErrors(prev => {
         const newErrors = { ...prev };

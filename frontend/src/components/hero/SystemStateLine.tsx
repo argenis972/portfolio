@@ -25,8 +25,8 @@ export const SystemStateLine = React.memo(({ status, effectiveP95, recoveryState
       const cause = lastIncident && lastIncident !== 'none'
         ? t(`metrics.incident.${lastIncident}`, { defaultValue: lastIncident })
         : 'anomaly detected';
-      const cbState = recoveryState === 'open' 
-        ? t('hero.status.circuit_breaker') + ' OPEN' 
+      const cbState = recoveryState === 'open'
+        ? t('hero.status.circuit_breaker') + ' OPEN'
         : t('hero.status.circuit_breaker') + ' ' + recoveryState.toUpperCase();
       const p95Text = t('hero.status.p95_at', { n: effectiveP95 });
       const fallback = t('hero.status.fallback_engaged');

@@ -28,9 +28,9 @@ if (!(Run-Check "Verify dependencies" { py -3.12 -m pip install -r requirements.
 if (!(Run-Check "Ruff Check (Linting)" { py -3.12 -m ruff check . })) { $AllPassed = $false }
 
 # 3. Ruff Format Check (Style)
-if (!(Run-Check "Ruff Format Check" { py -3.12 -m ruff format --check . })) { 
+if (!(Run-Check "Ruff Format Check" { py -3.12 -m ruff format --check . })) {
     Write-Host "HINT: Use 'py -3.12 -m ruff format .' to fix automatically." -ForegroundColor Gray
-    $AllPassed = $false 
+    $AllPassed = $false
 }
 
 # 4. Mypy (Typing)

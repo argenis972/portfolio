@@ -46,7 +46,7 @@ export default function About() {
                 {categories.map((category) => {
                   const isExpanded = expandedCat === category;
                   const catSkills = skills.filter((s) => s.category === category);
-                  
+
                   return (
                     <div key={category} className="border border-app-border rounded-lg bg-app-surface overflow-hidden">
                       <button
@@ -56,7 +56,7 @@ export default function About() {
                         <span className="text-xs font-mono uppercase tracking-widest text-app-text">
                           {t(`stack.category.${category}`)}
                         </span>
-                        <ChevronRight 
+                        <ChevronRight
                           className={`w-4 h-4 text-app-primary transition-transform duration-300 ${isExpanded ? 'rotate-90' : ''}`}
                         />
                       </button>

@@ -27,7 +27,7 @@ export default function ChaosModeBanner() {
               {t('chaos.banner.hint')}
             </span>
           </div>
-          
+
           {/* Animated scanline effect */}
           <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-transparent via-white/5 to-transparent w-1/4 h-full skew-x-[-20deg] animate-[shimmer_2s_infinite]" />
         </m.div>

@@ -42,19 +42,19 @@ export function useMetricsDisplay() {
         ? 'bg-status-error-soft text-status-error'
         : 'bg-status-ok-soft text-status-ok';
   const errorNumberColor = errorIsElevated ? 'text-status-error' : 'text-app-text';
-  
+
   const hasIncident = data.last_incident !== 'none';
   const incidentDot = hasIncident ? 'bg-status-warn' : 'bg-status-ok';
   const incidentText = hasIncident ? 'text-status-warn' : 'text-status-ok';
-  
+
   const latencyDelta = previous ? effectiveP95 - previous.p95_ms : null;
   const baselineDelta = baselineP95 === null ? null : effectiveP95 - baselineP95;
-  
+
   const latestEventLabel = latestTrace ? t(`metrics.incident.${latestTrace.type}`) : t('metrics.incident.none');
   const latestEventAgoSeconds = latestTrace ? Math.max(0, Math.floor((currentTime - latestTrace.timestamp.getTime()) / 1000)) : null;
-  
-  const confidenceTone = confidenceLabel === 'estimated' 
-    ? 'bg-[var(--color-status-synthetic-bg)] text-[var(--color-status-synthetic)] border-[var(--color-status-synthetic-border)]' 
+
+  const confidenceTone = confidenceLabel === 'estimated'
+    ? 'bg-[var(--color-status-synthetic-bg)] text-[var(--color-status-synthetic)] border-[var(--color-status-synthetic-border)]'
     : 'bg-[var(--color-status-ok-bg)] text-[var(--color-status-ok-text)] border-[var(--color-status-ok-border)]';
 
   return {

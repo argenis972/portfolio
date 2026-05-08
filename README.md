@@ -10,7 +10,7 @@
 
 ---
 
-A **Cloud-Native payment backend** focused on resiliency, idempotency, and infrastructure automation. This isn't just a portfolio; it's a system built to survive and be managed at scale:
+A **Cloud-Native SRE Portfolio System** focused on resiliency, idempotency, and infrastructure automation. This isn't just a portfolio; it's a system built to survive and be managed at scale:
 
 - 🏗️ **Infrastructure as Code (IaC)** — Fully managed via Terraform with automated CI/CD provisioning.
 - 🌪️ **Chaos-Tested** — Automated weekly E2E stress tests to verify degradation and recovery.
@@ -101,7 +101,7 @@ This project follows a **Failure-Resilient** deployment model where infrastructu
 ---
 
 ## 📊 Production Incident Track Record
-*8 real production incidents documented with post-mortems:*
+*9 real production incidents documented with post-mortems:*
 
 | Incident | Failure | Detection | Resolution |
 |---|---|---|---|
@@ -113,8 +113,9 @@ This project follows a **Failure-Resilient** deployment model where infrastructu
 | **INC-006** | Spam filter false positive on mixed-protocol links | Static analysis | Unified URL hostname normalization (v1.8.0) |
 | **INC-007** | Koyeb Terraform Provider Schema Incompatibility | API 400 Bad Request | [Architectural pivot to Secret-First Orchestration](docs/architecture/INCIDENT_KOYEB_TERRAFORM.md) |
 | **INC-008** | Destructive IaC Migration (Free Tier Constraints) | 14-hour Downtime | [Cold migration for operational consistency](docs/architecture/INCIDENT_DESTRUCTIVE_IAC_MIGRATION.md) |
+| **INC-009** | Terraform Secret Identity Collision (Rename Race) | Deployment Blocked | [State migration via moved blocks](docs/architecture/INC-009-terraform-resource-collision.md) |
 
-See [FAILURE_MODEL.md](docs/architecture/FAILURE_MODEL.md) for full degradation behaviors and governing ADRs (INC-001–INC-008).
+See [FAILURE_MODEL.md](docs/architecture/FAILURE_MODEL.md) for full degradation behaviors and governing ADRs (INC-001–INC-009).
 
 ---
 
@@ -129,7 +130,7 @@ See [FAILURE_MODEL.md](docs/architecture/FAILURE_MODEL.md) for full degradation 
 | Error Rate | < 0.5% 5xx | **0%** (steady) / **~9%** (ramp-up DoS) — Koyeb Free Tier limits observed ✅ |
 
 > See [`benchmarks/results/02c08d3/summary.md`](benchmarks/results/02c08d3/summary.md) for full analysis including why local breaches are expected.
-> Reproduce: `k6 run --env BASE_URL=https://api.argenisbackend.com benchmarks/scripts/health.js` 
+> Reproduce: `k6 run --env BASE_URL=https://api.argenisbackend.com benchmarks/scripts/health.js`
 
 ---
 
@@ -178,7 +179,7 @@ npm install && npm run dev
 ```
 
 > Run database migrations as part of deploy/release automation, not on every Koyeb application boot.
-> 
+>
 > **Note**: Interactive documentation (Swagger/ReDoc) is disabled in production for security. To view the API contract, run the project locally in `development` mode and access `localhost:8000/docs`.
 
 ---

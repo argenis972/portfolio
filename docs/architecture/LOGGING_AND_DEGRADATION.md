@@ -8,7 +8,7 @@ Instead of outputting raw text dumps, the system outputs structured JSON logs. T
 **Pattern Identified:** A repetitive chain of `psycopg2.OperationalError` triggers within 5 seconds under high load.
 **Rule:** `IF (Database_Timeout_Count > 5 in 10s) AND (CPU_Utilization > 85%)`
 
-**Action (Automated):** 
+**Action (Automated):**
 1. **Trip Circuit Breaker** immediately (bypass halfway open state).
 2. **Activate Drain Mode** — purge the lowest priority 20% of the async queue.
 3. **Emit `System_Degraded` event** to telemetry tools.
@@ -50,7 +50,7 @@ When the system triggers "Survival Mode" due to the aforementioned rule, it alte
     "ui_directives": {
       "disable_animations": true,
       "hide_secondary_metrics": true,
-      "throttle_polling": 30000 
+      "throttle_polling": 30000
     },
     "message": "System is operating under heavy load. Non-essential features are disabled."
   }

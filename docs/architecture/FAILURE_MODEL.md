@@ -1,6 +1,6 @@
 # Explicit Failure Model & Contingency Policies
 
-> This document is grounded in real production incidents (INC-001 through INC-008).
+> This document is grounded in real production incidents (INC-001 through INC-009).
 > Each failure mode documents what actually happened, how it was detected, the accepted degradation behavior, and the governing ADR.
 > Source: CHANGELOG.md (Production Incidents section).
 
@@ -198,6 +198,30 @@ Downtime is accepted for destructive reconciliation when provider ownership cons
 
 ---
 
+## 9. Terraform Secret Identity Collision (Rename Race Condition)
+
+### Incident: INC-009 — Secret Identity Collision
+- **Period:** v1.8.1 → v1.8.2
+- **Affected:** Infrastructure Provisioning CI/CD (Terraform)
+
+### Actual Failure
+Renaming Terraform resource keys in a `for_each` map (e.g., `ENVIRONMENT` → `AMBIENTE`) triggered a `destroy + create` cycle. Because both keys mapped to the same physical Koyeb secret name, the "create" step failed with a `400 Bad Request: already exists` error. Terraform does not natively recognize key changes as renames without explicit instruction.
+
+### Detection
+**CI/CD pipeline failure.** Terraform apply failed during the "English-First" standardization phase.
+
+### Accepted Degradation Behavior
+- **Deployment blocked:** Infrastructure cannot be updated until the state is manually reconciled or `moved` blocks are added.
+- **Remediation:** Implementation of `moved` blocks to convert destructive cycles into state-only renames.
+
+### Governing ADR
+- **ADR-18:** Infrastructure as Code (IaC) — specifically the "Zero to Destroy" principle.
+
+### Accepted Consequence
+Renaming internal Terraform keys now requires mandatory `moved` blocks to maintain state continuity.
+
+---
+
 ## Failure Mode Summary
 
 | Incident | Component | Detection | Degradation | ADR | Status |
@@ -210,6 +234,7 @@ Downtime is accepted for destructive reconciliation when provider ownership cons
 | INC-006 | Spam Filter (Contact) | Static analysis | False negatives (spam passes as single-link) | CHANGELOG | Resolved v1.8.0 |
 | INC-007 | Terraform Provider | CI/CD failure | Deployment blocked (Architectural pivot to Secrets) | ADR-18 | Resolved v1.8.1 |
 | INC-008 | IaC Migration | Manual | Intentional downtime (Cold Migration) | ADR-18 | Resolved v1.8.1 |
+| INC-009 | Terraform Resource | CI/CD | Deployment blocked (Identity Collision) | ADR-18 | Resolved v1.8.2 |
 
 ---
 

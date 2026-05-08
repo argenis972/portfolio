@@ -2,7 +2,7 @@
 
 **Timestamp:** 2026-04-29T15-30-13
 **Base URL:** https://api.argenisbackend.com
-**k6 version:** 
+**k6 version:**
 
 ## Results
 

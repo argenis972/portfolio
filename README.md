@@ -1,5 +1,4 @@
-# 🏛️ Cloud-Native Backend: Resiliency & Infrastructure Laboratory
-
+# 🏛️ Backend-Focused Full-Stack System
 [![License: MIT](https://img.shields.io/badge/License-MIT-gold.svg)](LICENSE)
 [![Backend CI](https://github.com/Argenis1412/portfolio/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/Argenis1412/portfolio/actions)
 [![Frontend CI](https://github.com/Argenis1412/portfolio/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/Argenis1412/portfolio/actions)

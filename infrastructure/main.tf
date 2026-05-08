@@ -55,7 +55,7 @@ locals {
 
 resource "koyeb_secret" "vars" {
   # We use the STABLE legacy key as the Terraform resource key to prevent deletion/recreation
-  for_each = local.secrets_registry
+  for_each = nonsensitive(local.secrets_registry)
 
   # Secret name in Koyeb remains stable (using the legacy key name)
   name  = "portfolio-${lower(replace(each.key, "_", "-"))}"
@@ -97,7 +97,7 @@ resource "koyeb_service" "backend" {
 
     # Dynamic generation of environment variables using Secret references
     dynamic "env" {
-      for_each = local.secrets_registry
+      for_each = nonsensitive(local.secrets_registry)
       content {
         # The key the application sees (English standard)
         key = env.value.app_key

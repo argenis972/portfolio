@@ -100,7 +100,7 @@ resource "koyeb_service" "backend" {
       for_each = local.secrets_registry
       content {
         # The key the application sees (English standard)
-        key    = env.value.app_key
+        key = env.value.app_key
         # Reference the secret by its stable Terraform key
         secret = koyeb_secret.vars[env.key].name
       }

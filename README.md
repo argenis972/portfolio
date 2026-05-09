@@ -124,7 +124,7 @@ See [FAILURE_MODEL.md](docs/architecture/FAILURE_MODEL.md) for full degradation 
 
 | Endpoint | SLO Target | Benchmark Result |
 |----------|-----------|------------------|
-| `/about`, `/projects`, `/stack` | P95 < 50ms | **App P95: ~64ms** ✅ (Prod, JSON-First) / **Edge P95: ~2.1s** (Global Net) / ~820ms (Local SQLite) |
+| `/about`, `/projects`, `/stack` | P95 < 50ms | [local baseline: ~820ms P95](benchmarks/results/02c08d3/summary.md) — SQLite/single-worker; prod run pending |
 | `/contact` | P95 < 200ms | **P95 = 37ms** ✅ (local, in-memory anti-abuse stack) |
 | `/health` | P99 < 100ms | **P95 Cold: ~3.5s** (infra spin-up) / **P95 Warm: ~1.3s** (shared hypervisor) |
 | Error Rate | < 0.5% 5xx | **0%** (steady) / **~9%** (ramp-up DoS) — Koyeb Free Tier limits observed ✅ |

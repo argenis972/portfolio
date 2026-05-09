@@ -69,7 +69,7 @@ async def check_health(
             if is_healthy
             else "API degraded (fail-silent mode active)"
         ),
-        api_version="1.8.2",
+        api_version="1.7.0",
         environment=settings.environment,
         uptime_seconds=uptime,
         details=details,

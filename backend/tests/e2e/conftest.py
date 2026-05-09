@@ -18,7 +18,9 @@ def api_client():
         # Prevent 120s waits by skipping E2E tests if the backend doesn't support instant reset
         reset_resp = client.post("/api/v1/chaos/reset")
         if reset_resp.status_code == 404:
-            pytest.skip("Backend is running an old version without /api/v1/chaos/reset. Skipping E2E to avoid 120s delays.")
+            pytest.skip(
+                "Backend is running an old version without /api/v1/chaos/reset. Skipping E2E to avoid 120s delays."
+            )
 
         yield client
 
@@ -51,7 +53,9 @@ def chaos_teardown(api_client):
 
     # Teardown: Instantly reset chaos state to avoid waiting 120s
     reset_resp = api_client.post("/api/v1/chaos/reset")
-    assert reset_resp.status_code == 200, f"Reset failed with status {reset_resp.status_code}"
+    assert reset_resp.status_code == 200, (
+        f"Reset failed with status {reset_resp.status_code}"
+    )
 
     # Wait a tiny bit to ensure the next request doesn't hit any race conditions
     time.sleep(0.1)
@@ -60,4 +64,6 @@ def chaos_teardown(api_client):
     resp = api_client.get("/api/v1/metrics/summary")
     if resp.status_code == 200:
         data = resp.json()
-        assert data.get("system_lifecycle") == "NORMAL", "System failed to return to NORMAL after reset"
+        assert data.get("system_lifecycle") == "NORMAL", (
+            "System failed to return to NORMAL after reset"
+        )

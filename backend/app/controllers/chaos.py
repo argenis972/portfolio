@@ -392,9 +392,13 @@ async def inject_latency(
     summary="Reset chaos state",
     description="Instantly clears all active incidents and returns the system to NORMAL state. Used primarily for testing.",
 )
-async def reset_chaos() -> dict:
+@limiter.limit("5/minute")
+async def reset_chaos(request: Request) -> dict:
     """
     Clears the in-memory chaos state.
     """
     chaos_state.reset()
-    return {"status": "reset", "message": "Chaos state cleared, system returned to NORMAL"}
+    return {
+        "status": "reset",
+        "message": "Chaos state cleared, system returned to NORMAL",
+    }

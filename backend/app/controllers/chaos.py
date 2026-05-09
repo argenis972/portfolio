@@ -385,3 +385,20 @@ async def inject_latency(
         "incident_type": "latency_injection",
         "timestamp": datetime.now(UTC).isoformat(),
     }
+
+
+@router.post(
+    "/reset",
+    summary="Reset chaos state",
+    description="Instantly clears all active incidents and returns the system to NORMAL state. Used primarily for testing.",
+)
+@limiter.limit("5/minute")
+async def reset_chaos(request: Request) -> dict:
+    """
+    Clears the in-memory chaos state.
+    """
+    chaos_state.reset()
+    return {
+        "status": "reset",
+        "message": "Chaos state cleared, system returned to NORMAL",
+    }

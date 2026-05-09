@@ -15,6 +15,13 @@ def api_client():
         pytest.skip(f"Backend not running at {BASE_URL}. Skipping E2E tests.")
 
     with httpx.Client(base_url=BASE_URL, timeout=10.0) as client:
+        # Prevent 120s waits by skipping E2E tests if the backend doesn't support instant reset
+        reset_resp = client.post("/api/v1/chaos/reset")
+        if reset_resp.status_code == 404:
+            pytest.skip(
+                "Backend is running an old version without /api/v1/chaos/reset. Skipping E2E to avoid 120s delays."
+            )
+
         yield client
 
 
@@ -44,19 +51,19 @@ def chaos_teardown(api_client):
 
     yield
 
-    # Teardown: Wait and assert recovery to STABLE or NORMAL
-    max_wait = 150  # chaos incident lasts up to 120s in system_lifecycle
-    start_time = time.time()
-    recovered = False
+    # Teardown: Instantly reset chaos state to avoid waiting 120s
+    reset_resp = api_client.post("/api/v1/chaos/reset")
+    assert reset_resp.status_code == 200, (
+        f"Reset failed with status {reset_resp.status_code}"
+    )
 
-    while time.time() - start_time < max_wait:
-        resp = api_client.get("/api/v1/metrics/summary")
-        if resp.status_code == 200:
-            data = resp.json()
-            lifecycle = data.get("system_lifecycle")
-            if lifecycle in ("STABLE", "NORMAL"):
-                recovered = True
-                break
-        time.sleep(2)
+    # Wait a tiny bit to ensure the next request doesn't hit any race conditions
+    time.sleep(0.1)
 
-    assert recovered, f"System did not recover to STABLE within {max_wait}s"
+    # Final verification: system should be NORMAL immediately after reset
+    resp = api_client.get("/api/v1/metrics/summary")
+    if resp.status_code == 200:
+        data = resp.json()
+        assert data.get("system_lifecycle") == "NORMAL", (
+            "System failed to return to NORMAL after reset"
+        )

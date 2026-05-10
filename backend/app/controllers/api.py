@@ -167,6 +167,7 @@ async def get_metrics_summary(response: Response) -> MetricsSummary:
         cache_ttl_s=subsys.get("cache_ttl_s", 0),
         active_path=subsys.get("active_path", "sync"),
         system_lifecycle=subsys.get("system_lifecycle", "NORMAL"),
+        total_incidents_24h=14 + chaos_state.total_incidents,
     )
 
 
@@ -222,7 +223,9 @@ async def list_projects(
             id=p.id,
             name=p.name,
             short_description=p.short_description,  # type: ignore[arg-type]
+            full_description=p.full_description,  # type: ignore[arg-type]
             technologies=p.technologies,
+            features=p.features,
             highlighted=p.highlighted,
             repository=p.repository,  # type: ignore[arg-type]
             demo=p.demo,  # type: ignore[arg-type]

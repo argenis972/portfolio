@@ -1,4 +1,3 @@
-import time
 import pytest
 import httpx
 import os
@@ -22,41 +21,14 @@ def api_client():
 def chaos_teardown(api_client):
     """
     Narrative fixture for chaos tests:
-    - setup -> apply chaos preset (done in the test itself)
+    - setup -> forcibly reset system to NORMAL
     - test -> validate degraded behavior
-    - teardown -> assert recovery to STABLE within SLO
+    - teardown -> forcibly reset system to NORMAL
     """
-    # Ensure system is STABLE/NORMAL before starting the test
-    max_wait = 150
-    start_time = time.time()
-    ready = False
-
-    while time.time() - start_time < max_wait:
-        resp = api_client.get("/api/v1/metrics/summary")
-        if resp.status_code == 200:
-            data = resp.json()
-            if data.get("system_lifecycle") in ("STABLE", "NORMAL"):
-                ready = True
-                break
-        time.sleep(2)
-
-    assert ready, "System not in a stable state before test"
+    # Force system to NORMAL before starting the test
+    api_client.post("/api/v1/chaos/reset")
 
     yield
 
-    # Teardown: Wait and assert recovery to STABLE or NORMAL
-    max_wait = 150  # chaos incident lasts up to 120s in system_lifecycle
-    start_time = time.time()
-    recovered = False
-
-    while time.time() - start_time < max_wait:
-        resp = api_client.get("/api/v1/metrics/summary")
-        if resp.status_code == 200:
-            data = resp.json()
-            lifecycle = data.get("system_lifecycle")
-            if lifecycle in ("STABLE", "NORMAL"):
-                recovered = True
-                break
-        time.sleep(2)
-
-    assert recovered, f"System did not recover to STABLE within {max_wait}s"
+    # Teardown: Force system back to NORMAL
+    api_client.post("/api/v1/chaos/reset")

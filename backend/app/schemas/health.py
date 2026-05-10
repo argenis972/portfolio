@@ -118,3 +118,8 @@ class MetricsSummary(BaseModel):
         examples=["NORMAL", "DEGRADED", "RECOVERING", "STABLE"],
         description="Current state machine position based on time-since-last-incident",
     )
+    total_incidents_24h: int = Field(
+        default=0,
+        examples=[12],
+        description="Total number of chaos incidents recorded in the last 24h window",
+    )

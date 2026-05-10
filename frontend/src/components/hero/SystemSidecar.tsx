@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { type SystemStatus } from '../../hooks/useLiveMetrics';
 import { type MetricsSummary } from '../../api/types';
 import { type MetricSample } from '../../types/metrics';
 import { type TraceEntry } from '../../services/TraceEmitter';
 import MetricsSparkline from '../ui/MetricsSparkline';
+import { m, AnimatePresence } from 'framer-motion';
 
 const STATUS_COLORS: Record<SystemStatus, string> = {
   loading: 'text-app-muted',
@@ -32,6 +33,7 @@ export const SystemSidecar = React.memo(({
   effectiveP95, confidenceScore, confidenceLabel, recoveryState
 }: SystemSidecarProps) => {
   const { t } = useLanguage();
+  const [showRaw, setShowRaw] = useState(false);
 
   return (
     <div className="glass rounded-2xl p-6 border border-app-border/40 premium-shadow">
@@ -103,13 +105,43 @@ export const SystemSidecar = React.memo(({
         </div>
       </div>
 
-      <div className="mt-8 pt-6 border-t border-app-border/20 flex items-center justify-between">
-        <div className="text-[9px] font-mono text-app-muted/60">
-          NODE_ID: PRODUCTION-01
+      <div className="mt-8 pt-6 border-t border-app-border/20">
+        <div className="flex items-center justify-between mb-4">
+          <div className="text-[10px] font-mono text-app-muted/60 uppercase tracking-widest">
+            {t('hero.sidecar.uptime')}: {data?.uptime ?? '...'}
+          </div>
+          <button
+            onClick={() => setShowRaw(!showRaw)}
+            className={`text-xs font-mono uppercase tracking-tight transition-all px-2 py-1 rounded border ${
+              showRaw
+                ? 'text-app-primary border-app-primary/30 bg-app-primary/5'
+                : 'text-app-muted/80 border-app-border/20 hover:border-app-primary/40 hover:text-app-primary hover:bg-app-primary/5'
+            } focus:outline-none focus:ring-1 focus:ring-app-primary/30`}
+          >
+            {showRaw ? '[HIDE_RAW]' : '[SHOW_RAW]'}
+          </button>
         </div>
-         <div className="text-[9px] font-mono text-app-muted/60">
-           {t('hero.sidecar.uptime')}: {data?.uptime ?? '...'} <span className="text-[9px] text-status-ok/80">{t('hero.sidecar.uptime_note')}</span>
-         </div>
+
+        <AnimatePresence>
+          {showRaw && (
+            <m.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="space-y-2 overflow-hidden"
+            >
+              <div className="text-[9px] font-mono text-app-muted/40">
+                NODE_ID: PRODUCTION-01
+              </div>
+              <div className="text-[9px] font-mono text-app-muted/40">
+                INFRA: KOYEB-EPHEMERAL-S1
+              </div>
+              <div className="text-[9px] font-mono text-app-muted/40">
+                STATUS: {t('hero.sidecar.uptime_note')}
+              </div>
+            </m.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

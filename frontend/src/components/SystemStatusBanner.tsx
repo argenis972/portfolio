@@ -10,6 +10,7 @@
 import React from 'react';
 import { m, AnimatePresence } from 'framer-motion';
 import { useMetricsDisplay } from '../hooks/useMetricsDisplay';
+import { useChaosMode } from '../hooks/useChaosMode';
 
 
 function causeKey(lastIncident: string): string {
@@ -25,9 +26,10 @@ function causeKey(lastIncident: string): string {
 }
 
 const SystemStatusBanner = React.memo(() => {
+  const { preset } = useChaosMode();
   const { t, metrics, data } = useMetricsDisplay();
 
-  if (!data) return null;
+  if (!data || preset !== 'off') return null;
 
   const { status, displayLifecycle, effectiveP95, strategyProfile } = metrics;
   const isVisible = status === 'degraded' || status === 'down';

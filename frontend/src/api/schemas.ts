@@ -92,6 +92,7 @@ export const MetricsSummarySchema = z.object({
   active_path: z.enum(['sync', 'async', 'fallback']).default('sync'),
   // State machine lifecycle
   system_lifecycle: z.enum(['NORMAL', 'DEGRADED', 'RECOVERING', 'STABLE']).default('NORMAL'),
+  total_incidents_24h: z.number().int().default(0),
 });
 
 export const AboutSchema = z.object({

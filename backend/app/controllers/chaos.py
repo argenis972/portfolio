@@ -52,6 +52,7 @@ class ChaosState:
     """Global mutable state for chaos metrics — consumed by /metrics/summary."""
 
     total_chaos_requests: int = 0
+    total_incidents: int = 0
     incidents: list[ChaosIncident] = field(default_factory=list)
     # Separate retry timestamps — not capped like incidents.
     # Each spike generates multiple retries; each failure generates 1.
@@ -63,6 +64,7 @@ class ChaosState:
 
     def record_incident(self, incident: ChaosIncident) -> None:
         self.incidents.append(incident)
+        self.total_incidents += 1
         # Keep only the last 50 incidents in memory
         if len(self.incidents) > 50:
             self.incidents = self.incidents[-50:]
@@ -82,6 +84,7 @@ class ChaosState:
     def reset(self) -> None:
         """Reset all state — used by tests to isolate chaos effects."""
         self.total_chaos_requests = 0
+        self.total_incidents = 0
         self.incidents.clear()
         self._retry_timestamps.clear()
 
@@ -385,3 +388,14 @@ async def inject_latency(
         "incident_type": "latency_injection",
         "timestamp": datetime.now(UTC).isoformat(),
     }
+
+
+@router.post(
+    "/reset",
+    summary="Reset chaos state",
+    description="Forcibly clears all in-memory chaos state (incidents, retries, counters).",
+)
+async def reset_chaos():
+    """Reset the chaos simulation to NORMAL/nominal state."""
+    chaos_state.reset()
+    return {"status": "reset", "timestamp": datetime.now(UTC).isoformat()}

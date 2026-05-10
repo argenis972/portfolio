@@ -1,26 +1,23 @@
 
 import { useLanguage } from '../../context/LanguageContext';
-import { type SystemStatus } from '../../hooks/useLiveMetrics';
 import { type MetricsSummary } from '../../api/types';
 import DeltaBadge from '../ui/DeltaBadge';
-
-const STATUS_COLORS: Record<SystemStatus, string> = {
-  loading: 'text-app-muted',
-  operational: 'text-status-ok',
-  warning: 'text-status-warn',
-  degraded: 'text-status-error',
-  down: 'text-status-error',
-};
 
 interface KpiStripProps {
   data: MetricsSummary;
   previous: MetricsSummary | null;
-  status: SystemStatus;
   effectiveP95: number;
 }
 
-export function KpiStrip({ data, previous, status, effectiveP95 }: KpiStripProps) {
+export function KpiStrip({ data, previous, effectiveP95 }: KpiStripProps) {
   const { t } = useLanguage();
+
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   const items = [
     {
@@ -41,17 +38,24 @@ export function KpiStrip({ data, previous, status, effectiveP95 }: KpiStripProps
       delta: null,
     },
     {
-      label: t('hero.kpi.state'),
-      value: t(`metrics.status.${status}`).toUpperCase(),
-      className: STATUS_COLORS[status],
-      delta: null,
+      id: 'incidents',
+      label: t('hero.kpi.incidents'),
+      value: data.total_incidents_24h,
+      className: 'text-app-primary cursor-pointer hover:underline',
+      delta: <DeltaBadge current={data.total_incidents_24h} previous={previous?.total_incidents_24h ?? null} unit="" />,
+      onClick: () => scrollToSection('incidents'),
     },
   ];
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 max-w-xl mx-auto md:mx-0">
       {items.map((item) => (
-        <div key={item.label} className="glass rounded-xl px-4 py-3 flex flex-col gap-1">
+        <div
+          key={item.label}
+          className="glass rounded-xl px-4 py-3 flex flex-col gap-1"
+          onClick={item.onClick}
+          role={item.onClick ? 'button' : undefined}
+        >
           <span className="text-[10px] font-mono uppercase tracking-widest text-app-muted">{item.label}</span>
            <div className="flex items-baseline flex-wrap">
              <span className={`font-mono text-lg font-bold ${item.className ?? 'text-app-text'}`}>

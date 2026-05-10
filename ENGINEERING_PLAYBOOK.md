@@ -22,6 +22,16 @@
 
 **Atomic commits**: One logical change per commit. A feature and its refactor are separate commits — reviewers shouldn't have to untangle them.
 
+*Exception for mass-formatting*: A repository-wide execution of linters or formatting hooks (e.g., `pre-commit`) that touches many files at once IS considered a single logical change. It must be squashed into a single commit to prevent history pollution.
+
+**Example of a valid atomic commit for mass-formatting:**
+```text
+chore(infra): apply terraform fmt and normalize line endings across repo
+
+First-time execution of pre-commit hooks (terraform fmt + end-of-file fixer)
+touched all .tf and config files. Squashed into single commit per atomic commit policy.
+```
+
 **`ci:` commits are prioritized above all other work.** A broken pipeline blocks everyone. Fix it first.
 
 ---
@@ -43,6 +53,18 @@ No underscores. No uppercase. No ticket numbers unless the team uses an issue tr
 ---
 
 ## 3. CI/CD — Green Pipeline Before Merge
+
+**Zero Tolerance for Broken Pipelines**: A broken `main` branch is an incident. The CI pipeline on GitHub is the final gate, not a debugging tool.
+
+### Pre-Flight Checklist (Mandatory Local Verification)
+Before pushing to `main` or opening a PR, you MUST execute and pass locally:
+1. **Backend**:
+   - `ruff check .` (Linting)
+   - `ruff format --check .` (Formatting - *The cause of the v1.8.2 CI break*)
+   - `pytest` (Logic & Coverage)
+2. **Frontend**:
+   - `npm run lint` (Style & Types)
+   - `npm run test` (Vitest suite)
 
 No merge to `main` without passing:
 
@@ -273,7 +295,47 @@ During the implementation of GitHub Actions for Terraform, several critical arch
 
  ---
 
- *Last updated: v1.8.2*
+ ## 18. GitHub Configuration & Professional Workflow
+
+ **Repository Settings & Philosophy**:
+ - ✅ **Allow squash merging**: (Enabled) Prioritized for this repository to maintain a clean, linear history.
+ - ℹ️ **Merge Strategy Context**: While merge commits are standard and necessary in large-scale corporate environments (monorepos, complex release branches, hotfix flows), for personal portfolios, **squash merging** is preferred. It ensures that reviewers see the final architectural result without the noise of "work-in-progress" commits.
+ - ⚠️ **Allow rebase merging**: (Optional)
+
+ **The Ideal Workflow (Even when working solo)**:
+ 1. **Create Branch**: `git checkout -b feat/nombre-feature`
+ 2. **Clear, Atomic Commits**:
+    ```text
+    feat(auth): implement JWT refresh rotation
+    fix(cache): prevent Redis stampede
+    test(e2e): improve teardown reliability
+    ```
+ 3. **Open a PR**: Opening Pull Requests even when working alone demonstrates a professional, team-ready workflow.
+ 4. **Merge**: Always use **Squash and merge**.
+
+ **Expected Result in `main`**:
+ A clean, linear commit history:
+ ```text
+ feat(metrics): add P95 aggregation
+ fix(auth): validate token expiration edge cases
+ docs(api): add retry flow documentation
+ ```
+ *And NOT*: `Merge pull request #34 from ...`
+
+ **What is Actually Evaluated (Beyond raw contribution counts)**:
+ - Architecture
+ - Clarity
+ - Tests
+ - Observability
+ - Documentation
+ - Ability to finish features
+ - Understandable commits
+
+ *Baseline*: This repository enforces conventional commits, separation of responsibilities, real backend practices, and includes tests/docs/performance — avoiding the anti-patterns of generic commit messages like "fix2", "final", or "ahora-si".
+
+ ---
+
+ *Last updated: v1.8.3*
 
 ---
 

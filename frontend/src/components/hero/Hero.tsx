@@ -88,7 +88,6 @@ export const Hero = React.memo(() => {
               <KpiStrip
                 data={data}
                 previous={previous}
-                status={status}
                 effectiveP95={effectiveP95}
               />
             </m.div>

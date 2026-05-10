@@ -22,7 +22,14 @@ function parseProjectStory(raw: string | undefined): StorySections {
   const paragraphs = (() => {
     if (typeof DOMParser !== 'undefined') {
       const doc = new DOMParser().parseFromString(raw, 'text/html');
-      return Array.from(doc.querySelectorAll('.project-story p'))
+      let nodes = doc.querySelectorAll('.project-story p');
+
+      // Fallback: if .project-story is missing or empty, try any p tags
+      if (nodes.length === 0) {
+        nodes = doc.querySelectorAll('p');
+      }
+
+      return Array.from(nodes)
         .map((node) => node.textContent?.trim() ?? '')
         .filter(Boolean);
     }

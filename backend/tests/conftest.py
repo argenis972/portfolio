@@ -314,6 +314,10 @@ def reset_global_state():
     from app.core.idempotency import store
     from app.core.rate_limit import limiter
     from app.core.spam_store import spam_dedup_store
+    from app.controllers.chaos import chaos_state
+
+    # Clear chaos state
+    chaos_state.reset()
 
     # Clear idempotency caches
     if hasattr(store, "_cache"):

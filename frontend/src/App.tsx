@@ -45,6 +45,16 @@ function App() {
             <div className="min-h-screen flex flex-col pt-16 selection:bg-app-primary/30 selection:text-app-text transition-colors duration-300">
               <Navbar />
 
+              {/*
+                Banner render logic — two independent axes:
+                  A) chaos active + system degraded → ChaosModeBanner (unified, collapsible, shows detail on expand)
+                  B) chaos active + system OK       → ChaosModeBanner (collapsed label only)
+                  C) chaos off    + system degraded → SystemStatusBanner alone (no chaos label)
+                  D) chaos off    + system OK       → nothing renders
+
+                ChaosModeBanner returns null when preset === 'off' (cases C & D).
+                SystemStatusBanner returns null when chaos is active — it yields to the unified banner.
+              */}
               <Suspense fallback={null}>
                 <ChaosModeBanner />
               </Suspense>
@@ -57,7 +67,6 @@ function App() {
                 <SocialRail />
               </Suspense>
 
-              {/* System Status Banner — appears only when degraded/down */}
               <Suspense fallback={null}>
                 <SystemStatusBanner />
               </Suspense>

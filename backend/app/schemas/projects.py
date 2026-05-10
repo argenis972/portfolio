@@ -31,10 +31,18 @@ class ProjectSummary(BaseModel):
         ...,
         description="Brief project description in PT, EN and ES",
     )
+    full_description: LocalizedText | None = Field(
+        default=None,
+        description="Full story description (Problem/Constraint/Decision/Trade-off/Impact) in PT, EN and ES",
+    )
     technologies: list[str] = Field(
         ...,
         examples=[["Python", "FastAPI", "Pydantic"]],
         description="Technologies used",
+    )
+    features: list[str] = Field(
+        default_factory=list,
+        description="Main features or capabilities of the project",
     )
     highlighted: bool = Field(
         default=False,

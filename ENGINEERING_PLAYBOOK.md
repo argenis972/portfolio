@@ -22,6 +22,8 @@
 
 **Atomic commits**: One logical change per commit. A feature and its refactor are separate commits — reviewers shouldn't have to untangle them.
 
+**The Golden Rule**: Atomic commits in branches are a **tool**, not a cage. They become optional when the technical cost of separating changes is higher than the benefit of isolating them. However, never mix unrelated domains (e.g., a security fix and a CSS tweak) in the same commit; that is the "Giant Commit Trap" that kills debuggability.
+
 *Exception for mass-formatting*: A repository-wide execution of linters or formatting hooks (e.g., `pre-commit`) that touches many files at once IS considered a single logical change. It must be squashed into a single commit to prevent history pollution.
 
 **Example of a valid atomic commit for mass-formatting:**

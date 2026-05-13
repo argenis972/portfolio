@@ -21,7 +21,14 @@ from app.use_cases.get_experiences import GetExperiencesUseCase
 from app.use_cases.get_formation import GetFormationUseCase
 from app.use_cases.get_philosophy import GetPhilosophyUseCase
 from app.use_cases.send_contact import SendContactUseCase
+from app.core.queue import JobQueue, queue
 from app.settings import settings
+
+
+@lru_cache
+def get_job_queue() -> JobQueue | None:
+    """Returns the job queue provider (Redis Streams)."""
+    return queue
 
 
 @lru_cache

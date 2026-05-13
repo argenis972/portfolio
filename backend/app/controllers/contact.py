@@ -11,10 +11,11 @@ import structlog
 from fastapi import APIRouter, BackgroundTasks, Depends, Request
 
 from app.use_cases.send_contact import SendContactUseCase
-from app.controllers.dependencies import get_send_contact_use_case
+from app.controllers.dependencies import get_send_contact_use_case, get_job_queue
 from app.core.contact_guard import ContactGuard, email_domain
 from app.core.exceptions import DuplicateContactError
 from app.core.idempotency import store, verify_idempotency
+from app.core.queue import JobQueue
 from app.schemas.contact import ContactRequest, ContactResponse
 
 logger = structlog.get_logger(__name__)
@@ -30,9 +31,9 @@ async def _process_background_delivery(
     is_suspicious: bool,
     spam_score: int,
 ) -> None:
-    """Executes contact delivery in the background, logging structured events."""
+    """Fallback handler for local environments using BackgroundTasks."""
     try:
-        success = await send_contact_uc.execute(
+        await send_contact_uc.execute(
             name=request_data.name,
             email=request_data.email,
             subject=request_data.subject or "",
@@ -40,30 +41,8 @@ async def _process_background_delivery(
             is_suspicious=is_suspicious,
             spam_score=spam_score,
         )
-
-        if success:
-            logger.info(
-                "contact_delivered",
-                is_suspicious=is_suspicious,
-                email_domain=email_domain(request_data.email),
-                delivery_mode="background",
-            )
-        else:
-            logger.error(
-                "contact_delivery_failed",
-                is_suspicious=is_suspicious,
-                event_type="delivery_error",
-                email_domain=email_domain(request_data.email),
-                delivery_mode="background",
-            )
     except Exception as e:
-        logger.error(
-            "contact_delivery_crash",
-            error=str(e),
-            event_type="system_error",
-            email_domain=email_domain(request_data.email),
-            delivery_mode="background",
-        )
+        logger.error("background_task_fallback_failed", error=str(e))
 
 
 @router.post(
@@ -85,6 +64,7 @@ async def send_contact(
         SendContactUseCase,
         Depends(get_send_contact_use_case),
     ],
+    job_queue: Annotated[Optional[JobQueue], Depends(get_job_queue)],
     idempotency_key: Annotated[Optional[str], Depends(verify_idempotency)] = None,
 ) -> ContactResponse:
     cacheable_response: ContactResponse | None = None
@@ -173,26 +153,44 @@ async def send_contact(
             email_domain=email_domain(contact_request.email),
         )
 
-        # ── 6. Delivery (Background Tasks) ──────────────────────────────────
-        background_tasks.add_task(
-            _process_background_delivery,
-            send_contact_uc,
-            contact_request,
-            is_suspicious,
-            spam_score,
-        )
+        # ── 6. Delivery (Durable Queue vs Background Tasks) ──────────────────
+        delivery_mode = "stream"
+        if job_queue:
+            # Durable delivery via Redis Streams
+            await job_queue.enqueue(
+                job_name="send_contact_email",
+                payload={
+                    "name": contact_request.name,
+                    "email": contact_request.email,
+                    "subject": contact_request.subject,
+                    "message": contact_request.message,
+                    "is_suspicious": is_suspicious,
+                    "spam_score": spam_score,
+                },
+            )
+        else:
+            # Fallback to non-durable BackgroundTasks (local dev)
+            delivery_mode = "background_fallback"
+            background_tasks.add_task(
+                _process_background_delivery,
+                send_contact_uc,
+                contact_request,
+                is_suspicious,
+                spam_score,
+            )
 
         logger.info(
             "contact_queued",
             is_suspicious=is_suspicious,
             email_domain=email_domain(contact_request.email),
+            delivery_mode=delivery_mode,
         )
 
         cacheable_response = ContactResponse(
             success=True,
             message="Message sent successfully! I will get back to you soon.",
             queue_status="queued",
-            delivery_mode="background",
+            delivery_mode=delivery_mode,
             downstream=downstream,
         )
         return cacheable_response

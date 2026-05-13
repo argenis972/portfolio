@@ -47,6 +47,27 @@ services:
       start_period: 40s
 
   # ===========================
+  # BACKGROUND WORKER (Redis Streams)
+  # ===========================
+  worker:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: portafolio-worker
+    restart: unless-stopped
+    command: ["python", "-m", "app.worker"]
+    environment:
+      - ENVIRONMENT=development
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-portafolio}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@db:5432/${POSTGRES_DB:-portafolio_db}
+      - REDIS_URL=redis://redis:6379/0
+      - RESEND_API_KEY=${RESEND_API_KEY:-}
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - portafolio-network
+
+  # ===========================
   # FRONTEND (React + Vite)
   # ===========================
   # frontend:

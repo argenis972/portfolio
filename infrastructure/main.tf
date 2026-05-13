@@ -138,7 +138,7 @@ resource "koyeb_service" "worker" {
 
   definition {
     name = "worker"
-    type = "WORKER"
+    type = "WEB"
 
     git {
       repository = "github.com/Argenis1412/portfolio"

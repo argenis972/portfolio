@@ -17,6 +17,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from contextlib import asynccontextmanager
+import asyncio
 
 from app import __version__
 from app.settings import settings
@@ -32,16 +33,34 @@ from app.core.middleware import (
     SecurityHeadersMiddleware,
 )
 from app.core.observability import setup_observability
+from app.worker import StreamWorker
 
 
 @asynccontextmanager
 async def _lifespan(app: FastAPI):
     """FastAPI lifespan context: startup → yield → shutdown.
 
+    Starts the background job worker (Redis Streams) if configured.
     Shutdown: disposes the SQLAlchemy connection pool to avoid dangling
     connections during container restarts/rolling deploys.
     """
+    worker_task = None
+    if settings.redis_url:
+        worker = StreamWorker(settings.redis_url)
+        worker_task = asyncio.create_task(worker.run())
+        app.state.worker = worker
+
     yield  # Application running
+
+    # Shutdown
+    if worker_task:
+        app.state.worker.stop()
+        # Give some time for the loop to finish or cancel it
+        try:
+            await asyncio.wait_for(worker_task, timeout=5.0)
+        except (asyncio.TimeoutError, asyncio.CancelledError):
+            pass
+
     await dispose_all()
 
 

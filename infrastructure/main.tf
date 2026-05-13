@@ -130,57 +130,6 @@ resource "koyeb_service" "backend" {
   }
 }
 
-resource "koyeb_service" "worker" {
-  app_name = koyeb_app.portfolio.name
-
-  # Ensure all secrets are fully created before trying to reference them in the service
-  depends_on = [koyeb_secret.vars]
-
-  definition {
-    name = "worker"
-    type = "WEB"
-
-    git {
-      repository = "github.com/Argenis1412/portfolio"
-      branch     = "main"
-      workdir    = "/"
-      dockerfile {
-        dockerfile = "backend/Dockerfile"
-        command    = "python -m app.worker"
-      }
-    }
-
-    # Dynamic generation of environment variables using Secret references
-    dynamic "env" {
-      for_each = nonsensitive(local.secrets_registry)
-      content {
-        key    = env.value.app_key
-        secret = koyeb_secret.vars[env.key].name
-      }
-    }
-
-    ports {
-      port     = 8000
-      protocol = "http"
-    }
-
-    routes {
-      path = "/"
-      port = 8000
-    }
-
-    scalings {
-      min = 0
-      max = 1
-    }
-
-    instance_types {
-      type = "free"
-    }
-
-    regions = ["was"]
-  }
-}
 
 # --- INFRASTRUCTURE STATE MIGRATION ---
 # These moved blocks ensure that Terraform renames the resources in the state

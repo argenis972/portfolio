@@ -159,8 +159,18 @@ resource "koyeb_service" "worker" {
       }
     }
 
+    ports {
+      port     = 8000
+      protocol = "http"
+    }
+
+    routes {
+      path = "/"
+      port = 8000
+    }
+
     scalings {
-      min = 1
+      min = 0
       max = 1
     }
 

@@ -146,11 +146,9 @@ resource "koyeb_service" "worker" {
       workdir    = "/"
       dockerfile {
         dockerfile = "backend/Dockerfile"
+        command    = "python -m app.worker"
       }
     }
-
-    # Override the default CMD from Dockerfile to run the worker
-    command = ["python", "-m", "app.worker"]
 
     # Dynamic generation of environment variables using Secret references
     dynamic "env" {

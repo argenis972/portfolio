@@ -11,8 +11,25 @@ from slowapi.util import get_remote_address
 from app.settings import settings
 
 
+# Paths where rate limit must fail-closed (reject request) when Redis is unavailable.
+# Read-only portfolio endpoints use fail-open (allow through) to remain available.
+FAIL_CLOSED_PATHS = frozenset({"/api/v1/contact"})
+
+
 def get_client_ip(request: Request) -> str:
-    """Returns the real client IP, only trusting the N-th hop from the right."""
+    """Returns the real client IP.
+
+    - strict_proxy_mode ON (TRUSTED_PROXY_IPS configured): trusts forwarded headers
+      only when REMOTE_ADDR is a known proxy. Prevents IP spoofing bypass.
+    - strict_proxy_mode OFF (default, Koyeb/dynamic IPs): legacy depth-based mode.
+    """
+    peer_ip = request.client.host if request.client else None
+
+    if settings.strict_proxy_mode:
+        if peer_ip not in settings.trusted_proxy_ip_set:
+            # Peer is not a known proxy — ignore spoofed forwarding headers
+            return peer_ip or "unknown"
+
     forwarded_for = request.headers.get("x-forwarded-for")
     if forwarded_for:
         ips = [ip.strip() for ip in forwarded_for.split(",")]
@@ -59,9 +76,15 @@ limiter = Limiter(
 def check_rate_limit(request: Request, limit_string: str, key_func=get_email_or_ip_key):
     """
     Manually applies a rate limit hit and raises RateLimitExceeded if the limit is reached.
+
+    Fail strategy:
+    - Sensitive paths (FAIL_CLOSED_PATHS): raises HTTP 503 when Redis is unavailable.
+      This prevents abuse bypass during Redis outages.
+    - Read-only paths: fail-open (allows request through) to keep portfolio data available.
     """
     from limits import parse_many
     from slowapi.errors import RateLimitExceeded
+    from fastapi import HTTPException
 
     # Mock to satisfy RateLimitExceeded constructor (expects an object with `error_message`)
     class MockLimit:
@@ -69,6 +92,8 @@ def check_rate_limit(request: Request, limit_string: str, key_func=get_email_or_
             self.error_message = msg
 
     key = key_func(request)
+    is_sensitive = request.url.path in FAIL_CLOSED_PATHS
+
     # Parse the limit string (e.g. "10/day" -> [Limit(...)])
     for limit in parse_many(limit_string):
         try:
@@ -77,14 +102,37 @@ def check_rate_limit(request: Request, limit_string: str, key_func=get_email_or_
         except RateLimitExceeded:
             raise
         except Exception as e:
-            # Fallback (Fail-open) in case of Redis connection drops/timeouts
             import structlog
 
             logger = structlog.get_logger(__name__)
-            logger.warning(
-                "rate_limiter_redis_fallback_open",
+            logger.error(
+                "rate_limiter_backend_unavailable",
                 error=str(e),
                 limit=str(limit),
+                path=request.url.path,
+                mode="fail_closed" if is_sensitive else "fail_open",
             )
-            # Instead of returning 500, we fail 'open' allowing the request
+
+            # Emit Prometheus metric for alerting on Redis degradation
+            try:
+                from prometheus_client import Counter
+
+                Counter(
+                    "rate_limit_backend_unavailable_total",
+                    "Redis unavailable during rate limit evaluation",
+                    ["path", "mode"],
+                ).labels(
+                    path=request.url.path,
+                    mode="fail_closed" if is_sensitive else "fail_open",
+                ).inc()
+            except Exception:
+                pass  # Never fail the request due to a metrics error
+
+            if is_sensitive:
+                # Fail-closed: reject request on sensitive endpoints to prevent abuse
+                raise HTTPException(
+                    status_code=503,
+                    detail="Service temporarily unavailable. Please try again later.",
+                )
+            # Fail-open: allow through on read-only portfolio endpoints
             continue

@@ -9,11 +9,11 @@ from typing import Annotated, Optional
 
 import structlog
 from fastapi import APIRouter, BackgroundTasks, Depends, Request
-from fastapi.responses import JSONResponse
 
 from app.use_cases.send_contact import SendContactUseCase
 from app.controllers.dependencies import get_send_contact_use_case
 from app.core.contact_guard import ContactGuard, email_domain
+from app.core.exceptions import DuplicateContactError
 from app.core.idempotency import store, verify_idempotency
 from app.schemas.contact import ContactRequest, ContactResponse
 
@@ -156,13 +156,7 @@ async def send_contact(
                 email_domain=email_domain(contact_request.email),
                 context="shared_dedup_store",
             )
-            return JSONResponse(  # type: ignore[return-value]
-                status_code=400,
-                content={
-                    "error": {"code": "DUPLICATE_CONTENT"},
-                    "detail": "DUPLICATE_CONTENT",
-                },
-            )
+            raise DuplicateContactError()
 
         # ── 4. Rate limiting ────────────────────────────────────────────────
         # Set identity on request state so the limiter uses email as the key

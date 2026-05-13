@@ -133,6 +133,15 @@ class Settings(BaseSettings):
         alias="TRUSTED_PROXY_DEPTH",
         description="Number of trusted proxies (Edge/Load Balancer) before the application.",
     )
+    trusted_proxy_ips: str = Field(
+        default="",
+        alias="TRUSTED_PROXY_IPS",
+        description=(
+            "Comma-separated allowlist of trusted proxy IPs. "
+            "Empty = legacy mode (TRUSTED_PROXY_DEPTH only, compatible with Koyeb/dynamic IPs). "
+            "Set to your LB/Nginx IP to enable strict anti-spoof mode."
+        ),
+    )
 
     def get_allowed_origins(self) -> list[str]:
         """
@@ -169,6 +178,18 @@ class Settings(BaseSettings):
             self.metrics_basic_auth_username.strip()
             and self.metrics_basic_auth_password.strip()
         )
+
+    @property
+    def trusted_proxy_ip_set(self) -> frozenset:
+        """Returns the set of trusted proxy IPs (empty = legacy/compat mode)."""
+        return frozenset(
+            ip.strip() for ip in self.trusted_proxy_ips.split(",") if ip.strip()
+        )
+
+    @property
+    def strict_proxy_mode(self) -> bool:
+        """True when TRUSTED_PROXY_IPS is configured explicitly (anti-spoof enabled)."""
+        return bool(self.trusted_proxy_ip_set)
 
     def validate_production(self) -> None:
         """Ensures minimum security and infrastructure requirements in production."""

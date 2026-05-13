@@ -19,7 +19,13 @@ def test_silent_rejection_invalid_subject():
 
 
 def test_silent_rejection_invalid_email():
-    """Verifies that a message with invalid email format returns 200 Success."""
+    """Verifies that a message with invalid email format returns 422.
+
+    Previously this returned 200 (silent drop) because email was typed as `str`.
+    With EmailStr, Pydantic enforces RFC 5321 format at schema validation time
+    and returns 422 INPUT_VALIDATION_ERROR — this is the correct, secure behavior.
+    Email format is a hard contract (not a soft guard heuristic).
+    """
     payload = {
         "name": "User",
         "email": "not-an-email",
@@ -27,8 +33,9 @@ def test_silent_rejection_invalid_email():
         "message": "Valid message but invalid email.",
     }
     response = client.post("/api/v1/contact", json=payload)
-    assert response.status_code == 200
-    assert response.json()["success"] is True
+    assert response.status_code == 422
+    data = response.json()
+    assert data["error"]["code"] == "INPUT_VALIDATION_ERROR"
 
 
 def test_silent_rejection_invalid_name():

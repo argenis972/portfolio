@@ -16,12 +16,14 @@ Architecture: Simplified Clean Architecture
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from contextlib import asynccontextmanager
 
 from app import __version__
 from app.settings import settings
 from app.controllers import health_router
 from app.controllers.v1 import router_v1
 from app.core.handlers import register_exception_handlers
+from app.core.infrastructure import dispose_all
 from app.core.rate_limit import limiter
 from app.core.middleware import (
     ChaosMonkeyMiddleware,
@@ -30,6 +32,17 @@ from app.core.middleware import (
     SecurityHeadersMiddleware,
 )
 from app.core.observability import setup_observability
+
+
+@asynccontextmanager
+async def _lifespan(app: FastAPI):
+    """FastAPI lifespan context: startup → yield → shutdown.
+
+    Shutdown: disposes the SQLAlchemy connection pool to avoid dangling
+    connections during container restarts/rolling deploys.
+    """
+    yield  # Application running
+    await dispose_all()
 
 
 def create_app() -> FastAPI:
@@ -53,6 +66,7 @@ def create_app() -> FastAPI:
         openapi_url=None if _is_prod else "/openapi.json",
         openapi_tags=_get_openapi_tags(),
         debug=settings.debug,
+        lifespan=_lifespan,
     )
 
     # Observability must be initialized BEFORE middlewares and routes

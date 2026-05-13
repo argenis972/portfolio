@@ -17,6 +17,7 @@ from app.adapters.sql_models import (
     StackModel,
 )
 from app.adapters.repository import PortfolioRepository
+from app.core.infrastructure import register_engine
 from app.settings import settings
 from app.entities.experience import ProfessionalExperience
 from app.entities.formation import AcademicFormation
@@ -55,6 +56,7 @@ class SqlRepository(PortfolioRepository):
             )
 
         self.engine = create_async_engine(database_url, **engine_kwargs)
+        register_engine(self.engine)  # Register for graceful shutdown via lifespan
         self.session_factory = async_sessionmaker(
             self.engine, class_=AsyncSession, expire_on_commit=False
         )

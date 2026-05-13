@@ -89,3 +89,20 @@ class MissingIdempotencyKeyError(DomainError):
 
     def __init__(self, message: str = "Header 'Idempotency-Key' is required") -> None:
         super().__init__(message, code="MISSING_IDEMPOTENCY_KEY")
+
+
+class DuplicateContactError(DomainError):
+    """
+    Raised when an identical contact message is submitted within the dedup window.
+
+    Maps to HTTP 400 Bad Request.
+    Replaces the ad-hoc JSONResponse in the contact controller, ensuring all
+    error responses go through the global domain_error_handler for a uniform
+    API contract: {"error": {"code": "DUPLICATE_CONTENT", "message": "..."}}.
+    """
+
+    def __init__(self) -> None:
+        super().__init__(
+            message="Duplicate message detected. Please wait before sending again.",
+            code="DUPLICATE_CONTENT",
+        )

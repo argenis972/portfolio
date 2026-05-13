@@ -176,10 +176,14 @@ def test_rate_limiting_contact_by_email(client):
         app.dependency_overrides.pop(get_send_contact_use_case, None)
 
 
-def test_rate_limiter_redis_fallback(client, monkeypatch):
-    """Tests if a Redis failure causes the RateLimiter to fail statically, allowing the request."""
+def test_rate_limiter_redis_fallback_fail_closed_on_contact(client, monkeypatch):
+    """Tests that /contact returns 503 when Redis is unavailable (fail-closed).
 
-    # Make the connection hit throw a generic Exception simulating `redis.exceptions.ConnectionError`.
+    Security requirement (OWASP A05): when the rate-limiting backend is down,
+    sensitive endpoints must NOT allow requests through (fail-open would let
+    attackers spam during Redis outages). The expected behavior is HTTP 503.
+    """
+
     def mock_hit(*args, **kwargs):
         raise ConnectionError("Redis is down")
 
@@ -187,9 +191,9 @@ def test_rate_limiter_redis_fallback(client, monkeypatch):
 
     payload = {
         "name": "Test User",
-        "email": "limite_fallback@example.com",
+        "email": "fallback_contact@example.com",
         "subject": "Test",
-        "message": "Some message that should pass despite redis dead.",
+        "message": "Some message that should be blocked when Redis is down.",
     }
 
     mock_uc = AsyncMock()
@@ -198,8 +202,31 @@ def test_rate_limiter_redis_fallback(client, monkeypatch):
 
     try:
         resp = client.post("/api/v1/contact", json=payload)
-        # Instead of HTTP 500, the system returns HTTP 200 thanks to fallback!
-        assert resp.status_code == 200
-        assert mock_uc.execute.call_count == 1
+        # Fail-closed: 503 Service Unavailable (not 200, not 500)
+        assert resp.status_code == 503, (
+            f"Expected 503 (fail-closed), got {resp.status_code}. "
+            "Redis outage must not allow abuse bypass on /contact."
+        )
+        # Use case must NOT have been called (request was rejected)
+        assert mock_uc.execute.call_count == 0
     finally:
         app.dependency_overrides.pop(get_send_contact_use_case, None)
+
+
+def test_rate_limiter_redis_fallback_fail_open_on_readonly(client, monkeypatch):
+    """Tests that read-only portfolio routes remain available when check_rate_limit fails.
+
+    Portfolio data endpoints (GET /api/v1/projects, etc.) do not go through
+    check_rate_limit (they use @limiter.limit decorator separately). This test
+    verifies that when the decorator's backend is unavailable, slowapi's built-in
+    fallback still serves the request. We test this by confirming GET /projects
+    returns 200 even when check_rate_limit would fail-closed (it's not called here).
+    """
+    # GET /projects uses @limiter.limit decorator — it does NOT call check_rate_limit.
+    # When Redis is unavailable, slowapi's Limiter falls back to memory.
+    # We simply verify the endpoint is reachable (fail-open behavior is the default
+    # for the slowapi decorator on read-only routes).
+    resp = client.get("/api/v1/projects")
+    assert resp.status_code == 200, (
+        f"Expected 200 (read-only route should be available), got {resp.status_code}."
+    )

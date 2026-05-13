@@ -7,7 +7,7 @@ Defines request and response contracts for message submission.
 import re
 from typing import Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 NAME_REGEX = re.compile(r"^[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ .,'-]{1,79}$")
 SUBJECT_REGEX = re.compile(r"^[A-Za-zÀ-ÿ0-9 .,:;!?()/#&+@'\-]{0,120}$")
@@ -30,7 +30,7 @@ class ContactRequest(BaseModel):
         examples=["Maria Silva"],
         description="Sender name",
     )
-    email: str = Field(
+    email: EmailStr = Field(
         ...,
         min_length=3,
         max_length=100,
@@ -60,6 +60,12 @@ class ContactRequest(BaseModel):
     def validate_name(cls, value: str) -> str:
         """Sanitizes the name, allowing it to fail silently in the guard."""
         return re.sub(r"\s+", " ", value).strip()
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value: str) -> str:
+        """Lowercase and strip email for consistent dedup/rate-limit keying."""
+        return value.strip().lower()
 
     @field_validator("subject")
     @classmethod

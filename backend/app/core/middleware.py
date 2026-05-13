@@ -29,6 +29,38 @@ from app.utils.email import mask_email
 configure_structlog()
 logger = structlog.get_logger(__name__)
 
+# Parameters that must never appear in logs in plain text
+_SENSITIVE_PARAMS = frozenset(
+    {
+        "token",
+        "key",
+        "api_key",
+        "email",
+        "password",
+        "secret",
+        "auth",
+        "access_token",
+        "refresh_token",
+    }
+)
+
+
+def _sanitize_query(query: str) -> str | None:
+    """Redacts sensitive query parameters before logging.
+
+    Example:
+        '?token=abc&page=1' → 'token=[REDACTED]&page=1'
+    """
+    if not query:
+        return None
+    from urllib.parse import parse_qsl, urlencode
+
+    parts = parse_qsl(query, keep_blank_values=True)
+    sanitized = [
+        (k, "[REDACTED]" if k.lower() in _SENSITIVE_PARAMS else v) for k, v in parts
+    ]
+    return urlencode(sanitized) if sanitized else None
+
 
 def _get_loggable_identity(request: Request) -> str:
     identity = getattr(request.state, "identity", None)
@@ -129,7 +161,7 @@ class RequestMiddleware(BaseHTTPMiddleware):
         # Log received request
         logger.info(
             "request_received",
-            query=str(request.url.query) if request.url.query else None,
+            query=_sanitize_query(request.url.query),
             client_ip=get_client_ip(request),
             identity=_get_loggable_identity(request),
         )
@@ -186,9 +218,12 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         # Security Headers
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
-        response.headers["Strict-Transport-Security"] = (
-            "max-age=31536000; includeSubDomains; preload"
-        )
+        # HSTS only makes sense over HTTPS; sending it on plain HTTP causes
+        # browser loops in local development and is a misconfiguration (OWASP A05).
+        if settings.is_production or request.url.scheme == "https":
+            response.headers["Strict-Transport-Security"] = (
+                "max-age=31536000; includeSubDomains; preload"
+            )
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = (
             "camera=(), microphone=(), geolocation=()"

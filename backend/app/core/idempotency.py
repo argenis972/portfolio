@@ -25,14 +25,23 @@ class IdempotencyStore:
     In production, use Redis to share state across multiple instances.
     """
 
-    def __init__(self, max_size: int = 100, ttl_seconds: int = 3600):
+    def __init__(
+        self, max_size: int = 100, ttl_seconds: int = 3600, lock_ttl_seconds: int = 30
+    ):
         """
         WARNING: The fallback in-memory cache is only safe when running with a single worker.
         In multi-worker environments this will lead to race conditions unless Redis is configured.
+
+        Args:
+            max_size: Maximum number of keys held in the in-memory fallback cache.
+            ttl_seconds: TTL for finalized idempotency results (default 1h).
+            lock_ttl_seconds: TTL for in-progress locks (default 30s).
+                              Kept short so a crashed process does not block retries for 1h.
         """
         self._cache: Dict[str, IdempotencyRecord] = {}
         self.max_size = max_size
         self.ttl_seconds = ttl_seconds
+        self.lock_ttl_seconds = lock_ttl_seconds
         self._lock = threading.Lock()
         self._redis = None
 
@@ -100,7 +109,7 @@ class IdempotencyStore:
                 acquired = await self._redis.set(
                     self._redis_key(key),
                     record.model_dump_json(),
-                    ex=self.ttl_seconds,
+                    ex=self.lock_ttl_seconds,  # Short TTL: crash won't block retries for 1h
                     nx=True,
                 )
                 if acquired:

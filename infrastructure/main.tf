@@ -160,7 +160,7 @@ resource "koyeb_service" "worker" {
     }
 
     scalings {
-      min = 0
+      min = 1
       max = 1
     }
 

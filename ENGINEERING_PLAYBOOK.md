@@ -427,3 +427,18 @@ This document defines the execution strategy to demonstrate engineering judgment
 - [x] Final smoke tests.
 - [x] Technical release notes documenting accepted degradations.
 - [x] Final hygiene check in production.
+
+---
+
+## 9. Infrastructure Lessons Learned (Koyeb Free Tier)
+
+**Context**: During the Backend Resilience Audit (Phase 2), we implemented a durable Redis Streams queue.
+
+**Operational Gotchas**:
+1. **Single Instance Limit**: Koyeb's Free Tier strictly allows only **one (1) free instance** per organization. Attempting to deploy a standalone `worker` service alongside the `api` will fail with `failed_precondition`.
+2. **Scale-to-Zero Enforcement**: Free instances must scale to zero when idle. This requires at least one HTTP route. Services of type `WORKER` do not support routes, creating a deadlock for free background processes.
+
+**Architectural Decision (Resilient Monolith)**:
+- To maintain durability without infrastructure costs, the worker was **consolidated** into the API process.
+- The worker runs as an asynchronous background task within the FastAPI `lifespan`.
+- **Verdict**: This maintains the use of Redis Streams for persistence while staying within the free tier constraints. If the service is upgraded to a paid plan, the worker can be easily extracted back into a standalone service by reverting the `main.tf` and `main.py` changes.

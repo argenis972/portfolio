@@ -74,7 +74,9 @@ class StreamWorker:
             else:
                 raise
 
-    async def _move_to_dlq(self, job_id: str, body: dict[str, Any], reason: str, error_type: str):
+    async def _move_to_dlq(
+        self, job_id: str, body: dict[str, Any], reason: str, error_type: str
+    ):
         queue = RedisStreamsQueue(self.redis_url, stream_name=self.stream_name)
         await queue.enqueue_dlq(
             job_name=body["job_name"],
@@ -83,7 +85,9 @@ class StreamWorker:
             reason=reason,
             error_type=error_type,
         )
-        logger.error("job_moved_to_dlq", job_id=job_id, reason=reason, error_type=error_type)
+        logger.error(
+            "job_moved_to_dlq", job_id=job_id, reason=reason, error_type=error_type
+        )
         inc_dlq(reason)
 
     async def process_job(self, job_id: str, data: Dict[str, Any]):
@@ -124,9 +128,19 @@ class StreamWorker:
         meta = body.get("meta", {})
         retry_count = int(meta.get("retry_count", 0))
         message = str(exc).lower()
-        if isinstance(exc, (json.JSONDecodeError, KeyError, ValueError)) or "4" in message or "schema" in message or "invalid" in message:
+        if (
+            isinstance(exc, (json.JSONDecodeError, KeyError, ValueError))
+            or "4" in message
+            or "schema" in message
+            or "invalid" in message
+        ):
             failure_class = "permanent"
-        elif "timeout" in message or "connection" in message or "5" in message or "reset" in message:
+        elif (
+            "timeout" in message
+            or "connection" in message
+            or "5" in message
+            or "reset" in message
+        ):
             failure_class = "transient"
         else:
             failure_class = "unknown"
@@ -135,16 +149,25 @@ class StreamWorker:
         meta["last_error"] = str(exc)
         meta["last_error_type"] = type(exc).__name__
 
-        max_retries_for_class = MAX_RETRIES if failure_class == "transient" else (1 if failure_class == "unknown" else 0)
+        max_retries_for_class = (
+            MAX_RETRIES
+            if failure_class == "transient"
+            else (1 if failure_class == "unknown" else 0)
+        )
 
         if retry_count < max_retries_for_class:
             meta["retry_count"] = retry_count + 1
             if failure_class == "transient":
-                backoff = (2 ** retry_count) + random.uniform(0, 0.5)
+                backoff = (2**retry_count) + random.uniform(0, 0.5)
             else:
                 backoff = 0.2
 
-            logger.warning("job_retry_scheduled", job_id=job_id, retry_count=meta["retry_count"], backoff=backoff)
+            logger.warning(
+                "job_retry_scheduled",
+                job_id=job_id,
+                retry_count=meta["retry_count"],
+                backoff=backoff,
+            )
             inc_retry(failure_class)
             await asyncio.sleep(backoff)
 
@@ -152,9 +175,14 @@ class StreamWorker:
             first_seen_at = meta.get("first_seen_at")
             if first_seen_at:
                 try:
-                    age = (datetime.now(timezone.utc) - datetime.fromisoformat(first_seen_at)).total_seconds()
+                    age = (
+                        datetime.now(timezone.utc)
+                        - datetime.fromisoformat(first_seen_at)
+                    ).total_seconds()
                     if age > 900:
-                        await self._move_to_dlq(job_id, body, "max_age_exceeded", "TimeoutError")
+                        await self._move_to_dlq(
+                            job_id, body, "max_age_exceeded", "TimeoutError"
+                        )
                         return
                 except Exception:
                     pass
@@ -164,9 +192,12 @@ class StreamWorker:
             body["meta"] = meta
             await client.xadd(
                 self.stream_name,
-                {"job_name": body.get("job_name", "unknown"), "payload": json.dumps(body)},
+                {
+                    "job_name": body.get("job_name", "unknown"),
+                    "payload": json.dumps(body),
+                },
                 maxlen=10000,
-                approximate=True
+                approximate=True,
             )
             return
 
@@ -188,7 +219,7 @@ class StreamWorker:
                     self.consumer_name,
                     min_idle_time=300000,
                     start_id="0",
-                    count=1
+                    count=1,
                 )
 
                 messages = []
@@ -223,11 +254,17 @@ class StreamWorker:
                             try:
                                 body = json.loads(data.get("payload", "{}"))
                             except Exception:
-                                body = {"job_name": data.get("job_name", "unknown"), "payload": {}, "meta": {}}
+                                body = {
+                                    "job_name": data.get("job_name", "unknown"),
+                                    "payload": {},
+                                    "meta": {},
+                                }
                             try:
                                 await self._handle_failure(job_id, body, e)
                             except Exception:
-                                logger.error("job_processing_crash", job_id=job_id, error=str(e))
+                                logger.error(
+                                    "job_processing_crash", job_id=job_id, error=str(e)
+                                )
                                 continue
                             await client.xack(self.stream_name, self.group_name, job_id)
                             inc_processed("failed", type(e).__name__)

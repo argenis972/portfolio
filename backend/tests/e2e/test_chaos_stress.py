@@ -17,8 +17,9 @@ def test_chaos_stress(api_client, chaos_teardown):
     metrics = metrics_resp.json()
 
     # STRESS should open the circuit breaker or cause worker delay/fallback
-    assert metrics.get("active_path") in ("fallback", "async"), (
-        "Circuit breaker did not open/fallback"
-    )
+    assert metrics.get("active_path") in (
+        "fallback",
+        "async",
+    ), "Circuit breaker did not open/fallback"
 
     # 3. Teardown handles the recovery validation

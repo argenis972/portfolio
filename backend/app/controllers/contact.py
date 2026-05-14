@@ -132,7 +132,7 @@ async def send_contact(
             logger.info(
                 "duplicate_content_detected",
                 event_type="security_event",
-                content_hash_prefix=content_hash[:12],
+                content_hash_prefix=content_hash[:12] if content_hash else "unknown",
                 email_domain=email_domain(contact_request.email),
                 context="shared_dedup_store",
             )

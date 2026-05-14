@@ -4,7 +4,9 @@ from redis import asyncio as redis
 
 async def inject_poison_message(redis_url: str, stream: str = "contact_jobs") -> str:
     client = redis.from_url(redis_url, decode_responses=True)
-    return await client.xadd(stream, {"job_name": "send_contact_email", "payload": "{bad-json"})
+    return await client.xadd(
+        stream, {"job_name": "send_contact_email", "payload": "{bad-json"}
+    )
 
 
 async def simulate_redis_intermittent(redis_url: str) -> None:

@@ -107,3 +107,11 @@ Building for production introduced real-world challenges that were addressed wit
 ## 18. Infrastructure as Code Strategy
 **Decision**: Provisioning a Minimum Viable IaC setup with Terraform, strictly scoped to the Koyeb application and environment variables, while intentionally leaving third-party stateful services (Upstash Redis, Supabase) as manual steps.
 **Why?** This setup prioritizes reproducibility of the backend service, not full infrastructure parity. Automating the free-tier setups of external providers often requires complex modules or unsupported providers, violating the goal of a clear, readable codebase. By provisioning only Koyeb, any developer can understand the deployment topology in 5 minutes and bootstrap the backend with `< 10 commands`.
+
+## 19. Resilient Background Processing (Redis Streams)
+**Decision**: Migrating from in-process volatile background tasks to a durable worker based on Redis Streams with explicit error classification and PEL recovery.
+**Why?** In Phase 3 (Operational Health), we transitioned from "best effort" task processing to "at-least-once" delivery. This ensures no contact submissions are lost due to transient provider failures or process restarts.
+- **Error Classification**: The worker distinguishes between transient (retry with backoff), permanent (DLQ), and unknown errors, preventing "poison pill" messages from blocking the queue.
+- **Self-Healing (XAUTOCLAIM)**: By scanning the Pending Entries List (PEL) at startup, the worker can automatically recover jobs that were assigned to a previous instance that crashed.
+- **Observability**: Real-time visibility into queue depth, retry rates, and DLQ size through Prometheus metrics, allowing proactive incident response before users report issues.
+- **Resilient Testing**: To maintain CI speed and stability, we use a "force-memory" strategy in tests, mocking Redis behavior while strictly validating the state machine logic of the worker.

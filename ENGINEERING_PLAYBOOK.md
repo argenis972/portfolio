@@ -337,7 +337,23 @@ During the implementation of GitHub Actions for Terraform, several critical arch
 
  ---
 
- *Last updated: v1.8.3*
+ ## 19. Resilient Background Processing (Redis Streams)
+
+**At-Least-Once Delivery**: We use Redis Streams (`XADD`, `XREADGROUP`) to ensure no job is lost. A message is only `XACK`ed after successful processing.
+
+**Error Classification Strategy**:
+1. **TransientErrors**: (e.g., Network timeout, Rate limited by provider). **Action**: Retry with exponential backoff + jitter.
+2. **PermanentErrors**: (e.g., Invalid payload, PII violation). **Action**: Move to `contact_jobs_dlq` immediately.
+3. **UnknownErrors**: (Unhandled exceptions). **Action**: Single retry for safety, then DLQ.
+
+**The "Zombies" Problem (PEL Recovery)**: If a worker process crashes, its assigned messages stay in the *Pending Entries List* (PEL).
+- **Solution**: The worker loop starts with `XAUTOCLAIM`. It scans for messages that have been pending for >60s and re-claims them before reading new ones.
+
+**Max Age Protection**: Jobs older than 15 minutes are considered "stale" for the contact use case and are moved to the DLQ to prevent processing severely outdated requests.
+
+---
+
+*Last updated: v1.9.0*
 
 ---
 
@@ -427,6 +443,17 @@ This document defines the execution strategy to demonstrate engineering judgment
 - [x] Final smoke tests.
 - [x] Technical release notes documenting accepted degradations.
 - [x] Final hygiene check in production.
+
+#### Phase 5: Operational Health (Resilient Worker & DLQ) (✅ COMPLETED)
+
+> [!IMPORTANT]
+> **Technical Maturity**: This phase transitions the "Resilient Monolith" from simple background tasks to a production-grade, self-healing processing engine.
+
+- [x] **Durable Redis Streams**: Replaced volatile background tasks with persisted streams.
+- [x] **Error Classification**: Logic to distinguish transient failures (retry) from permanent ones (DLQ).
+- [x] **Self-Healing Loop**: Implementation of `XAUTOCLAIM` to recover orphaned messages from PEL.
+- [x] **Worker Observability**: Prometheus metrics and structured logging with PII masking.
+- [x] **CI Stability**: Forced `memory://` storage for tests, achieving 82% coverage.
 
 ---
 

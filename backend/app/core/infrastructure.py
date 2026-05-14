@@ -53,7 +53,7 @@ async def dispose_all() -> None:
     global _redis_client
     if _redis_client is not None:
         try:
-            await _redis_client.aclose()
+            await _redis_client.close()
             logger.info("redis_client_closed")
         except Exception as e:
             logger.error("redis_client_close_failed", error=str(e))

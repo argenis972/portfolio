@@ -9,7 +9,9 @@ _duration = Histogram("worker_job_duration_seconds", "Worker job duration in sec
 _dlq = Counter("worker_dlq_total", "Jobs moved to DLQ", ["reason"])
 _lag = Gauge("worker_consumer_lag", "Estimated consumer lag")
 _retries = Counter("worker_retries_total", "Worker retries", ["reason"])
-_pel = Gauge("worker_pel_size", "Worker pending entries list size", ["group", "consumer"])
+_pel = Gauge(
+    "worker_pel_size", "Worker pending entries list size", ["group", "consumer"]
+)
 
 
 def observe_job_duration(value: float) -> None:

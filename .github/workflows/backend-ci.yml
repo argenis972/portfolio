@@ -78,8 +78,9 @@ jobs:
       - name: 🧹 Run ruff (lint + format)
         run: |
           cd backend
+          ruff --version
           ruff check .
-          ruff format --check .
+          ruff format --check . || (ruff format --diff . && exit 1)
 
       - name: 🛡️ Run mypy (gradual typing)
         run: |

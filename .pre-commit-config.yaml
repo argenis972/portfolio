@@ -11,6 +11,21 @@ repos:
       - id: check-yaml
       - id: check-added-large-files
 
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.10
+    hooks:
+      - id: ruff
+        args: [ --fix ]
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.13.0
+    hooks:
+      - id: mypy
+        additional_dependencies: [types-redis, types-python-dateutil, pydantic]
+        args: [--ignore-missing-imports, --explicit-package-bases]
+        files: ^backend/app/
+
   - repo: local
     hooks:
       - id: terraform-fmt

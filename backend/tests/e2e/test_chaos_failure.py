@@ -13,9 +13,11 @@ def test_chaos_failure(api_client, chaos_teardown):
     assert health_resp.status_code == 200
 
     health_data = health_resp.json()
-    assert health_data.get("status") in ("degraded", "ok", "error"), (
-        "Health status is missing"
-    )
+    assert health_data.get("status") in (
+        "degraded",
+        "ok",
+        "error",
+    ), "Health status is missing"
 
     if health_data.get("status") == "degraded":
         assert "dependencies" in health_data
@@ -24,8 +26,9 @@ def test_chaos_failure(api_client, chaos_teardown):
     metrics_resp = api_client.get("/api/v1/metrics/summary")
     assert metrics_resp.status_code == 200
     metrics = metrics_resp.json()
-    assert metrics.get("system_lifecycle") in ("DEGRADED", "RECOVERING"), (
-        "System status should reflect failure"
-    )
+    assert metrics.get("system_lifecycle") in (
+        "DEGRADED",
+        "RECOVERING",
+    ), "System status should reflect failure"
 
     # 3. Teardown handles the recovery validation

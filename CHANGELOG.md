@@ -189,6 +189,31 @@ Migrated rate limiting storage to Redis (Upstash). Counters now survive containe
 **Accepted side effect**
 Redis is now in the critical path for `/contact`. If Upstash is unavailable, the rate limiter fails open — requests pass through unthrottled. This failure mode is documented and accepted (failing closed would block legitimate contact attempts during an infrastructure outage).
 
+## [1.9.0] - 2026-05-14
+
+### Resilient Worker & Operational Health (Phase 3)
+
+> This release implements Phase 3 of the "Resilient Monolith" strategy. We transformed the background task system into a robust, observable, and self-healing engine using Redis Streams.
+
+#### Added
+- **Resilient Redis Worker**: Implemented a background consumer with explicit error classification:
+  - **Transient**: Automatic retry with exponential backoff and jitter.
+  - **Permanent**: Immediate diversion to Dead Letter Queue (DLQ).
+  - **Unknown**: Safety retry before DLQ.
+- **Self-Healing PEL Recovery**: Added `XAUTOCLAIM` logic to the worker loop to automatically recover and process "orphaned" messages (Pending Entries List) after process restarts.
+- **Dead Letter Queue (DLQ)**: Created `contact_jobs_dlq` stream to house failed jobs with full error metadata (stack trace, attempt count, last error type).
+- **Operational Metrics**: Integrated Prometheus metrics for the worker (`worker_retries_total`, `worker_pel_size`, `worker_jobs_processed_total`).
+- **PII Masking Global Processor**: Added a `structlog` global processor to automatically mask email and phone fields in all logs, ensuring compliance even in background processes.
+
+#### Changed
+- **Unified Redis Lifecycle**: Centralized Redis client management in `infrastructure.py` with singleton pattern and integration into FastAPI lifespan.
+- **Stability-First Test Suite**: Refactored the test suite to force `memory://` storage during CI, achieving **82%+ coverage** while eliminating flaky connection dependencies.
+
+#### Fixed
+- **Unused variable in tests**: Fixed F841 lint error in `test_durable_queue.py` discovered during CI.
+
+---
+
 ## [1.8.2] - 2026-05-08
 
 ### IaC Stability & Local Guardrails

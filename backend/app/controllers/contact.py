@@ -157,17 +157,28 @@ async def send_contact(
         delivery_mode = "stream"
         if job_queue:
             # Durable delivery via Redis Streams
-            await job_queue.enqueue(
-                job_name="send_contact_email",
-                payload={
-                    "name": contact_request.name,
-                    "email": contact_request.email,
-                    "subject": contact_request.subject,
-                    "message": contact_request.message,
-                    "is_suspicious": is_suspicious,
-                    "spam_score": spam_score,
-                },
-            )
+            try:
+                await job_queue.enqueue(
+                    job_name="send_contact_email",
+                    payload={
+                        "name": contact_request.name,
+                        "email": contact_request.email,
+                        "subject": contact_request.subject,
+                        "message": contact_request.message,
+                        "is_suspicious": is_suspicious,
+                        "spam_score": spam_score,
+                    },
+                )
+            except Exception as e:
+                logger.warning("queue_unavailable_fallback_background", error=str(e))
+                delivery_mode = "background_fallback"
+                background_tasks.add_task(
+                    _process_background_delivery,
+                    send_contact_uc,
+                    contact_request,
+                    is_suspicious,
+                    spam_score,
+                )
         else:
             # Fallback to non-durable BackgroundTasks (local dev)
             delivery_mode = "background_fallback"

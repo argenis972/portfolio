@@ -4,6 +4,10 @@ Shared pytest configurations.
 Defines reusable fixtures for tests.
 """
 
+import os
+# Force Redis to memory BEFORE any app imports
+os.environ["REDIS_URL"] = "memory://"
+
 from datetime import date
 from unittest.mock import AsyncMock, MagicMock
 

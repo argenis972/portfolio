@@ -18,6 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from contextlib import asynccontextmanager
 import asyncio
+import os
 
 from app import __version__
 from app.settings import settings
@@ -45,7 +46,7 @@ async def _lifespan(app: FastAPI):
     connections during container restarts/rolling deploys.
     """
     worker_task = None
-    if settings.redis_url:
+    if settings.redis_url and not os.environ.get("PYTEST_CURRENT_TEST"):
         worker = StreamWorker(settings.redis_url)
         worker_task = asyncio.create_task(worker.run())
         app.state.worker = worker

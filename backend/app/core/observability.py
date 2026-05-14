@@ -88,6 +88,13 @@ def _setup_prometheus(app: FastAPI) -> None:
     On Koyeb, it becomes publicly accessible at https://<app>.koyeb.app/metrics.
     """
     try:
+        try:
+            import importlib
+
+            importlib.import_module("app.worker_metrics")
+        except Exception as e:
+            logger.error("worker_metrics_init_failed", error=str(e))
+
         from prometheus_fastapi_instrumentator import Instrumentator, metrics
         from app import __version__
 

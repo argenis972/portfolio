@@ -45,7 +45,7 @@ class IdempotencyStore:
         self._lock = threading.Lock()
         self._redis = None
 
-        if settings.redis_url:
+        if settings.redis_url and not settings.redis_url.startswith("memory://"):
             self._redis = redis.from_url(
                 settings.redis_url,
                 decode_responses=True,

@@ -22,7 +22,7 @@ class SpamDedupStore:
                 socket_timeout=settings.redis_socket_timeout_seconds,
                 socket_connect_timeout=settings.redis_connect_timeout_seconds,
             )
-            if redis_url
+            if redis_url and not redis_url.startswith("memory://")
             else None
         )
         self._memory_store: dict[str, float] = {}

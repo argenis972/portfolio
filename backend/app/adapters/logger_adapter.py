@@ -13,6 +13,31 @@ import structlog
 _structlog_configured = False
 
 
+def _mask_email(value: str) -> str:
+    if "@" not in value:
+        return "***"
+    local, domain = value.split("@", 1)
+    prefix = local[0] if local else "*"
+    return f"{prefix}***@{domain}"
+
+
+def _mask_phone(value: str) -> str:
+    digits = "".join(ch for ch in value if ch.isdigit())
+    if len(digits) <= 4:
+        return "****"
+    return f"{digits[:2]}****{digits[-2:]}"
+
+
+def _mask_pii(_, __, event_dict: dict[str, Any]) -> dict[str, Any]:
+    email = event_dict.get("email")
+    phone = event_dict.get("phone")
+    if isinstance(email, str):
+        event_dict["email"] = _mask_email(email)
+    if isinstance(phone, str):
+        event_dict["phone"] = _mask_phone(phone)
+    return event_dict
+
+
 def configure_structlog() -> None:
     global _structlog_configured
     if _structlog_configured:
@@ -32,6 +57,7 @@ def configure_structlog() -> None:
     structlog.configure(
         processors=[
             structlog.contextvars.merge_contextvars,
+            _mask_pii,
             structlog.stdlib.add_log_level,
             structlog.processors.TimeStamper(fmt="iso"),
             structlog.processors.StackInfoRenderer(),

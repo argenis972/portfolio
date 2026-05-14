@@ -1,102 +1,221 @@
 import json
-import pytest
 from unittest.mock import AsyncMock, patch
+
+import pytest
+
 from app.core.queue import RedisStreamsQueue
 from app.worker import StreamWorker
 
 
 @pytest.mark.asyncio
-async def test_redis_queue_enqueue_success():
-    """Verifies that RedisStreamsQueue.enqueue calls xadd with correct params."""
+async def test_enqueue_includes_operational_metadata():
     mock_redis = AsyncMock()
-
-    with patch("redis.asyncio.from_url", return_value=mock_redis):
+    with patch("app.core.queue.get_redis", return_value=mock_redis):
         queue = RedisStreamsQueue("redis://localhost", stream_name="test_stream")
-        payload = {"test": "data"}
-
-        await queue.enqueue("test_job", payload)
-
-        # Verify xadd call
-        mock_redis.xadd.assert_called_once()
+        await queue.enqueue("test_job", {"a": 1})
         args, kwargs = mock_redis.xadd.call_args
-        assert args[0] == "test_stream"
-        assert kwargs["maxlen"] == 10000
-        assert kwargs["approximate"] is True
-
-        # Verify data content
         data = args[1]
-        assert data["job_name"] == "test_job"
-        assert json.loads(data["payload"]) == payload
+        body = json.loads(data["payload"])
+        assert body["job_name"] == "test_job"
+        assert body["payload"] == {"a": 1}
+        assert body["meta"]["retry_count"] == 0
+        assert "first_seen_at" in body["meta"]
+        assert kwargs["maxlen"] == 10000
 
 
 @pytest.mark.asyncio
-async def test_worker_process_job_calls_use_case():
-    """Verifies that StreamWorker correctly dispatches a job to the use case."""
-    mock_use_case = AsyncMock()
-    mock_use_case.execute.return_value = True
-
-    # Payload for the job
-    payload = {
-        "name": "Argenis",
-        "email": "test@example.com",
-        "message": "Hello World",
-        "subject": "Test",
-        "is_suspicious": False,
-        "spam_score": 10,
-    }
-
-    job_data = {"job_name": "send_contact_email", "payload": json.dumps(payload)}
-
-    worker = StreamWorker("redis://localhost")
-
-    # Mock dependencies
-    with patch("app.worker.get_send_contact_use_case", return_value=mock_use_case):
-        await worker.process_job("job-123", job_data)
-
-        # Verify use case execution
-        mock_use_case.execute.assert_called_once_with(
-            name="Argenis",
-            email="test@example.com",
-            subject="Test",
-            message="Hello World",
-            is_suspicious=False,
-            spam_score=10,
-        )
-
-
-@pytest.mark.asyncio
-async def test_worker_ack_after_processing():
-    """Verifies that the worker ACKs the message after successful processing."""
+async def test_enqueue_dlq_publishes_failure_context():
     mock_redis = AsyncMock()
-    # Mock xreadgroup response: [(stream_name, [(job_id, data)])]
-    payload = {"name": "Test", "email": "test@test.com", "message": "msg"}
-    mock_redis.xreadgroup.return_value = [
-        (
-            "contact_jobs",
-            [
-                (
-                    "job-1",
-                    {"job_name": "send_contact_email", "payload": json.dumps(payload)},
-                )
-            ],
+    with patch("app.core.queue.get_redis", return_value=mock_redis):
+        queue = RedisStreamsQueue("redis://localhost")
+        await queue.enqueue_dlq(
+            job_name="send_contact_email",
+            payload={"name": "n"},
+            metadata={"retry_count": 3},
+            reason="bad payload",
+            error_type="ValueError",
         )
-    ]
+        args, _ = mock_redis.xadd.call_args
+        assert args[0] == "contact_jobs_dlq"
+        body = json.loads(args[1]["payload"])
+        assert body["meta"]["last_error"] == "bad payload"
+        assert body["meta"]["last_error_type"] == "ValueError"
+
+
+@pytest.mark.asyncio
+async def test_worker_permanent_error_moves_to_dlq_and_acks():
+    mock_redis = AsyncMock()
+    payload = {"job_name": "send_contact_email", "payload": {"name": "a", "email": "a@a.com", "message": "m"}, "meta": {"retry_count": 0}}
+    mock_redis.xautoclaim.return_value = ["0", []]
+    mock_redis.xreadgroup.return_value = [("contact_jobs", [("job-1", {"job_name": "send_contact_email", "payload": json.dumps(payload)})])]
 
     worker = StreamWorker("redis://localhost")
-    # Avoid infinite loop
-    worker.running = True
 
-    def stop_worker(*args, **kwargs):
+    def stop_once(*args, **kwargs):
         worker.running = False
         return mock_redis.xreadgroup.return_value
 
-    mock_redis.xreadgroup.side_effect = stop_worker
+    mock_redis.xreadgroup.side_effect = stop_once
 
-    with patch("redis.asyncio.from_url", return_value=mock_redis):
-        with patch("app.worker.get_send_contact_use_case", return_value=AsyncMock()):
-            await worker.run()
+    uc_mock = AsyncMock()
+    uc_mock.execute.side_effect = ValueError("Invalid email format") # Permanent
 
-            # Verify xack was called
-            mock_redis.xack.assert_called_once_with(
-                "contact_jobs", "email_workers", "job-1"
-            )
+    with patch("redis.asyncio.from_url", return_value=mock_redis), patch(
+        "app.worker.get_send_contact_use_case", return_value=uc_mock
+    ), patch.object(RedisStreamsQueue, "enqueue_dlq", new=AsyncMock()) as mock_dlq:
+        await worker.run()
+        mock_redis.xack.assert_called_once_with("contact_jobs", "email_workers", "job-1")
+        mock_dlq.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_worker_transient_error_retries_and_re_enqueues():
+    mock_redis = AsyncMock()
+    payload = {"job_name": "send_contact_email", "payload": {"name": "a", "email": "a@a.com", "message": "m"}, "meta": {"retry_count": 0}}
+    mock_redis.xautoclaim.return_value = ["0", []]
+    mock_redis.xreadgroup.return_value = [("contact_jobs", [("job-1", {"job_name": "send_contact_email", "payload": json.dumps(payload)})])]
+
+    worker = StreamWorker("redis://localhost")
+
+    def stop_once(*args, **kwargs):
+        worker.running = False
+        return mock_redis.xreadgroup.return_value
+
+    mock_redis.xreadgroup.side_effect = stop_once
+
+    uc_mock = AsyncMock()
+    uc_mock.execute.side_effect = TimeoutError("Connection timeout") # Transient
+
+    with patch("redis.asyncio.from_url", return_value=mock_redis), patch(
+        "app.worker.get_send_contact_use_case", return_value=uc_mock
+    ), patch("asyncio.sleep", new=AsyncMock()):
+        await worker.run()
+        # Should xack the old one
+        mock_redis.xack.assert_called_once_with("contact_jobs", "email_workers", "job-1")
+        # Should xadd a new one for retry
+        assert mock_redis.xadd.call_count == 1
+        args, _ = mock_redis.xadd.call_args
+        assert args[0] == "contact_jobs"
+
+
+@pytest.mark.asyncio
+async def test_worker_transient_error_exceeds_retries_and_dlq():
+    mock_redis = AsyncMock()
+    payload = {"job_name": "send_contact_email", "payload": {"name": "a", "email": "a@a.com", "message": "m"}, "meta": {"retry_count": 3}} # Max retries
+    mock_redis.xautoclaim.return_value = ["0", []]
+    mock_redis.xreadgroup.return_value = [("contact_jobs", [("job-1", {"job_name": "send_contact_email", "payload": json.dumps(payload)})])]
+
+    worker = StreamWorker("redis://localhost")
+
+    def stop_once(*args, **kwargs):
+        worker.running = False
+        return mock_redis.xreadgroup.return_value
+
+    mock_redis.xreadgroup.side_effect = stop_once
+
+    uc_mock = AsyncMock()
+    uc_mock.execute.side_effect = TimeoutError("Connection timeout") # Transient
+
+    with patch("redis.asyncio.from_url", return_value=mock_redis), patch(
+        "app.worker.get_send_contact_use_case", return_value=uc_mock
+    ), patch.object(RedisStreamsQueue, "enqueue_dlq", new=AsyncMock()) as mock_dlq:
+        await worker.run()
+        mock_redis.xack.assert_called_once_with("contact_jobs", "email_workers", "job-1")
+        mock_dlq.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_worker_unknown_error_1_retry_then_dlq():
+    mock_redis = AsyncMock()
+    # First attempt (retry=0)
+    payload = {"job_name": "send_contact_email", "payload": {"name": "a", "email": "a@a.com", "message": "m"}, "meta": {"retry_count": 0}}
+    mock_redis.xautoclaim.return_value = ["0", []]
+    mock_redis.xreadgroup.return_value = [("contact_jobs", [("job-1", {"job_name": "send_contact_email", "payload": json.dumps(payload)})])]
+
+    worker = StreamWorker("redis://localhost")
+
+    def stop_once(*args, **kwargs):
+        worker.running = False
+        return mock_redis.xreadgroup.return_value
+
+    mock_redis.xreadgroup.side_effect = stop_once
+
+    uc_mock = AsyncMock()
+    uc_mock.execute.side_effect = Exception("Mysterious failure") # Unknown
+
+    with patch("redis.asyncio.from_url", return_value=mock_redis), patch(
+        "app.worker.get_send_contact_use_case", return_value=uc_mock
+    ), patch("asyncio.sleep", new=AsyncMock()):
+        await worker.run()
+        # Should xack old and xadd new
+        mock_redis.xack.assert_called_once_with("contact_jobs", "email_workers", "job-1")
+        assert mock_redis.xadd.call_count == 1
+
+    # Second attempt (retry=1)
+    mock_redis.reset_mock()
+    payload["meta"]["retry_count"] = 1
+    mock_redis.xautoclaim.return_value = ["0", []]
+    mock_redis.xreadgroup.return_value = [("contact_jobs", [("job-2", {"job_name": "send_contact_email", "payload": json.dumps(payload)})])]
+    mock_redis.xreadgroup.side_effect = stop_once
+
+    with patch("redis.asyncio.from_url", return_value=mock_redis), patch(
+        "app.worker.get_send_contact_use_case", return_value=uc_mock
+    ), patch.object(RedisStreamsQueue, "enqueue_dlq", new=AsyncMock()) as mock_dlq:
+        worker.running = True
+        await worker.run()
+        mock_redis.xack.assert_called_once_with("contact_jobs", "email_workers", "job-2")
+        mock_dlq.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_worker_corrupt_payload_does_not_crash_loop():
+    mock_redis = AsyncMock()
+    mock_redis.xautoclaim.return_value = ["0", []]
+    # payload is completely invalid JSON
+    mock_redis.xreadgroup.return_value = [("contact_jobs", [("job-1", {"job_name": "send_contact_email", "payload": "{bad json"})])]
+
+    worker = StreamWorker("redis://localhost")
+
+    def stop_once(*args, **kwargs):
+        worker.running = False
+        return mock_redis.xreadgroup.return_value
+
+    mock_redis.xreadgroup.side_effect = stop_once
+
+    with patch("redis.asyncio.from_url", return_value=mock_redis), patch.object(RedisStreamsQueue, "enqueue_dlq", new=AsyncMock()) as mock_dlq:
+        await worker.run()
+        # It handles the JSONDecodeError internally, moves to DLQ, and ACKs
+        mock_redis.xack.assert_called_once_with("contact_jobs", "email_workers", "job-1")
+        mock_dlq.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_worker_reclaims_pel():
+    mock_redis = AsyncMock()
+    # Reclaim returns 1 message
+    payload = {"job_name": "send_contact_email", "payload": {"name": "a", "email": "a@a.com", "message": "m"}, "meta": {"retry_count": 0}}
+    mock_redis.xautoclaim.return_value = ["0", [("job-pel-1", {"job_name": "send_contact_email", "payload": json.dumps(payload)})]]
+
+    worker = StreamWorker("redis://localhost")
+    worker.running = False # So it just runs one iteration and exits
+
+    uc_mock = AsyncMock()
+    uc_mock.execute.return_value = True
+
+    with patch("redis.asyncio.from_url", return_value=mock_redis), patch(
+        "app.worker.get_send_contact_use_case", return_value=uc_mock
+    ):
+        worker.running = True
+        # Monkey patch run to break out after one successful iteration
+        original_xautoclaim = mock_redis.xautoclaim
+        def side_effect(*args, **kwargs):
+            worker.running = False
+            return ["0", [("job-pel-1", {"job_name": "send_contact_email", "payload": json.dumps(payload)})]]
+        mock_redis.xautoclaim.side_effect = side_effect
+
+        await worker.run()
+
+        # Should xack the pel message
+        mock_redis.xack.assert_called_once_with("contact_jobs", "email_workers", "job-pel-1")
+        # xreadgroup should not even be called because claim_res was truthy
+        mock_redis.xreadgroup.assert_not_called()

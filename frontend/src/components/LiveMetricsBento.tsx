@@ -72,14 +72,23 @@ export default function LiveMetricsBento() {
           <span className="text-[10px] font-mono text-app-muted">{t('metrics.strategy.retry')} {strategyProfile.source === 'synthetic' ? t('metrics.strategy.synthetic') : t('metrics.strategy.backend')}</span>
         </Tile>
 
-        <Tile index={1} label={t('metrics.last_incident')}>
-          <div className="flex items-center gap-2 mt-1">
-            <span className={`h-2.5 w-2.5 rounded-full flex-shrink-0 ${incidentDot}`} />
-            <span className={`font-mono text-sm font-bold ${incidentText} truncate`}>
-              {hasIncident ? t(`metrics.incident.${data.last_incident}`) : t('metrics.incident.none')}
-            </span>
-          </div>
-          {hasIncident && <span className="text-xs text-app-muted font-mono">{data.last_incident_ago}</span>}
+        <Tile index={1} label={t('metrics.last_incident')} className="p-0">
+          <button
+            onClick={() => {
+              const el = document.getElementById('observability');
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="w-full h-full text-left p-5 flex flex-col gap-3 rounded-2xl focus:outline-none focus:ring-2 focus:ring-app-primary hover:bg-app-surface-hover/30 transition-colors cursor-pointer"
+            aria-label="View last incident logs"
+          >
+            <div className="flex items-center gap-2 mt-1">
+              <span className={`h-2.5 w-2.5 rounded-full flex-shrink-0 animate-pulse-soft ${incidentDot}`} />
+              <span className={`font-mono text-sm font-bold ${incidentText} truncate`}>
+                {hasIncident ? t(`metrics.incident.${data.last_incident}`) : t('metrics.incident.none')}
+              </span>
+            </div>
+            {hasIncident && <span className="text-xs text-app-muted font-mono">{data.last_incident_ago}</span>}
+          </button>
         </Tile>
 
         <Tile index={2} label={t('metrics.requests_24h')}>

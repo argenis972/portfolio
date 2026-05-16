@@ -143,12 +143,22 @@
 }
 
 body {
-  @apply bg-app-bg text-app-text antialiased transition-colors duration-300 font-['Inter'] selection:bg-app-primary/30;
+  @apply bg-app-bg text-app-text antialiased transition-colors duration-300 selection:bg-app-primary/30;
+  font-family: 'Inter', sans-serif;
   line-height: 1.55;
 }
 
 h1, h2, h3, h4, h5 {
-  @apply tracking-wider font-['Montserrat'] font-bold;
+  @apply tracking-wider font-bold;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.font-sans {
+  font-family: 'Inter', sans-serif;
 }
 
 /* ─── Glass cards ──────────────────────────────────────────── */
@@ -231,4 +241,14 @@ section[id] {
 .reveal-visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* ─── Animations ──────────────────────────────────────────── */
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }

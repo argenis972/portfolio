@@ -315,6 +315,16 @@ During the implementation of GitHub Actions for Terraform, several critical arch
  3. **Open a PR**: Opening Pull Requests even when working alone demonstrates a professional, team-ready workflow.
  4. **Merge**: Always use **Squash and merge**.
 
+ **Stacked PR Strategy (For Complex Overhauls)**:
+ When undertaking a large refactor or UI overhaul (e.g., adding a mobile menu, fixing overlapping elements, and updating typography), avoid the "Giant PR" anti-pattern.
+ 1. **Decompose**: Split the work into atomic branches (e.g., `fix/layout`, `feat/mobile-menu`, `refactor/typography`).
+ 2. **Execute in Sequence**: Create each branch from `main`, apply the specific changes, and test.
+ 3. **Squash Merge Independently**: Merge each branch back into `main` sequentially.
+ *Benefits*: Easier code reviews, selective rollback capability, and isolated regression testing.
+
+ **English-First Git History**:
+ All PR descriptions, commit messages, and branch names MUST be written in English. This is a strict standard to ensure the repository is fully accessible to global engineering teams and recruiters, even if the primary frontend content or local documentation contains other languages.
+
  **Expected Result in `main`**:
  A clean, linear commit history:
  ```text

@@ -98,20 +98,24 @@ Building for production introduced real-world challenges that were addressed wit
 2. **SLO Alignment**: Histogram buckets in the backend are now explicitly set to `[50ms, 200ms, ...]` to match the P95 targets defined in the Engineering Playbook.
 3. **Traceability**: All alerts and metrics now include `app_version` as a label, allowing instant correlation between a new deployment and a performance degradation.
 
-## 17. Chaos E2E Testing Strategy
+## 18. Chaos E2E Testing Strategy
 **Decision**: Executing Chaos E2E tests against a local `docker-compose` environment in CI rather than production/staging, and preserving `/health` endpoint availability (`200 OK (Degraded)`) during simulated failures.
 **Why?**
 1. **Trade-off**: CI tests validate system behavior deterministically (local environment). They do not simulate real network conditions or provider-level variability. This ensures the CI is 100% reproducible and avoids network flakiness.
 2. **Semantics of /health**: During a `FAILURE` scenario, returning `503` would cause the orchestrator (Koyeb) to kill and restart the container, defeating the "Fail-Silent" pattern. Returning `200 OK (Degraded)` ensures the system survives and continues serving cached portfolio data. *200 OK does not imply full system health. It indicates the service is still serving responses under degraded conditions.*
 
-## 18. Infrastructure as Code Strategy
+## 19. Infrastructure as Code Strategy
 **Decision**: Provisioning a Minimum Viable IaC setup with Terraform, strictly scoped to the Koyeb application and environment variables, while intentionally leaving third-party stateful services (Upstash Redis, Supabase) as manual steps.
 **Why?** This setup prioritizes reproducibility of the backend service, not full infrastructure parity. Automating the free-tier setups of external providers often requires complex modules or unsupported providers, violating the goal of a clear, readable codebase. By provisioning only Koyeb, any developer can understand the deployment topology in 5 minutes and bootstrap the backend with `< 10 commands`.
 
-## 19. Resilient Background Processing (Redis Streams)
+## 20. Resilient Background Processing (Redis Streams)
 **Decision**: Migrating from in-process volatile background tasks to a durable worker based on Redis Streams with explicit error classification and PEL recovery.
 **Why?** In Phase 3 (Operational Health), we transitioned from "best effort" task processing to "at-least-once" delivery. This ensures no contact submissions are lost due to transient provider failures or process restarts.
 - **Error Classification**: The worker distinguishes between transient (retry with backoff), permanent (DLQ), and unknown errors, preventing "poison pill" messages from blocking the queue.
 - **Self-Healing (XAUTOCLAIM)**: By scanning the Pending Entries List (PEL) at startup, the worker can automatically recover jobs that were assigned to a previous instance that crashed.
 - **Observability**: Real-time visibility into queue depth, retry rates, and DLQ size through Prometheus metrics, allowing proactive incident response before users report issues.
 - **Resilient Testing**: To maintain CI speed and stability, we use a "force-memory" strategy in tests, mocking Redis behavior while strictly validating the state machine logic of the worker.
+
+## 21. UI/UX Resilience & Observability
+**Decision**: In the TraceViewer and ChaosPlayground, a simulated "Latency Injection" explicitly emits a `503 ERR` trace rather than `200 OK`, even though the backend successfully handled the chaos request itself.
+**Why?** This demonstrates realistic system behavior and circuit breaker patterns. A timeout in a highly available architecture is an error that should trigger fallback mechanisms, not just a "slow success". Emitting a `503` in the observability trace proves the monitoring system can correctly identify SLA breaches and SLA-driven failure states.

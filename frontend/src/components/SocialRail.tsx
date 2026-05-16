@@ -8,7 +8,7 @@ export default function SocialRail() {
   const linkedinUrl = about?.linkedin || 'https://www.linkedin.com/in/argenis1412/';
 
   return (
-    <aside className="pointer-events-none fixed right-4 top-1/2 z-40 hidden -translate-y-1/2 lg:block">
+    <aside className="pointer-events-none fixed right-4 top-1/2 z-40 hidden -translate-y-1/2 xl:block">
       <div className="pointer-events-auto flex flex-col gap-3 rounded-2xl border border-app-border bg-app-bg/85 p-2 shadow-[0_14px_40px_rgba(0,0,0,0.28)] backdrop-blur">
         <a
           href={githubUrl}

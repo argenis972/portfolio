@@ -53,10 +53,11 @@ const SystemStatusBanner = React.memo(() => {
       {isVisible && (
         <m.div
           key="status-banner"
-          initial={{ height: 0, opacity: 0 }}
-          animate={{ height: 'auto', opacity: 1 }}
-          exit={{ height: 0, opacity: 0 }}
-          transition={{ duration: 0.3 }}
+          layout="position"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
           className={`w-full border-b ${outerColor} backdrop-blur-sm overflow-hidden sticky top-16 z-40`}
         >
           <div className="max-w-6xl mx-auto px-4 py-2.5 font-mono text-xs">

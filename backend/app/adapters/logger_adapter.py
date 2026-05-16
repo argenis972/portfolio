@@ -6,7 +6,7 @@ Abstract interface + implementation with structlog for structured logs.
 
 import sys
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Mapping, MutableMapping
 
 import structlog
 
@@ -28,7 +28,9 @@ def _mask_phone(value: str) -> str:
     return f"{digits[:2]}****{digits[-2:]}"
 
 
-def _mask_pii(_, __, event_dict: dict[str, Any]) -> dict[str, Any]:
+def _mask_pii(
+    logger: Any, method_name: str, event_dict: MutableMapping[str, Any]
+) -> Mapping[str, Any]:
     email = event_dict.get("email")
     phone = event_dict.get("phone")
     if isinstance(email, str):

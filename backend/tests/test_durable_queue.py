@@ -342,3 +342,80 @@ async def test_worker_reclaims_pel():
         )
         # xreadgroup should not even be called because claim_res was truthy
         mock_redis.xreadgroup.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_worker_reports_consumer_lag():
+    mock_redis = AsyncMock()
+    mock_redis.xpending.return_value = {"pending": 7}
+    mock_redis.xautoclaim.return_value = ["0", []]
+
+    worker = StreamWorker("redis://localhost")
+
+    def stop_once(*args, **kwargs):
+        worker.running = False
+        return []
+
+    mock_redis.xreadgroup.side_effect = stop_once
+
+    with (
+        patch("redis.asyncio.from_url", return_value=mock_redis),
+        patch("app.worker.set_lag") as lag_mock,
+    ):
+        worker.running = True
+        await worker.run()
+        lag_mock.assert_called_with(7)
+
+
+@pytest.mark.asyncio
+async def test_worker_xadds_before_xack_on_retry():
+    mock_redis = AsyncMock()
+    payload = {
+        "job_name": "send_contact_email",
+        "payload": {"name": "a", "email": "a@a.com", "message": "m"},
+        "meta": {"retry_count": 0},
+    }
+    mock_redis.xautoclaim.return_value = ["0", []]
+    mock_redis.xreadgroup.return_value = [
+        (
+            "contact_jobs",
+            [
+                (
+                    "job-1",
+                    {"job_name": "send_contact_email", "payload": json.dumps(payload)},
+                )
+            ],
+        )
+    ]
+
+    worker = StreamWorker("redis://localhost")
+
+    def stop_once(*args, **kwargs):
+        worker.running = False
+        return mock_redis.xreadgroup.return_value
+
+    mock_redis.xreadgroup.side_effect = stop_once
+
+    uc_mock = AsyncMock()
+    uc_mock.execute.side_effect = TimeoutError("Connection timeout")
+
+    calls: list[str] = []
+
+    async def xack_side_effect(*args, **kwargs):
+        calls.append("xack")
+
+    async def xadd_side_effect(*args, **kwargs):
+        calls.append("xadd")
+
+    mock_redis.xack.side_effect = xack_side_effect
+    mock_redis.xadd.side_effect = xadd_side_effect
+
+    with (
+        patch("redis.asyncio.from_url", return_value=mock_redis),
+        patch("app.worker.get_send_contact_use_case", return_value=uc_mock),
+        patch("asyncio.sleep", new=AsyncMock()),
+    ):
+        await worker.run()
+
+    assert "xack" in calls and "xadd" in calls
+    assert calls.index("xadd") < calls.index("xack")

@@ -22,6 +22,7 @@ from app.worker_metrics import (
     inc_processed,
     inc_retry,
     observe_job_duration,
+    set_lag,
     set_pel_size,
 )
 
@@ -183,11 +184,13 @@ class StreamWorker:
                         await self._move_to_dlq(
                             job_id, body, "max_age_exceeded", "TimeoutError"
                         )
+                        client = await self._get_client()
+                        await client.xack(self.stream_name, self.group_name, job_id)
                         return
                 except Exception:
                     pass
 
-            # Re-enqueue to stream to maintain metadata without leaving it stuck
+            # Re-enqueue before ACK to maintain at-least-once semantics
             client = await self._get_client()
             body["meta"] = meta
             await client.xadd(
@@ -199,9 +202,14 @@ class StreamWorker:
                 maxlen=10000,
                 approximate=True,
             )
+            await client.xack(self.stream_name, self.group_name, job_id)
             return
 
+        # For terminal failures, publish to DLQ first, then ACK original.
+        # This preserves durability if DLQ publish fails.
         await self._move_to_dlq(job_id, body, str(exc), type(exc).__name__)
+        client = await self._get_client()
+        await client.xack(self.stream_name, self.group_name, job_id)
 
     async def run(self):
         """Main loop for consuming jobs."""
@@ -212,6 +220,21 @@ class StreamWorker:
 
         while self.running:
             try:
+                try:
+                    pel_summary = await client.xpending(
+                        self.stream_name, self.group_name
+                    )
+                    pending = (
+                        pel_summary.get("pending", 0)
+                        if isinstance(pel_summary, dict)
+                        else int(pel_summary[0])
+                        if pel_summary
+                        else 0
+                    )
+                    set_lag(int(pending))
+                except Exception:
+                    pass
+
                 # XAUTOCLAIM: Reclaim messages stuck in PEL for > 5 minutes
                 claim_res = await client.xautoclaim(
                     self.stream_name,
@@ -266,7 +289,6 @@ class StreamWorker:
                                     "job_processing_crash", job_id=job_id, error=str(e)
                                 )
                                 continue
-                            await client.xack(self.stream_name, self.group_name, job_id)
                             inc_processed("failed", type(e).__name__)
                             logger.error(
                                 "job_processing_crash", job_id=job_id, error=str(e)

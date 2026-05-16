@@ -47,7 +47,7 @@ export default function Contact() {
   ];
 
   return (
-    <section id="contato" className="py-16 max-w-6xl mx-auto px-4 relative group overflow-hidden">
+    <section id="contact" className="py-16 max-w-6xl mx-auto px-4 relative group overflow-hidden">
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-[var(--glow-primary)] rounded-full blur-[140px] -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
       <motion.div
         initial={{ opacity: 0, y: 20 }}

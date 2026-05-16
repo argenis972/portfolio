@@ -12,7 +12,7 @@ async def inject_poison_message(redis_url: str, stream: str = "contact_jobs") ->
 async def simulate_redis_intermittent(redis_url: str) -> None:
     client = redis.from_url(redis_url, decode_responses=True)
     await client.ping()
-    await client.aclose()
+    await client.aclose()  # type: ignore[attr-defined]
     await asyncio.sleep(0.2)
 
 

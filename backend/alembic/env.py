@@ -86,7 +86,7 @@ async def run_async_migrations() -> None:
     """
 
     connectable = create_async_engine(
-        config.get_main_option("sqlalchemy.url"),
+        config.get_main_option("sqlalchemy.url") or "",
         poolclass=pool.NullPool,
     )
 
@@ -104,7 +104,7 @@ def run_migrations_online() -> None:
 
     """
     # Detect if URL is async (like on Koyeb or local SQLite)
-    url = config.get_main_option("sqlalchemy.url")
+    url = config.get_main_option("sqlalchemy.url") or ""
     is_async = "+aiosqlite" in url or "+asyncpg" in url
 
     if is_async:

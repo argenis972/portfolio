@@ -130,7 +130,7 @@ def repository_mock() -> PortfolioRepository:
     mock.get_experiences.return_value = [
         ProfessionalExperience(
             id="exp-1",
-            role="Current Dev",
+            role={"en": "Current Dev", "pt": "Dev Atual", "es": "Dev Actual"},
             company="Company A",
             location="Remote",
             start_date=date(2023, 1, 1),
@@ -145,7 +145,7 @@ def repository_mock() -> PortfolioRepository:
         ),
         ProfessionalExperience(
             id="exp-2",
-            role="Former Dev",
+            role={"en": "Former Dev", "pt": "Dev Antigo", "es": "Dev Anterior"},
             company="Company B",
             location="São Paulo",
             start_date=date(2022, 1, 1),

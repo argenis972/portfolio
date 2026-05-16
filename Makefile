@@ -1,4 +1,4 @@
-.PHONY: dev-back dev-front test-back test-front test
+.PHONY: dev-back dev-front test-back test-front test lint-back lint-front format-back lint
 
 dev-back:
 	cd backend && python -m uvicorn app.main:app --reload --port 8000
@@ -13,3 +13,14 @@ test-front:
 	cd frontend && npm run test
 
 test: test-back test-front
+
+lint-back:
+	cd backend && ruff check . && mypy .
+
+lint-front:
+	cd frontend && npm run lint && npx tsc --noEmit
+
+format-back:
+	cd backend && ruff format .
+
+lint: lint-back lint-front

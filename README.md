@@ -19,6 +19,8 @@ A **Cloud-Native SRE Portfolio System** focused on resiliency, idempotency, and 
 - ✅ **Multi-layer anti-abuse** — Honeypot + Spam Scoring + Redis-backed deduplication + Rate Limiting.
 - ✅ **JSON-First Read Path** — Eliminates Database cold-starts for public-facing data.
 - ✅ **React 19 + TanStack Query** — Optimized frontend with zero-refetch and 15min caching.
+- ✅ **Resilient Mobile Navigation** — Accessible drawer menu with scroll-lock, Esc support, and focus trap.
+- ✅ **UI Resilience Observability** — Circuit-breaker `503 ERR` traces surfaced in real-time Chaos Playground.
 
 ---
 
@@ -31,8 +33,10 @@ This project didn't start production-ready. It evolved through real production i
 | **v1.5.0** | Chaos Engineering | Deterministic chaos presets + stateful decision engine (ADR-14) |
 | **v1.5.1** | Honest Telemetry | Synthetic vs. real labels + confidence indicator (ADR-13) |
 | **v1.6.0** | Build Standardization | Modular API layer + root-context Dockerfile (ADR-15.2) — fixed INC-005 |
-| **v1.7.0** | SRE Evidence | Minimum Viable IaC (Terraform) + Weekly Chaos CI (ADR-17/18) |
+| **v1.7.0** | SRE Evidence | Minimum Viable IaC (Terraform) + Weekly Chaos CI (ADR-18/19) |
 | **v1.8.0** | System Closure | Typography audit + Anti-spam accuracy fix (INC-006) |
+| **v1.9.0** | Operational Health | Resilient Redis Streams worker with at-least-once delivery (ADR-20) |
+| **v1.9.1** | UI/UX Resilience | Stacked PR overhaul — mobile nav, banner animations, typography, social rail (ADR-21) |
 
 See [CHANGELOG.md](CHANGELOG.md) for full details.
 
@@ -214,8 +218,8 @@ portfolio/
 │       ├── SLO_DEFINITIONS.md    # Per-endpoint SLOs with measurement methods
 │       └── FAILURE_MODEL.md      # Production incident failure model (INC-001–INC-008)
 ├── .github/              # GitHub Actions CI/CD workflows
-├── ARCHITECTURE.md       # ADR-01 through ADR-16
-├── CHANGELOG.md          # Release history + 8 production incidents
+├── ARCHITECTURE.md       # ADR-01 through ADR-21
+├── CHANGELOG.md          # Release history + 9 production incidents
 ├── ENGINEERING_PLAYBOOK.md  # SLOs, standards, incident protocol
 └── docker-compose.yml
 ```

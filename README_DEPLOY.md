@@ -38,6 +38,7 @@ Global Edge UI deployment.
     *   **Output Directory**: `dist`
 3.  **Environment Variables**:
     *   `VITE_API_URL`: `https://api.argenisbackend.com/api/v1`
+    *   `VITE_ENABLE_CHAOS_PLAYGROUND`: `true` (enables the Chaos Playground and Trace Viewer UI)
     *   **Live Status**: `https://api.argenisbackend.com/health` (JSON Health Check)
 
 ---
@@ -89,4 +90,4 @@ docker-compose up -d api prometheus grafana jaeger
 
 ---
 **Maintained by**: Argenis1412/portfolio
-**Version**: 1.3.0 (Architecture Hardening — Security Middlewares + Distributed State)
+**Version**: 1.9.1 (UI/UX Resilience Overhaul — Mobile Navigation + Typography + Chaos Observability)

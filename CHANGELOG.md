@@ -189,6 +189,30 @@ Migrated rate limiting storage to Redis (Upstash). Counters now survive containe
 **Accepted side effect**
 Redis is now in the critical path for `/contact`. If Upstash is unavailable, the rate limiter fails open — requests pass through unthrottled. This failure mode is documented and accepted (failing closed would block legitimate contact attempts during an infrastructure outage).
 
+---
+
+## [1.9.1] - 2026-05-16
+
+### UI/UX Resilience Overhaul (Stacked PRs)
+
+> Executed as 4 atomic, sequentially-stacked Pull Requests to maintain a linear, reviewable history. Each PR was independently testable and squash-merged into `main`.
+
+#### Fixed
+- **SocialRail Overlap (ADR-21)**: Updated the display breakpoint from `lg` to `xl` to prevent the social icon rail from overlapping content on tablet viewports.
+- **Banner Animation Shift**: Refactored `SystemStatusBanner` Framer Motion animations to use the `layout` prop, eliminating layout shifts when the banner mounts/unmounts.
+- **Section ID Consistency**: Renamed all `contato` internal IDs to `contact` across `Navbar.tsx` and `Contact.tsx` for 100% English codebase compliance.
+
+#### Added
+- **Accessible Mobile Navigation Drawer**: Full-featured mobile menu with scroll-lock, `Esc` key support, click-outside dismissal, and focus trap for WCAG compliance.
+- **Global Typography System**: Migrated globally to `Inter` (sans-serif) and `JetBrains Mono` (monospace) with preloaded font assets in `index.html`.
+
+#### Chore
+- **Repository Standards (ADR-21)**: Added `lint`, `format-back`, and `lint-front` targets to `Makefile` and `make.ps1`, unifying `ruff`, `mypy`, and `tsc --noEmit` in a single `make lint` command.
+- **Type Safety Fixes**: Resolved 4 latent `mypy` errors in `alembic/env.py`, `chaos_queue.py`, and `tests/conftest.py` uncovered by the new verification pipeline.
+- **Git Strategy Documented**: Formalized Stacked PR workflow and English-First rule in `ENGINEERING_PLAYBOOK.md`.
+
+---
+
 ## [1.9.0] - 2026-05-14
 
 ### Resilient Worker & Operational Health (Phase 3)
@@ -458,6 +482,8 @@ All frontend Zod schemas and TypeScript interfaces updated to match English back
 
 ---
 
+[1.9.1]: https://github.com/Argenis1412/portfolio/releases/tag/v1.9.1
+[1.9.0]: https://github.com/Argenis1412/portfolio/releases/tag/v1.9.0
 [1.6.0]: https://github.com/Argenis1412/portfolio/releases/tag/v1.6.0
 [1.5.1]: https://github.com/Argenis1412/portfolio/releases/tag/v1.5.1
 [1.5.0]: https://github.com/Argenis1412/portfolio/releases/tag/v1.5.0

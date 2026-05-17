@@ -224,6 +224,9 @@ Key tests that demonstrate production-level reliability:
 portfolio/
 ├── backend/              # FastAPI backend (Clean Architecture)
 ├── frontend/             # React 19 + TypeScript frontend
+├── infrastructure/       # Terraform IaC (main.tf, variables.tf, outputs.tf)
+├── infra/
+│   └── monitoring/       # Prometheus + Grafana configs (mounted by docker-compose)
 ├── docs/
 │   └── architecture/
 │       ├── SLO_DEFINITIONS.md    # Per-endpoint SLOs with measurement methods

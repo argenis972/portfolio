@@ -81,6 +81,8 @@ To run Prometheus + Grafana + Jaeger locally:
 docker-compose up -d api prometheus grafana jaeger
 ```
 
+> **Directory Note**: The `infra/monitoring/` directory contains the configuration files for Prometheus and Grafana. It is actively mounted as volumes by `docker-compose.yml` and must not be deleted. Do not confuse it with `infrastructure/`, which contains the Terraform state and definitions.
+
 | Service | URL | Credentials |
 |---|---|---|
 | Grafana Dashboards | http://localhost:3000 | admin / admin |

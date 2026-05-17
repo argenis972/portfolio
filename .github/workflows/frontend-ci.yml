@@ -73,7 +73,7 @@ jobs:
       - name: 🔒 TypeScript type-check
         run: |
           cd frontend
-          npx tsc --noEmit
+          npx tsc -b
 
       - name: 🔒 Check hardcoded placeholders
         run: |

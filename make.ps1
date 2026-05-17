@@ -10,9 +10,9 @@ $commands = @{
     "test-front"  = "cd frontend; npm run test"
     "test"        = "cd backend; .venv\Scripts\activate; python -m pytest; cd ../frontend; npm run test"
     "lint-back"   = "cd backend; .venv\Scripts\activate; ruff check .; mypy ."
-    "lint-front"  = "cd frontend; npm run lint; npx tsc --noEmit"
+    "lint-front"  = "cd frontend; npm run lint; npx tsc -b"
     "format-back" = "cd backend; .venv\Scripts\activate; ruff format ."
-    "lint"        = "cd backend; .venv\Scripts\activate; ruff check .; mypy .; cd ../frontend; npm run lint; npx tsc --noEmit"
+    "lint"        = "cd backend; .venv\Scripts\activate; ruff check .; mypy .; cd ../frontend; npm run lint; npx tsc -b"
     "help"        = "Write-Host 'Available shortcuts: dev, dev-back, dev-front, test-back, test-front, test, lint-back, lint-front, format-back, lint' -ForegroundColor Yellow"
 }
 

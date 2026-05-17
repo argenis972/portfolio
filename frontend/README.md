@@ -27,8 +27,8 @@ The UI is built using atomic, highly specialized components to ensure modularity
 
 All API interactions are localized in `src/hooks/useApi.ts`. We **do not** write `fetch` or `axios` calls directly in components.
 
-- **Queries**: `usePortfolioData()` encapsulates the fetcher logic, utilizing TanStack Query to cache the JSON payload for 15 minutes. Components simply consume `data`, `isLoading`, or `isError`.
-- **Mutations**: `useSubmitContact()` handles the POST request, orchestrating success toasts and error boundaries without leaking implementation details into `ContactForm`.
+- **Queries**: Modular hooks (`useAbout`, `useProjects`, `useSkills`, etc.) encapsulate the fetcher logic, utilizing TanStack Query to cache JSON payloads. Stale times are specifically tuned (e.g., 5 mins for projects, 10 mins for skills, 60 mins for philosophy). Components simply consume `data`, `isLoading`, or `isError`.
+- **Mutations**: `useContactMutation()` handles the POST request, orchestrating success toasts and error boundaries without leaking implementation details into `ContactForm`.
 
 ## ♿ Accessibility (a11y)
 

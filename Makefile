@@ -18,7 +18,7 @@ lint-back:
 	cd backend && ruff check . && mypy .
 
 lint-front:
-	cd frontend && npm run lint && npx tsc --noEmit
+	cd frontend && npm run lint && npx tsc -b
 
 format-back:
 	cd backend && ruff format .

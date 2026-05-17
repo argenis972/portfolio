@@ -260,11 +260,25 @@ def _register_routes(application: FastAPI) -> None:
     # API v1 (recommended)
     application.include_router(router_v1, prefix="/api")
 
-    # Legacy health check aliases (Portuguese/Spanish) for Koyeb compatibility
-    @application.get("/saude", include_in_schema=False)
-    @application.get("/salud", include_in_schema=False)
+    # Legacy health check aliases — DEPRECATED since v1.9.2
+    # These routes are kept for backward compatibility with any external probes
+    # still pointing to the Portuguese/Spanish endpoints.
+    # Canonical endpoint: GET /health
+    # Planned removal: v1.9.3
+    import structlog as _structlog
+
+    _dep_logger = _structlog.get_logger(__name__)
+
+    @application.get("/saude", include_in_schema=False, deprecated=True)
+    @application.get("/salud", include_in_schema=False, deprecated=True)
     async def legacy_health_alias():
-        return {"status": "ok", "message": "API alive (legacy alias)"}
+        _dep_logger.warning(
+            "deprecated_endpoint_called",
+            path="/saude (or /salud)",
+            canonical="/health",
+            removal_version="v1.9.3",
+        )
+        return {"status": "ok", "message": "API alive — deprecated alias, use /health"}
 
 
 # Global application instance (used by uvicorn)

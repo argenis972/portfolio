@@ -46,8 +46,8 @@ Step 3 — Monitor startup
   - Look for: "Application startup complete."
 
 Step 4 — Validate readiness
-  - GET /live   → must return HTTP 200
-  - GET /saude  → must return {"status": "ok"} with all deps healthy
+  - GET /live    → must return HTTP 200
+  - GET /health  → must return {"status": "ok"} with all deps healthy
 
 Step 5 — Smoke test
   - Submit a test contact form and verify it is received.
@@ -75,8 +75,8 @@ Step 3 — Alternatively: revert and push
   # Koyeb auto-deploys the reverted commit.
 
 Step 4 — Validate recovery
-  - GET /live  → HTTP 200
-  - GET /saude → {"status": "ok"}
+  - GET /live    → HTTP 200
+  - GET /health  → {"status": "ok"}
   - Verify 5xx rate returns to baseline in Prometheus/Sentry.
 
 Step 5 — Post-rollback
@@ -107,8 +107,8 @@ Step 3 — Redeploy
   koyeb service redeploy <service-name>
 
 Step 4 — Validate
-  - GET /live  → HTTP 200
-  - GET /saude → {"status": "ok", ...} with database/redis showing "ok"
+  - GET /live    → HTTP 200
+  - GET /health  → {"status": "ok", ...} with database/redis showing "ok"
   - Try the contact form end-to-end.
   - Verify old credentials no longer work.
 
@@ -132,8 +132,8 @@ Priority order for rotation:
 ### Triage Checklist
 
 ```
-1. Check /live         → if DOWN: Koyeb instance is crashed. Rollback immediately.
-2. Check /saude        → if degraded: identify which dependency (db/redis) is failing.
+1. Check /live          → if DOWN: Koyeb instance is crashed. Rollback immediately.
+2. Check /health        → if degraded: identify which dependency (db/redis) is failing.
 3. Check Sentry        → look for new exceptions or error rate spikes.
 4. Check Prometheus    → check 5xx rate, P95 latency, contact delivery failures.
 5. Check Koyeb logs    → look for OOM kills, timeout errors, startup failures.
@@ -144,7 +144,7 @@ Priority order for rotation:
 | Severity | Condition | Action |
 |---|---|---|
 | P1 | /live returns non-200 | Rollback immediately |
-| P2 | /saude shows DB or Redis error | Investigate provider status, rotate if needed |
+| P2 | /health shows DB or Redis error | Investigate provider status, rotate if needed |
 | P3 | 5xx rate > 2% for 5 min | Check Sentry for root cause |
 | P4 | Contact form not delivering | Check Resend status / credentials |
 
@@ -211,10 +211,13 @@ Suggested sinks:
 | Endpoint | Purpose | Use |
 |---|---|---|
 | `/live` | Process liveness only (no deps) | Koyeb liveness probe |
-| `/saude` | Readiness with real dependency checks | Koyeb readiness probe / diagnostics |
+| `/health` | Readiness with real dependency checks | Koyeb readiness probe / diagnostics |
 
 Use `/live` for lightweight keep-alive probes.
-Use `/saude` in production diagnostics and incident triage.
+Use `/health` in production diagnostics and incident triage.
+
+> **Note:** `/saude` and `/salud` remain active as deprecated aliases (since v1.9.2).
+> Canonical endpoint is `/health`. Aliases will be removed in v1.9.3.
 
 ---
 

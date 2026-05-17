@@ -15,7 +15,7 @@ export default function Footer() {
   const { data: about } = useAbout();
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [copiedWhatsApp, setCopiedWhatsApp] = useState(false);
-  const email = about?.email || 'argenislopez28708256@gmail.com';
+  const email = about?.email || 'argenisbackend@gmail.com';
   const phone = about?.phone || '(41) 9 9510-3364';
 
   const handleCopyEmail = (e: React.MouseEvent) => {
@@ -32,11 +32,7 @@ export default function Footer() {
     setTimeout(() => setCopiedWhatsApp(false), 2000);
   };
 
-  const maskEmail = (str: string) => {
-    const [name, domain] = str.split('@');
-    if (!name || !domain) return str;
-    return `${name[0]}${name[1] || ''}***@${domain}`;
-  };
+
 
   const maskPhone = (str: string) => str.replace(/\d(?=.{4})/g, '•');
 
@@ -44,7 +40,7 @@ export default function Footer() {
     {
       key: 'email',
       label: 'Email',
-      value: maskEmail(email),
+      value: email,
       icon: <Mail className="w-4 h-4" />,
       accent: 'text-app-primary bg-app-primary/10 group-hover:bg-app-primary group-hover:text-white',
       buttonAccent: 'group-hover:text-app-primary',

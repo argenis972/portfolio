@@ -46,7 +46,7 @@ class AboutResponse(BaseModel):
     )
     email: EmailStr = Field(
         ...,
-        examples=["argenislopez28708256@gmail.com"],
+        examples=["argenisbackend@gmail.com"],
         description="Contact email",
     )
     phone: str = Field(

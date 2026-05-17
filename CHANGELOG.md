@@ -374,7 +374,7 @@ All frontend Zod schemas and TypeScript interfaces updated to match English back
 
 #### Fixed
 - **LogStream auto-scroll**: Was calling `window.scrollTo` globally, scrolling the entire page instead of staying inside the terminal container. Scoped to the terminal's `scrollTop`.
-- **Privacy**: Contact details in the footer obfuscated (`ar***@gmail.com`, `(+x) x ****-3364`).
+- **Privacy**: Phone details in the footer obfuscated (`(+x) x ****-3364`), while email remains explicitly visible.
 
 ---
 

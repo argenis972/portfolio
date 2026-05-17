@@ -159,6 +159,17 @@ Service: still serving (fail-silent)
 
 ---
 
+## 🛠️ Development Commands
+| Command | Linux/macOS | Windows |
+|---------|-------------|---------|
+| Lint all | `make lint` | `.\make.ps1 lint` |
+| Test all | `make test` | `.\make.ps1 test` |
+| Backend only | `make lint-back` | `.\make.ps1 lint-back` |
+| Frontend only | `make lint-front` | `.\make.ps1 lint-front` |
+| Format backend | `make format-back` | `.\make.ps1 format-back` |
+
+---
+
 ## 🚀 Quick Start
 
 ### Using Docker (Recommended)

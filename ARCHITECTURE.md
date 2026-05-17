@@ -26,7 +26,8 @@ This document details the reasoning behind the architectural choices found in th
 
 ## 7. Global Consistency: Unified English Codebase
 **Decision**: Migrating all remaining Portuguese identifiers, including the `/saude` endpoint, to English (`/health`).
-**Why?** Although the project started with some Portuguese core models, maintaining a bilingual codebase creates cognitive load and technical debt. By finally migrating `/saude` to `/health` and renaming all backend directories (`controladores` → `controllers`, etc.), we ensure the repository is 100% accessible to the global engineering community and adheres to international industry standards for RESTful APIs.
+**Why?** Although the project started with some Portuguese core models, maintaining a bilingual codebase creates cognitive load and technical debt. We renamed all backend directories (`controladores` → `controllers`, etc.) to adhere to international industry standards.
+*Status Update (v1.9.2):* The `/saude` and `/salud` endpoints are currently **deprecated** and kept alive strictly as fallback aliases with warning logs to prevent breaking legacy probes. Final removal is scheduled for `v1.9.3`.
 
 ## 8. Frontend State Architecture
 **Decision**: React + TanStack Query instead of Redux/Zustand for most data mapping.

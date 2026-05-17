@@ -191,6 +191,29 @@ Redis is now in the critical path for `/contact`. If Upstash is unavailable, the
 
 ---
 
+## [1.9.2] - 2026-05-17
+
+### Repository Hardening & Finalization
+
+> This release concludes the final hardening phase of the portfolio repository, focusing on structural clarity, API consistency, and professional readiness before the v2.0 milestone.
+
+#### Added
+- **Frontend Architecture Documentation**: Expanded `frontend/README.md` to document component architecture, TanStack Query integration (`useApi.ts`), and strict accessibility requirements (focus rings, keyboard navigation).
+- **Development Commands Registry**: Added a comprehensive Makefile command table to the root `README.md` for unified entrypoint discovery.
+
+#### Changed
+- **Health Check Standardization**: The internal Docker `healthcheck` now exclusively uses `/health` instead of the legacy `/saude` alias.
+- **Directory Roles Disambiguation**: Explicitly documented the difference between `infrastructure/` (Terraform state) and `infra/monitoring/` (Docker Compose volumes) in `README.md` and `README_DEPLOY.md`.
+- **Professional Contact Vectors**: Updated the global contact email to `argenisbackend@gmail.com` across schemas, JSON seed data, and the React Footer, removing legacy text masking for frictionless recruiter contact.
+
+#### Deprecated
+- **Legacy API Aliases**: `/saude` and `/salud` endpoints are officially deprecated. They now return standard payload but emit logging warnings. Hard deadline for removal is `v1.9.3`.
+
+#### Fixed
+- **Frontend CI Blind Spot**: Added `tsc --noEmit` to `.github/workflows/frontend-ci.yml` to ensure TypeScript compilation errors break the build, synchronizing remote CI with local `make lint` standards.
+
+---
+
 ## [1.9.1] - 2026-05-16
 
 ### UI/UX Resilience Overhaul (Stacked PRs)

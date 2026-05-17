@@ -25,10 +25,18 @@ export default function Navbar() {
       if (e.key === 'Escape') setIsOpen(false);
     };
 
+    // Close drawer if viewport grows past the md breakpoint (768px) so that
+    // CSS-hidden drawers do not keep the body scroll-locked.
+    const handleResize = () => {
+      if (window.innerWidth >= 768 && isOpen) setIsOpen(false);
+    };
+
     window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('resize', handleResize);
     return () => {
       document.body.style.overflow = 'unset';
       window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('resize', handleResize);
     };
   }, [isOpen]);
 

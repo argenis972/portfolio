@@ -230,3 +230,53 @@ def test_rate_limiter_redis_fallback_fail_open_on_readonly(client, monkeypatch):
     assert resp.status_code == 200, (
         f"Expected 200 (read-only route should be available), got {resp.status_code}."
     )
+
+
+def test_rate_limiter_prometheus_counter_on_redis_down(client, monkeypatch):
+    """Verifies that multiple Redis errors during rate limiting do not raise duplicate timeseries errors in Prometheus."""
+    from prometheus_client import REGISTRY
+
+    # Get initial value of the counter if it exists, otherwise 0.0
+    try:
+        initial_value = (
+            REGISTRY.get_sample_value(
+                "rate_limit_backend_unavailable_total",
+                {"path": "/api/v1/contact", "mode": "fail_closed"},
+            )
+            or 0.0
+        )
+    except Exception:
+        initial_value = 0.0
+
+    def mock_hit(*args, **kwargs):
+        raise ConnectionError("Redis is down")
+
+    monkeypatch.setattr("app.core.rate_limit.limiter.limiter.hit", mock_hit)
+
+    payload = {
+        "name": "Test User",
+        "email": "fallback_contact@example.com",
+        "subject": "Test",
+        "message": "Some message that should be blocked when Redis is down.",
+    }
+
+    mock_uc = AsyncMock()
+    mock_uc.execute.return_value = True
+    app.dependency_overrides[get_send_contact_use_case] = lambda: mock_uc
+
+    try:
+        # Call twice to generate multiple failures
+        resp1 = client.post("/api/v1/contact", json=payload)
+        resp2 = client.post("/api/v1/contact", json=payload)
+
+        assert resp1.status_code == 503
+        assert resp2.status_code == 503
+
+        # Assert metric was incremented by 2
+        final_value = REGISTRY.get_sample_value(
+            "rate_limit_backend_unavailable_total",
+            {"path": "/api/v1/contact", "mode": "fail_closed"},
+        )
+        assert final_value == initial_value + 2.0
+    finally:
+        app.dependency_overrides.pop(get_send_contact_use_case, None)

@@ -6,6 +6,7 @@ import hashlib
 import os
 
 from fastapi import Request
+from prometheus_client import Counter
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
@@ -79,6 +80,12 @@ limiter = Limiter(
     storage_uri=_storage_uri,
 )
 
+REDIS_UNAVAILABLE_COUNTER = Counter(
+    "rate_limit_backend_unavailable_total",
+    "Redis unavailable during rate limit evaluation",
+    ["path", "mode"],
+)
+
 
 def check_rate_limit(request: Request, limit_string: str, key_func=get_email_or_ip_key):
     """
@@ -122,13 +129,7 @@ def check_rate_limit(request: Request, limit_string: str, key_func=get_email_or_
 
             # Emit Prometheus metric for alerting on Redis degradation
             try:
-                from prometheus_client import Counter
-
-                Counter(
-                    "rate_limit_backend_unavailable_total",
-                    "Redis unavailable during rate limit evaluation",
-                    ["path", "mode"],
-                ).labels(
+                REDIS_UNAVAILABLE_COUNTER.labels(
                     path=request.url.path,
                     mode="fail_closed" if is_sensitive else "fail_open",
                 ).inc()

@@ -25,14 +25,23 @@ def mock_use_case():
         app.dependency_overrides.pop(get_send_contact_use_case, None)
 
 
-def test_honeypot_triggered(mock_use_case):
+@pytest.mark.parametrize(
+    "honeypot_field,value",
+    [
+        ("website", "http://evilbot.com"),
+        ("fax", "123456"),
+        ("company", "Spam Corp"),
+        ("middle_name", "Danger"),
+    ],
+)
+def test_honeypot_triggered(mock_use_case, honeypot_field, value):
     """Verifies if the honeypot blocks the send but returns fake success."""
     payload = {
         "name": "Bot",
         "email": "bot@spam.com",
         "subject": "Spam bot",
         "message": "I am a bot filling all fields.",
-        "website": "http://evilbot.com",  # Honeypot field
+        honeypot_field: value,
     }
 
     response = client.post("/api/v1/contact", json=payload)

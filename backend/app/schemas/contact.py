@@ -54,6 +54,8 @@ class ContactRequest(BaseModel):
     # Honeypot fields (should be empty)
     website: Optional[str] = Field(None, description="Honeypot 1")
     fax: Optional[str] = Field(None, description="Honeypot 2")
+    company: Optional[str] = Field(None, description="Honeypot 3")
+    middle_name: Optional[str] = Field(None, description="Honeypot 4")
 
     @field_validator("name")
     @classmethod

@@ -20,6 +20,28 @@ export function buildApiUrl(path: string): string {
   return `${API_BASE_URL}${path}`;
 }
 
+// ─── Trace ID Extraction ──────────────────────────────────────────────────────
+
+/**
+ * Extracts the trace/request ID from a response using a prioritized fallback chain:
+ *   1. `X-Trace-ID` response header (OpenTelemetry standard)
+ *   2. `X-Request-ID` response header (middleware-generated UUID)
+ *   3. `rawData.error.trace_id` (nested backend error envelope)
+ *   4. `rawData.trace_id` (top-level, legacy/success responses)
+ */
+export function extractTraceId(
+  res: Response,
+  rawData: unknown,
+): string | undefined {
+  return (
+    res.headers.get('x-trace-id') ??
+    res.headers.get('x-request-id') ??
+    (rawData as Record<string, Record<string, unknown>> | null)?.error?.trace_id as string | undefined ??
+    (rawData as Record<string, unknown> | null)?.trace_id as string | undefined ??
+    undefined
+  );
+}
+
 // ─── Error Class ──────────────────────────────────────────────────────────────
 
 export class ApiError extends Error {
@@ -51,11 +73,7 @@ export async function apiGet<T>(
   // Parse body first so we can extract trace_id from error responses
   const rawData = await res.json().catch(() => null);
 
-  // Fallback chain: response header → body field → undefined
-  const traceId: string | undefined =
-    res.headers.get('x-trace-id') ??
-    (rawData as Record<string, unknown>)?.trace_id as string | undefined ??
-    undefined;
+  const traceId = extractTraceId(res, rawData);
 
   if (!res.ok) {
     console.error('[API ERROR]', { traceId, status: res.status, endpoint: path });

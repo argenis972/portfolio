@@ -2,7 +2,7 @@
  * Chaos Engineering and Contact mutation functions.
  * These are write operations (POST) that trigger side effects on the backend.
  */
-import { buildApiUrl, ApiError } from './client';
+import { buildApiUrl, ApiError, extractTraceId } from './client';
 import type { ChaosResponse, ContactResponse } from './types';
 
 // Re-export types so consumers can import from a single service file
@@ -34,20 +34,12 @@ export async function postContact(
   });
   const durationMs = Math.round(performance.now() - start);
 
-  if (!res.ok) {
-    let errTrace: string | undefined = res.headers.get('x-trace-id') ?? undefined;
-    if (!errTrace) {
-      const rawData = await res.json().catch(() => null);
-      errTrace = (rawData as Record<string, unknown>)?.trace_id as string | undefined;
-    }
-    throw new ApiError(res.status, `Failed to submit contact form: ${res.status}`, errTrace);
-  }
-
   const rawData = await res.json().catch(() => null);
-  const traceId: string | undefined =
-    res.headers.get('x-trace-id') ??
-    (rawData as Record<string, unknown>)?.trace_id as string | undefined ??
-    undefined;
+  const traceId = extractTraceId(res, rawData);
+
+  if (!res.ok) {
+    throw new ApiError(res.status, `Failed to submit contact form: ${res.status}`, traceId);
+  }
 
   return {
     traceId,

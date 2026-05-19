@@ -6,6 +6,7 @@ import asyncio
 import json
 import os
 import signal
+import sys
 import time
 import random
 from datetime import datetime, timezone
@@ -313,10 +314,16 @@ async def main():
 
     worker = StreamWorker(settings.redis_url)
 
-    # Handle termination signals
+    # Handle termination signals for graceful shutdown.
+    # loop.add_signal_handler is only available on Unix; use signal.signal as
+    # a fallback on Windows (which delivers the handler on the main thread).
     loop = asyncio.get_running_loop()
-    for sig in (signal.SIGINT, signal.SIGTERM):
-        loop.add_signal_handler(sig, worker.stop)
+    if sys.platform != "win32":
+        for sig in (signal.SIGINT, signal.SIGTERM):
+            loop.add_signal_handler(sig, worker.stop)
+    else:
+        for sig in (signal.SIGINT, signal.SIGTERM):
+            signal.signal(sig, lambda _sig, _frame: worker.stop())
 
     try:
         await worker.run()

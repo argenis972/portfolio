@@ -195,3 +195,35 @@ def test_spam_score_adjacent_urls_with_comma_are_separated():
     # Rule 2 (all_links >= 3) -> +45
     # Rule 2 (multiple links same domain) -> NO (+0)
     assert score == 45
+
+
+def test_international_recruiter_unicode_names():
+    """Verifies that international characters (Cyrillic, Arabic, CJK) in names and subjects do not trigger spam scoring."""
+    from app.core.spam_check import calculate_spam_score
+
+    # Cyrillic name and subject
+    score_cyrillic = calculate_spam_score(
+        message="Hello, I would like to schedule an interview with you.",
+        email="recruiter@yandex.ru",
+        name="Иван Петров",
+        subject="Важная вакансия",
+    )
+    assert score_cyrillic <= 30
+
+    # CJK name and subject
+    score_cjk = calculate_spam_score(
+        message="Hello, I saw your portfolio and wanted to reach out regarding a job opportunity.",
+        email="hr@tencent.com",
+        name="张伟",
+        subject="Job Opportunity [Tencent]",
+    )
+    assert score_cjk <= 30
+
+    # Arabic name and subject
+    score_arabic = calculate_spam_score(
+        message="Hello, we are interested in your profile and would like to discuss a position.",
+        email="contact@firm.ae",
+        name="علي",
+        subject="Software Engineer Role",
+    )
+    assert score_arabic <= 30

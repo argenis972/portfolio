@@ -7,8 +7,8 @@ import { ChaosModeProvider } from './context/ChaosContext';
 import { LazyMotion, domAnimation } from 'framer-motion';
 
 // Above-fold critical path (eager)
-const SystemStatusBanner = React.lazy(() => import('./components/SystemStatusBanner'));
-const LiveMetricsBento   = React.lazy(() => import('./components/LiveMetricsBento'));
+import SystemStatusBanner from './components/SystemStatusBanner';
+import LiveMetricsBento from './components/LiveMetricsBento';
 
 // Operational sections
 const ChaosPlayground = React.lazy(() => import('./components/ChaosPlayground'));
@@ -67,9 +67,7 @@ function App() {
                 <SocialRail />
               </Suspense>
 
-              <Suspense fallback={null}>
-                <SystemStatusBanner />
-              </Suspense>
+              <SystemStatusBanner />
 
               <main className="flex-grow">
                 {/* 1 — Hero: KPI strip above the fold */}

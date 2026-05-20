@@ -86,6 +86,11 @@ def calculate_spam_score(
     if name and not NAME_REGEX.fullmatch(name):
         return 100
 
+    if name:
+        for char in name:
+            if char.isnumeric():
+                return 100
+
     if subject and not SUBJECT_REGEX.fullmatch(subject):
         return 100
 

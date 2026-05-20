@@ -227,3 +227,55 @@ def test_international_recruiter_unicode_names():
         subject="Software Engineer Role",
     )
     assert score_arabic <= 30
+
+
+def test_name_rejects_unicode_nl_numeric_character():
+    """Rejects Number, letter (Nl) unicode characters in name."""
+    from app.core.spam_check import calculate_spam_score
+
+    score = calculate_spam_score(
+        message="Hello, I would like to discuss a role.",
+        email="recruiter@example.com",
+        name="John Ⅻ",
+        subject="Opportunity",
+    )
+    assert score == 100
+
+
+def test_name_rejects_unicode_no_numeric_character():
+    """Rejects Number, other (No) unicode characters in name."""
+    from app.core.spam_check import calculate_spam_score
+
+    score_superscript = calculate_spam_score(
+        message="Hello, I would like to discuss a role.",
+        email="recruiter@example.com",
+        name="John ²",
+        subject="Opportunity",
+    )
+    assert score_superscript == 100
+
+
+def test_name_rejects_unicode_fraction_numeric_character():
+    """Rejects unicode fraction in Number, other category."""
+    from app.core.spam_check import calculate_spam_score
+
+    score = calculate_spam_score(
+        message="Hello, I would like to discuss a role.",
+        email="recruiter@example.com",
+        name="John ½",
+        subject="Opportunity",
+    )
+    assert score == 100
+
+
+def test_name_rejects_unicode_lo_numeric_character():
+    """Rejects numeric chars even when unicode category is Lo."""
+    from app.core.spam_check import calculate_spam_score
+
+    score = calculate_spam_score(
+        message="Hello, I would like to discuss a role.",
+        email="recruiter@example.com",
+        name="John 四",
+        subject="Opportunity",
+    )
+    assert score == 100

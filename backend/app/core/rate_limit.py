@@ -80,6 +80,16 @@ limiter = Limiter(
     storage_uri=_storage_uri,
 )
 
+# Fallback in-memory limiter used when the primary backend (Redis) is
+# unavailable.  Sensitive paths degrade to local rate limiting instead
+# of returning a hard HTTP 503, keeping the contact form functional
+# while still providing single-instance anti-abuse protection.
+_fallback_limiter = Limiter(
+    key_func=get_client_ip,
+    strategy="fixed-window",
+    storage_uri="memory://",
+)
+
 REDIS_UNAVAILABLE_COUNTER = Counter(
     "rate_limit_backend_unavailable_total",
     "Redis unavailable during rate limit evaluation",
@@ -92,13 +102,12 @@ def check_rate_limit(request: Request, limit_string: str, key_func=get_email_or_
     Manually applies a rate limit hit and raises RateLimitExceeded if the limit is reached.
 
     Fail strategy:
-    - Sensitive paths (FAIL_CLOSED_PATHS): raises HTTP 503 when Redis is unavailable.
-      This prevents abuse bypass during Redis outages.
+    - Sensitive paths (FAIL_CLOSED_PATHS): degraded mode via in-memory fallback
+      when Redis is unavailable.
     - Read-only paths: fail-open (allows request through) to keep portfolio data available.
     """
     from limits import parse_many
     from slowapi.errors import RateLimitExceeded
-    from fastapi import HTTPException
 
     # Mock to satisfy RateLimitExceeded constructor (expects an object with `error_message`)
     class MockLimit:
@@ -119,28 +128,45 @@ def check_rate_limit(request: Request, limit_string: str, key_func=get_email_or_
             import structlog
 
             logger = structlog.get_logger(__name__)
-            logger.error(
-                "rate_limiter_backend_unavailable",
-                error=str(e),
-                limit=str(limit),
-                path=request.url.path,
-                mode="fail_closed" if is_sensitive else "fail_open",
-            )
 
             # Emit Prometheus metric for alerting on Redis degradation
+            _mode = "degraded" if is_sensitive else "fail_open"
             try:
                 REDIS_UNAVAILABLE_COUNTER.labels(
                     path=request.url.path,
-                    mode="fail_closed" if is_sensitive else "fail_open",
+                    mode=_mode,
                 ).inc()
             except Exception:
                 pass  # Never fail the request due to a metrics error
 
             if is_sensitive:
-                # Fail-closed: reject request on sensitive endpoints to prevent abuse
-                raise HTTPException(
-                    status_code=503,
-                    detail="Service temporarily unavailable. Please try again later.",
+                # Degraded mode: fall back to in-memory rate limiting so the
+                # contact form remains functional during Redis outages while
+                # still providing single-instance anti-abuse protection.
+                logger.warning(
+                    "rate_limiter_degraded_mode",
+                    error=str(e),
+                    error_type=type(e).__name__,
+                    limit=str(limit),
+                    path=request.url.path,
+                    mode="degraded_memory_fallback",
                 )
+                try:
+                    if not _fallback_limiter.limiter.hit(limit, key):
+                        raise RateLimitExceeded(MockLimit(str(limit)))  # type: ignore
+                except RateLimitExceeded:
+                    raise
+                except Exception:
+                    # Even memory fallback failed — allow through as last resort
+                    pass
+                continue
+
             # Fail-open: allow through on read-only portfolio endpoints
+            logger.error(
+                "rate_limiter_backend_unavailable",
+                error=str(e),
+                limit=str(limit),
+                path=request.url.path,
+                mode="fail_open",
+            )
             continue

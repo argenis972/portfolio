@@ -12,7 +12,7 @@
  *   history   — rolling last-20 P95 values for the sparkline chart
  *   previous  — snapshot of the prior fetch for delta calculation
  */
-import { useMemo, useRef, useState, useCallback, useEffect } from 'react';
+import { useMemo, useRef, useState, useEffect } from 'react';
 import { useCurrentTime } from './useCurrentTime';
 import { useQuery } from '@tanstack/react-query';
 import { fetchMetricsSummary, type MetricsSummary } from '../api/portfolioService';
@@ -113,32 +113,7 @@ export function useLiveMetrics() {
   const [recentTraces, setRecentTraces] = useState<TraceEntry[]>(() => getRecentTraces());
   const serverDataRef = useRef<MetricsSummary | null>(null);
 
-  const onSuccess = useCallback((data: MetricsSummary) => {
-    const now = Date.now();
-    serverDataRef.current = data;
-    // Update last success timestamp
-    lastSuccessRef.current = now;
-    setLastSuccessSnapshot(now);
 
-    // Update previous before rolling in new data
-    if (previousRef.current !== null) {
-      setPrevious(previousRef.current);
-    }
-
-    // Roll in new P95 value
-    historyRef.current = [...historyRef.current, data.p95_ms].slice(-MAX_HISTORY);
-    setHistory([...historyRef.current]);
-    sampleHistoryRef.current = appendSample(sampleHistoryRef.current, {
-      value: data.p95_ms,
-      timestamp: now,
-      source: 'real',
-      confidence: DEFAULT_CONFIDENCE_REAL,
-    });
-    setSampleHistory([...sampleHistoryRef.current]);
-
-    // Store current as next "previous"
-    previousRef.current = data;
-  }, []);
 
   useEffect(() => {
     return subscribeToTraces((trace) => {
@@ -157,11 +132,7 @@ export function useLiveMetrics() {
 
   const query = useQuery({
     queryKey: ['metrics-summary', preset],
-    queryFn: async () => {
-      const data = await fetchMetricsSummary(preset);
-      onSuccess(data);
-      return data;
-    },
+    queryFn: async () => fetchMetricsSummary(preset),
     staleTime: 10_000,
     refetchInterval: 15_000,
     refetchIntervalInBackground: false,
@@ -169,6 +140,42 @@ export function useLiveMetrics() {
     gcTime: 60_000,
     retry: 1,
   });
+
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    if (query.data && query.dataUpdatedAt) {
+      const data = query.data;
+      const now = query.dataUpdatedAt;
+
+      // Only process new fetches once
+      if (lastSuccessRef.current === now) return;
+
+      serverDataRef.current = data;
+      lastSuccessRef.current = now;
+      setLastSuccessSnapshot(now);
+
+      // Update previous before rolling in new data
+      if (previousRef.current !== null) {
+        setPrevious(previousRef.current);
+      }
+
+      // Roll in new P95 value
+      historyRef.current = [...historyRef.current, data.p95_ms].slice(-MAX_HISTORY);
+      setHistory([...historyRef.current]);
+
+      sampleHistoryRef.current = appendSample(sampleHistoryRef.current, {
+        value: data.p95_ms,
+        timestamp: now,
+        source: 'real',
+        confidence: DEFAULT_CONFIDENCE_REAL,
+      });
+      setSampleHistory([...sampleHistoryRef.current]);
+
+      // Store current as next "previous"
+      previousRef.current = data;
+    }
+  }, [query.data, query.dataUpdatedAt]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Derive combined status: backend signal + local latency threshold
   const latestSample = sampleHistory[sampleHistory.length - 1] ?? null;

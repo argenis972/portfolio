@@ -209,19 +209,20 @@ def test_rate_limiter_redis_fallback_fail_closed_on_contact(client, monkeypatch)
 def test_rate_limiter_redis_fallback_fail_open_on_readonly(client, monkeypatch):
     """Tests that read-only portfolio routes remain available when check_rate_limit fails.
 
-    Portfolio data endpoints (GET /api/v1/projects, etc.) do not go through
-    check_rate_limit (they use @limiter.limit decorator separately). This test
-    verifies that when the decorator's backend is unavailable, slowapi's built-in
-    fallback still serves the request. We test this by confirming GET /projects
-    returns 200 even when check_rate_limit would fail-closed (it's not called here).
+    Portfolio data endpoints (GET /api/v1/projects, etc.) now call check_rate_limit
+    directly instead of using @limiter.limit decorator. This test verifies that
+    when the Redis backend is unavailable, check_rate_limit's fail-open path
+    still serves the request (continues instead of raising).
     """
-    # GET /projects uses @limiter.limit decorator — it does NOT call check_rate_limit.
-    # When Redis is unavailable, slowapi's Limiter falls back to memory.
-    # We simply verify the endpoint is reachable (fail-open behavior is the default
-    # for the slowapi decorator on read-only routes).
+
+    def mock_hit(*args, **kwargs):
+        raise ConnectionError("Redis is down")
+
+    monkeypatch.setattr("app.core.rate_limit.limiter.limiter.hit", mock_hit)
+
     resp = client.get("/api/v1/projects")
     assert resp.status_code == 200, (
-        f"Expected 200 (read-only route should be available), got {resp.status_code}."
+        f"Expected 200 (fail-open should allow request), got {resp.status_code}."
     )
 
 

@@ -37,7 +37,7 @@ from app.controllers.dependencies import (
 )
 from app.core.cache_http import cacheable_response
 from app.core.exceptions import ResourceNotFoundError
-from app.core.rate_limit import limiter
+from app.core.rate_limit import check_rate_limit
 from app.schemas.about import AboutResponse
 from app.schemas.experiences import Experience, ExperiencesResponse
 from app.schemas.formation import FormationItem, FormationResponse
@@ -204,7 +204,6 @@ async def get_about(
         200: {"description": "Projects list returned successfully"},
     },
 )
-@limiter.limit("20/minute")
 async def list_projects(
     request: Request,
     response: Response,
@@ -216,6 +215,7 @@ async def list_projects(
     """
     Lists all portfolio projects.
     """
+    check_rate_limit(request, "20/minute")
     projects = await get_projects_uc.execute()
 
     projects_summary = [
@@ -283,7 +283,6 @@ async def list_projects(
         },
     },
 )
-@limiter.limit("20/minute")
 async def get_project(
     request: Request,
     response: Response,
@@ -296,6 +295,7 @@ async def get_project(
     """
     Retrieves full details of a project.
     """
+    check_rate_limit(request, "20/minute")
     project = await get_project_by_id_uc.execute(project_id)
 
     if not project:

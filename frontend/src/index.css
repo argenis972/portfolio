@@ -230,6 +230,10 @@ section[id] {
   scroll-margin-top: 4.5rem; /* 72 px — slight extra breathing room */
 }
 
+#contact {
+  scroll-margin-top: 5.5rem;
+}
+
 /* ─── Scroll reveal ──────────────────────────────────────────── */
 .reveal-hidden {
   opacity: 0;

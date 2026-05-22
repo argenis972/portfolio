@@ -19,6 +19,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from contextlib import asynccontextmanager
 import asyncio
 import os
+import structlog
 
 from app import __version__
 from app.settings import settings
@@ -35,6 +36,8 @@ from app.core.middleware import (
 )
 from app.core.observability import setup_observability
 from app.worker import StreamWorker
+
+logger = structlog.get_logger(__name__)
 
 
 @asynccontextmanager
@@ -61,6 +64,8 @@ async def _lifespan(app: FastAPI):
             await asyncio.wait_for(worker_task, timeout=5.0)
         except (asyncio.TimeoutError, asyncio.CancelledError):
             pass
+        except Exception:
+            logger.warning("worker_task_exception_on_shutdown", exc_info=True)
 
     await dispose_all()
 

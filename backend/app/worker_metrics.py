@@ -12,6 +12,13 @@ _retries = Counter("worker_retries_total", "Worker retries", ["reason"])
 _pel = Gauge(
     "worker_pel_size", "Worker pending entries list size", ["group", "consumer"]
 )
+_recovery_runs = Counter(
+    "worker_recovery_runs_total", "Recovery loop executions", ["pending_count"]
+)
+_reclaimed = Counter("worker_messages_reclaimed_total", "Messages reclaimed from PEL")
+_quota_blocks = Counter(
+    "worker_quota_blocks_total", "Times circuit breaker blocked Redis usage"
+)
 
 
 def observe_job_duration(value: float) -> None:
@@ -28,6 +35,18 @@ def inc_dlq(reason: str) -> None:
 
 def inc_retry(reason: str) -> None:
     _retries.labels(reason=reason).inc()
+
+
+def inc_recovery_run(pending_count: int) -> None:
+    _recovery_runs.labels(pending_count=str(pending_count)).inc()
+
+
+def inc_reclaimed(count: int = 1) -> None:
+    _reclaimed.inc(count)
+
+
+def inc_quota_block() -> None:
+    _quota_blocks.inc()
 
 
 def set_lag(value: int) -> None:

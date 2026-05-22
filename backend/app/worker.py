@@ -12,6 +12,7 @@ import random
 from datetime import datetime, timezone
 from typing import Any, Dict
 
+import sentry_sdk
 import structlog
 from redis import asyncio as redis
 
@@ -21,19 +22,24 @@ from app.settings import settings
 from app.worker_metrics import (
     inc_dlq,
     inc_processed,
+    inc_quota_block,
+    inc_reclaimed,
+    inc_recovery_run,
     inc_retry,
     observe_job_duration,
-    set_lag,
     set_pel_size,
 )
 
 logger = structlog.get_logger(__name__)
 MAX_RETRIES = 3
+_RECOVERY_INTERVAL = 300
+_QUOTA_COOLDOWN_HOURS = 1
+_QUOTA_COOLDOWN_SLEEP = 30
 
 
 class StreamWorker:
     """
-    Consumer for Redis Streams jobs.
+    Consumer for Redis Streams jobs with circuit breaker and separate recovery loop.
     """
 
     def __init__(
@@ -42,13 +48,24 @@ class StreamWorker:
         stream_name: str = "contact_jobs",
         group_name: str = "email_workers",
         consumer_name: str = f"worker-{os.getpid()}",
+        recovery_interval: int = 300,
     ):
         self.redis_url = redis_url
         self.stream_name = stream_name
         self.group_name = group_name
         self.consumer_name = consumer_name
+        self.recovery_interval = recovery_interval
         self.running = True
         self._redis: redis.Redis | None = None
+        self.redis_disabled_until: float | None = None
+
+    def _is_redis_disabled(self) -> bool:
+        if self.redis_disabled_until is None:
+            return False
+        if time.time() >= self.redis_disabled_until:
+            self.redis_disabled_until = None
+            return False
+        return True
 
     async def _get_client(self) -> redis.Redis:
         if self._redis is None:
@@ -56,25 +73,42 @@ class StreamWorker:
                 self.redis_url,
                 encoding="utf-8",
                 decode_responses=True,
-                socket_timeout=None,  # Workers should not timeout on long polls
+                socket_connect_timeout=10,
+                socket_timeout=60,
             )
         return self._redis
 
-    async def setup(self):
-        """Initializes the stream and consumer group."""
+    async def setup(self) -> bool:
+        """Initializes the stream and consumer group.
+
+        Returns True if the worker can start, False if Redis quota is exceeded.
+        """
         client = await self._get_client()
         try:
-            # Create consumer group if it doesn't exist
-            # MKSTREAM ensures the stream is created if missing
             await client.xgroup_create(
                 self.stream_name, self.group_name, id="0", mkstream=True
             )
             logger.info("consumer_group_created", group=self.group_name)
+            return True
         except redis.ResponseError as e:
-            if "BUSYGROUP" in str(e):
+            error_msg = str(e)
+            if "BUSYGROUP" in error_msg:
                 logger.info("consumer_group_exists", group=self.group_name)
-            else:
-                raise
+                return True
+            if "max requests limit exceeded" in error_msg:
+                logger.warning(
+                    "worker_setup_quota_exceeded",
+                    provider="upstash",
+                )
+                with sentry_sdk.push_scope() as scope:
+                    scope.set_tag("failure_type", "quota_exceeded")
+                    scope.set_tag("worker_phase", "setup")
+                    sentry_sdk.capture_message(
+                        "upstash_quota_exceeded", level="warning"
+                    )
+                return False
+            logger.error("worker_setup_failed", error=error_msg)
+            return False
 
     async def _move_to_dlq(
         self, job_id: str, body: dict[str, Any], reason: str, error_type: str
@@ -108,7 +142,6 @@ class StreamWorker:
         body["meta"] = meta
 
         if job_name == "send_contact_email":
-            # Composition Root inside the worker
             uc = get_send_contact_use_case()
             logger.info(
                 "processing_email_job", job_id=job_id, sender=payload.get("email")
@@ -173,7 +206,6 @@ class StreamWorker:
             inc_retry(failure_class)
             await asyncio.sleep(backoff)
 
-            # Check max age (15 min = 900s)
             first_seen_at = meta.get("first_seen_at")
             if first_seen_at:
                 try:
@@ -191,7 +223,6 @@ class StreamWorker:
                 except Exception:
                     pass
 
-            # Re-enqueue before ACK to maintain at-least-once semantics
             client = await self._get_client()
             body["meta"] = meta
             await client.xadd(
@@ -206,102 +237,159 @@ class StreamWorker:
             await client.xack(self.stream_name, self.group_name, job_id)
             return
 
-        # For terminal failures, publish to DLQ first, then ACK original.
-        # This preserves durability if DLQ publish fails.
         await self._move_to_dlq(job_id, body, str(exc), type(exc).__name__)
         client = await self._get_client()
         await client.xack(self.stream_name, self.group_name, job_id)
 
+    async def _recovery_loop(self):
+        """Periodically reclaims messages stuck in PEL.
+
+        Runs every 5 minutes, independent of the main consumption loop.
+        This separation keeps the hot path lean and recovery observable.
+        """
+        while self.running:
+            try:
+                if self._is_redis_disabled():
+                    await asyncio.sleep(self.recovery_interval)
+                    continue
+
+                client = await self._get_client()
+                pel = await client.xpending(self.stream_name, self.group_name)
+                pending_count = 0
+                if isinstance(pel, dict):
+                    pending_count = pel.get("pending", 0) or 0
+                elif pel:
+                    pending_count = int(pel[0])
+
+                inc_recovery_run(pending_count)
+
+                if pending_count > 0:
+                    logger.info("recovery_check_pel", pending=pending_count)
+                    claimed = await client.xautoclaim(
+                        self.stream_name,
+                        self.group_name,
+                        self.consumer_name,
+                        min_idle_time=300000,
+                        start_id="0",
+                        count=10,
+                    )
+                    if claimed and len(claimed) > 1 and claimed[1]:
+                        reclaimed_count = len(claimed[1])
+                        inc_reclaimed(reclaimed_count)
+                        logger.info(
+                            "recovery_reclaimed",
+                            count=reclaimed_count,
+                        )
+                await asyncio.sleep(self.recovery_interval)
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                logger.error("recovery_loop_error", error=str(e))
+                await asyncio.sleep(self.recovery_interval)
+
     async def run(self):
-        """Main loop for consuming jobs."""
-        await self.setup()
+        """Main consumption loop with separate recovery task."""
+        setup_ok = await self.setup()
+        if not setup_ok:
+            self.redis_disabled_until = time.time() + 3600 * _QUOTA_COOLDOWN_HOURS
+            logger.warning(
+                "worker_disabled",
+                reason="redis_quota_exceeded",
+                cooldown_hours=_QUOTA_COOLDOWN_HOURS,
+            )
+            return
+
         client = await self._get_client()
+        recovery_task = asyncio.create_task(self._recovery_loop())
 
         logger.info("worker_started", consumer=self.consumer_name)
 
-        while self.running:
-            try:
+        try:
+            while self.running:
+                if self._is_redis_disabled():
+                    await asyncio.sleep(_QUOTA_COOLDOWN_SLEEP)
+                    continue
+
                 try:
-                    pel_summary = await client.xpending(
-                        self.stream_name, self.group_name
-                    )
-                    pending = (
-                        pel_summary.get("pending", 0)
-                        if isinstance(pel_summary, dict)
-                        else int(pel_summary[0])
-                        if pel_summary
-                        else 0
-                    )
-                    set_lag(int(pending))
-                except Exception:
-                    pass
-
-                # XAUTOCLAIM: Reclaim messages stuck in PEL for > 5 minutes
-                claim_res = await client.xautoclaim(
-                    self.stream_name,
-                    self.group_name,
-                    self.consumer_name,
-                    min_idle_time=300000,
-                    start_id="0",
-                    count=1,
-                )
-
-                messages = []
-                if claim_res and len(claim_res) > 1 and claim_res[1]:
-                    messages = [(self.stream_name, claim_res[1])]
-                    logger.info("job_reclaimed_from_pel", count=len(claim_res[1]))
-                else:
-                    # XREADGROUP: Read from stream as part of a group
                     response = await client.xreadgroup(
                         self.group_name,
                         self.consumer_name,
                         {self.stream_name: ">"},
                         count=1,
-                        block=5000,
+                        block=30000,
                     )
                     if not response:
                         continue
-                    messages = response
 
-                for stream, stream_messages in messages:
-                    for job_id, data in stream_messages:
-                        try:
-                            started = time.perf_counter()
-                            logger.info("job_processing_started", job_id=job_id)
-                            await self.process_job(job_id, data)
-                            await client.xack(self.stream_name, self.group_name, job_id)
-                            set_pel_size(self.group_name, self.consumer_name, 0)
-                            observe_job_duration(time.perf_counter() - started)
-                            inc_processed("success", "ok")
-                            logger.info("job_acked", job_id=job_id)
-                        except Exception as e:
+                    for stream, stream_messages in response:
+                        for job_id, data in stream_messages:
                             try:
-                                body = json.loads(data.get("payload", "{}"))
-                            except Exception:
-                                body = {
-                                    "job_name": data.get("job_name", "unknown"),
-                                    "payload": {},
-                                    "meta": {},
-                                }
-                            try:
-                                await self._handle_failure(job_id, body, e)
-                            except Exception:
-                                logger.error(
-                                    "job_processing_crash", job_id=job_id, error=str(e)
+                                started = time.perf_counter()
+                                logger.info("job_processing_started", job_id=job_id)
+                                await self.process_job(job_id, data)
+                                await client.xack(
+                                    self.stream_name, self.group_name, job_id
                                 )
-                                continue
-                            inc_processed("failed", type(e).__name__)
-                            logger.error(
-                                "job_processing_crash", job_id=job_id, error=str(e)
-                            )
-                            # Note: We don't ACK if it crashes, so it stays in PEL for retry logic
-                            # (A separate process would normally check for stale messages in PEL)
+                                set_pel_size(self.group_name, self.consumer_name, 0)
+                                observe_job_duration(time.perf_counter() - started)
+                                inc_processed("success", "ok")
+                                logger.info("job_acked", job_id=job_id)
+                            except Exception as e:
+                                try:
+                                    body = json.loads(data.get("payload", "{}"))
+                                except Exception:
+                                    body = {
+                                        "job_name": data.get("job_name", "unknown"),
+                                        "payload": {},
+                                        "meta": {},
+                                    }
+                                try:
+                                    await self._handle_failure(job_id, body, e)
+                                except Exception:
+                                    logger.error(
+                                        "job_processing_crash",
+                                        job_id=job_id,
+                                        error=str(e),
+                                    )
+                                    continue
+                                inc_processed("failed", type(e).__name__)
+                                logger.error(
+                                    "job_processing_crash",
+                                    job_id=job_id,
+                                    error=str(e),
+                                )
 
+                except asyncio.CancelledError:
+                    break
+                except redis.ResponseError as e:
+                    error_msg = str(e)
+                    if "max requests limit exceeded" in error_msg:
+                        self.redis_disabled_until = (
+                            time.time() + 3600 * _QUOTA_COOLDOWN_HOURS
+                        )
+                        inc_quota_block()
+                        logger.warning(
+                            "redis_quota_exceeded_circuit_breaker",
+                            cooldown_hours=_QUOTA_COOLDOWN_HOURS,
+                        )
+                        with sentry_sdk.push_scope() as scope:
+                            scope.set_tag("failure_type", "quota_exceeded")
+                            scope.set_tag("worker_phase", "consume")
+                            sentry_sdk.capture_message(
+                                "upstash_quota_exceeded", level="warning"
+                            )
+                    else:
+                        logger.error("worker_redis_response_error", error=error_msg)
+                    await asyncio.sleep(5)
+                except Exception as e:
+                    logger.error("worker_loop_error", error=str(e))
+                    await asyncio.sleep(1)
+        finally:
+            recovery_task.cancel()
+            try:
+                await recovery_task
             except asyncio.CancelledError:
-                break
-            except Exception as e:
-                logger.error("worker_loop_error", error=str(e))
-                await asyncio.sleep(1)  # Avoid tight loop on Redis error
+                pass
 
     def stop(self):
         self.running = False

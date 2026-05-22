@@ -1,3 +1,4 @@
+import asyncio
 import json
 from unittest.mock import AsyncMock, patch
 
@@ -288,12 +289,12 @@ async def test_worker_corrupt_payload_does_not_crash_loop():
 @pytest.mark.asyncio
 async def test_worker_reclaims_pel():
     mock_redis = AsyncMock()
-    # Reclaim returns 1 message
     payload = {
         "job_name": "send_contact_email",
         "payload": {"name": "a", "email": "a@a.com", "message": "m"},
         "meta": {"retry_count": 0},
     }
+    mock_redis.xpending.return_value = {"pending": 1}
     mock_redis.xautoclaim.return_value = [
         "0",
         [
@@ -304,8 +305,7 @@ async def test_worker_reclaims_pel():
         ],
     ]
 
-    worker = StreamWorker("redis://localhost")
-    worker.running = False  # So it just runs one iteration and exits
+    worker = StreamWorker("redis://localhost", recovery_interval=0.01)
 
     uc_mock = AsyncMock()
     uc_mock.execute.return_value = True
@@ -315,56 +315,36 @@ async def test_worker_reclaims_pel():
         patch("app.worker.get_send_contact_use_case", return_value=uc_mock),
     ):
         worker.running = True
+        task = asyncio.create_task(worker._recovery_loop())
+        await asyncio.sleep(0.05)
+        worker.running = False
+        await task
 
-        # Monkey patch run to break out after one successful iteration
-        def side_effect(*args, **kwargs):
-            worker.running = False
-            return [
-                "0",
-                [
-                    (
-                        "job-pel-1",
-                        {
-                            "job_name": "send_contact_email",
-                            "payload": json.dumps(payload),
-                        },
-                    )
-                ],
-            ]
-
-        mock_redis.xautoclaim.side_effect = side_effect
-
-        await worker.run()
-
-        # Should xack the pel message
-        mock_redis.xack.assert_called_once_with(
-            "contact_jobs", "email_workers", "job-pel-1"
-        )
-        # xreadgroup should not even be called because claim_res was truthy
-        mock_redis.xreadgroup.assert_not_called()
+        mock_redis.xpending.assert_called()
+        mock_redis.xautoclaim.assert_called()
 
 
 @pytest.mark.asyncio
-async def test_worker_reports_consumer_lag():
+async def test_worker_recovery_reports_pending():
+    """Recovery loop reports pending count via worker_recovery_runs_total metric."""
     mock_redis = AsyncMock()
     mock_redis.xpending.return_value = {"pending": 7}
     mock_redis.xautoclaim.return_value = ["0", []]
 
-    worker = StreamWorker("redis://localhost")
-
-    def stop_once(*args, **kwargs):
-        worker.running = False
-        return []
-
-    mock_redis.xreadgroup.side_effect = stop_once
+    worker = StreamWorker("redis://localhost", recovery_interval=0.01)
 
     with (
         patch("redis.asyncio.from_url", return_value=mock_redis),
-        patch("app.worker.set_lag") as lag_mock,
+        patch("app.worker.inc_recovery_run") as inc_mock,
     ):
         worker.running = True
-        await worker.run()
-        lag_mock.assert_called_with(7)
+        task = asyncio.create_task(worker._recovery_loop())
+        await asyncio.sleep(0.05)
+        worker.running = False
+        await task
+
+        mock_redis.xpending.assert_called()
+        inc_mock.assert_called_with(7)
 
 
 @pytest.mark.asyncio

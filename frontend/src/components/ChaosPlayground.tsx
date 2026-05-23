@@ -125,48 +125,51 @@ export default function ChaosPlayground() {
 
         {/* Action cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
-          <ChaosActionCard
-            icon="🌬️"
-            titleKey="chaos.action.drain.title"
-            descKey="chaos.action.drain.desc"
-            accentClass="text-status-ok font-black"
-            borderClass="border-status-ok/50"
-            hoverClass="bg-status-ok text-white shadow-lg shadow-status-ok/20 hover:brightness-110"
-            loading={drainLoading}
-            cooldown={drainCooldown}
-            loadingKey="chaos.action.drain.running"
-            actionKey="chaos.action.drain.action"
-            disabled={drainLoading || drainCooldown > 0}
-            onClick={handleDrain}
-          />
-          <ChaosActionCard
-            icon="⏳"
-            titleKey="chaos.action.latency.title"
-            descKey="chaos.action.latency.desc"
-            accentClass="text-status-warn font-black"
-            borderClass="border-status-warn/50"
-            hoverClass="bg-status-warn text-white shadow-lg shadow-status-warn/20 hover:brightness-110"
-            loading={latencyLoading}
-            cooldown={latencyCooldown}
-            loadingKey="chaos.action.latency.running"
-            actionKey="chaos.action.latency.action"
-            disabled={latencyLoading || latencyCooldown > 0}
-            onClick={handleLatency}
-          />
-          <ChaosActionCard
-            icon="🔄"
-            titleKey="chaos.action.retry.title"
-            descKey="chaos.action.retry.desc"
-            accentClass="text-status-info font-black"
-            borderClass="border-status-info/50"
-            hoverClass="bg-status-info text-white shadow-lg shadow-status-info/20 hover:brightness-110"
-            loading={retryLoading}
-            cooldown={retryCooldown}
-            loadingKey="chaos.action.retry.running"
-            actionKey="chaos.action.retry.action"
-            disabled={retryLoading || retryCooldown > 0}
-            onClick={handleRetry}
-          />
+           <ChaosActionCard
+             icon="🌬️"
+             titleKey="chaos.action.drain.title"
+             descKey="chaos.action.drain.desc"
+             accentClass="text-status-ok font-black"
+             borderClass="border-status-ok/50"
+             hoverClass="bg-status-ok text-white shadow-lg shadow-status-ok/20 hover:brightness-110"
+             loading={drainLoading}
+             cooldown={drainCooldown}
+             loadingKey="chaos.action.drain.running"
+             actionKey="chaos.action.drain.action"
+             disabled={drainLoading || drainCooldown > 0}
+             onClick={handleDrain}
+             testId={`chaos-btn-drain`}
+           />
+           <ChaosActionCard
+             icon="⏳"
+             titleKey="chaos.action.latency.title"
+             descKey="chaos.action.latency.desc"
+             accentClass="text-status-warn font-black"
+             borderClass="border-status-warn/50"
+             hoverClass="bg-status-warn text-white shadow-lg shadow-status-warn/20 hover:brightness-110"
+             loading={latencyLoading}
+             cooldown={latencyCooldown}
+             loadingKey="chaos.action.latency.running"
+             actionKey="chaos.action.latency.action"
+             disabled={latencyLoading || latencyCooldown > 0}
+             onClick={handleLatency}
+             testId={`chaos-btn-latency`}
+           />
+           <ChaosActionCard
+             icon="🔄"
+             titleKey="chaos.action.retry.title"
+             descKey="chaos.action.retry.desc"
+             accentClass="text-status-info font-black"
+             borderClass="border-status-info/50"
+             hoverClass="bg-status-info text-white shadow-lg shadow-status-info/20 hover:brightness-110"
+             loading={retryLoading}
+             cooldown={retryCooldown}
+             loadingKey="chaos.action.retry.running"
+             actionKey="chaos.action.retry.action"
+             disabled={retryLoading || retryCooldown > 0}
+             onClick={handleRetry}
+             testId={`chaos-btn-retry`}
+           />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">

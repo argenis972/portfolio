@@ -38,6 +38,10 @@ Global Edge UI deployment.
     *   **Output Directory**: `dist`
 3.  **Environment Variables**:
     *   `VITE_API_URL`: `https://api.argenisbackend.com/api/v1`
+        *   **⚠️ Contrato formal**: El valor **debe** incluir el sufijo `/api/v1`.
+        *   Sin el sufijo, los endpoints de Chaos Playground (Drain, Retry, Latency) y otros
+            construyen rutas incorrectas (ej. `/chaos/drain` en vez de `/api/v1/chaos/drain`).
+        *   El frontend normaliza automáticamente si falta, pero muestra un warning en consola.
     *   `VITE_ENABLE_CHAOS_PLAYGROUND`: `true` (enables the Chaos Playground and Trace Viewer UI)
     *   **Live Status**: `https://api.argenisbackend.com/health` (JSON Health Check)
 

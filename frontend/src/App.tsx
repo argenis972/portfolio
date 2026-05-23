@@ -5,6 +5,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { LogProvider } from './context/LogContext';
 import { ChaosModeProvider } from './context/ChaosContext';
 import { LazyMotion, domAnimation } from 'framer-motion';
+import { API_BASE_URL } from './api/client';
 
 // Above-fold critical path (eager)
 import SystemStatusBanner from './components/SystemStatusBanner';
@@ -35,6 +36,8 @@ const SectionFallback = () => (
     LOADING...
   </div>
 );
+
+console.info('[API] Base URL:', API_BASE_URL);
 
 function App() {
   return (

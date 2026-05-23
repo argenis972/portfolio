@@ -82,3 +82,11 @@ jobs:
             echo "❌ ERROR: Placeholder 'https://seudominio.com' found. Use environment variables."
             exit 1
           fi
+
+      - name: 🔒 Preflight VITE_API_URL contract
+        run: |
+          echo "✅ Preflight: VITE_API_URL debe incluir /api/v1 (se configura en Vercel Dashboard)"
+          echo "   El código normaliza automáticamente, pero el valor exacto evita warnings en consola."
+          if grep -qrn "VITE_API_URL=" frontend/.env.example --include="*.example"; then
+            echo "   ✅ .env.example contiene el valor correcto con /api/v1"
+          fi

@@ -9,9 +9,32 @@
  */
 import { z } from 'zod';
 
+/**
+ * Ensures the base URL ends with /api/v1.
+ * If it already ends with /api/v{number}, leaves it untouched.
+ * Otherwise appends /api/v1 and warns in dev mode.
+ */
+export function ensureApiV1Suffix(url: string): string {
+  if (/\/api\/v\d+$/.test(url)) return url;
+  const normalized = url.endsWith('/api')
+    ? url + '/v1'
+    : url.replace(/\/+$/, '') + '/api/v1';
+  if (import.meta.env.DEV) {
+    console.warn(
+      `[API] VITE_API_URL="${url}" no incluye /api/v1. ` +
+      `Se normalizó automáticamente a "${normalized}". ` +
+      `Fija el valor exacto en Vercel Dashboard para eliminar este warning.`,
+    );
+  }
+  return normalized;
+}
+
 const configuredApiBaseUrl = import.meta.env.VITE_API_URL?.trim();
-export const API_BASE_URL =
-  configuredApiBaseUrl || (import.meta.env.DEV ? 'http://127.0.0.1:8000/api/v1' : '');
+export const API_BASE_URL = (() => {
+  const base = configuredApiBaseUrl || (import.meta.env.DEV ? 'http://127.0.0.1:8000/api/v1' : '');
+  if (!base) return '';
+  return ensureApiV1Suffix(base);
+})();
 
 export function buildApiUrl(path: string): string {
   if (!API_BASE_URL) {

@@ -5,11 +5,14 @@ import './index.css'
 import { LanguageProvider } from './context/LanguageContext.tsx'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import * as Sentry from '@sentry/react'
+import { API_BASE_URL } from './api/client'
 
 Sentry.init({
   dsn: import.meta.env.VITE_SENTRY_DSN || "",
   sendDefaultPii: false,
 });
+
+Sentry.setTag('api_base_url', API_BASE_URL);
 
 const queryClient = new QueryClient({
   defaultOptions: {

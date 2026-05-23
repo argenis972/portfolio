@@ -7,6 +7,7 @@
  */
 import { useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { buildApiUrl, ApiError } from '../api/client';
 import { postChaosDrain, postChaosRetry, postChaosLatency, type ChaosResponse } from '../api/chaosService';
 import { emitTrace } from '../services/TraceEmitter';
 import type { LogLevel } from '../types/logs';
@@ -79,9 +80,13 @@ export function useChaosActions({ addTerminalEntry, addEntry, addIncident }: Use
       invalidateMetrics();
       startCooldown(setDrainCooldown);
     } catch (err: unknown) {
+      const isNetworkError = err instanceof TypeError;
+      const isApiError = err instanceof ApiError;
       const msg = err instanceof Error ? err.message : 'Unknown error';
-      addTerminalEntry('ERROR', `chaos.drain failed error="${msg}" request_id=${rid} trace_id=${traceId}`, rid);
-      addEntry('ERROR', `chaos.drain status=FAILED error="${msg}" trace_id=${traceId}`, rid);
+      const url = buildApiUrl('/chaos/drain');
+      const errorTag = isNetworkError ? 'NETWORK' : isApiError ? `HTTP_${(err as ApiError).status}` : 'UNKNOWN';
+      addTerminalEntry('ERROR', `chaos.drain failed error="${msg}" error_type=${errorTag} url=${url} request_id=${rid} trace_id=${traceId}`, rid);
+      addEntry('ERROR', `chaos.drain status=FAILED error_type=${errorTag} error="${msg}" trace_id=${traceId}`, rid);
     } finally { setDrainLoading(false); }
   }, [drainLoading, drainCooldown, addTerminalEntry, addEntry, addIncident, invalidateMetrics, startCooldown]);
 
@@ -101,9 +106,13 @@ export function useChaosActions({ addTerminalEntry, addEntry, addIncident }: Use
       invalidateMetrics();
       startCooldown(setRetryCooldown);
     } catch (err: unknown) {
+      const isNetworkError = err instanceof TypeError;
+      const isApiError = err instanceof ApiError;
       const msg = err instanceof Error ? err.message : 'Unknown error';
-      addTerminalEntry('ERROR', `chaos.retry failed error="${msg}" request_id=${rid} trace_id=${traceId}`, rid);
-      addEntry('ERROR', `chaos.retry status=FAILED error="${msg}" trace_id=${traceId}`, rid);
+      const url = buildApiUrl('/chaos/retry');
+      const errorTag = isNetworkError ? 'NETWORK' : isApiError ? `HTTP_${(err as ApiError).status}` : 'UNKNOWN';
+      addTerminalEntry('ERROR', `chaos.retry failed error="${msg}" error_type=${errorTag} url=${url} request_id=${rid} trace_id=${traceId}`, rid);
+      addEntry('ERROR', `chaos.retry status=FAILED error_type=${errorTag} error="${msg}" trace_id=${traceId}`, rid);
     } finally { setRetryLoading(false); }
   }, [retryLoading, retryCooldown, addTerminalEntry, addEntry, addIncident, invalidateMetrics, startCooldown]);
 
@@ -123,9 +132,13 @@ export function useChaosActions({ addTerminalEntry, addEntry, addIncident }: Use
       invalidateMetrics();
       startCooldown(setLatencyCooldown);
     } catch (err: unknown) {
+      const isNetworkError = err instanceof TypeError;
+      const isApiError = err instanceof ApiError;
       const msg = err instanceof Error ? err.message : 'Unknown error';
-      addTerminalEntry('ERROR', `chaos.latency error="${msg}" request_id=${rid} trace_id=${traceId}`, rid);
-      addEntry('ERROR', `chaos.latency status=FAILED error="${msg}" trace_id=${traceId}`, rid);
+      const url = buildApiUrl('/chaos/latency');
+      const errorTag = isNetworkError ? 'NETWORK' : isApiError ? `HTTP_${(err as ApiError).status}` : 'UNKNOWN';
+      addTerminalEntry('ERROR', `chaos.latency failed error="${msg}" error_type=${errorTag} url=${url} request_id=${rid} trace_id=${traceId}`, rid);
+      addEntry('ERROR', `chaos.latency status=FAILED error_type=${errorTag} error="${msg}" trace_id=${traceId}`, rid);
     } finally { setLatencyLoading(false); }
   }, [latencyLoading, latencyCooldown, addTerminalEntry, addEntry, addIncident, invalidateMetrics, startCooldown]);
 

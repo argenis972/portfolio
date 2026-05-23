@@ -19,7 +19,13 @@ export function ensureApiV1Suffix(url: string): string {
   const normalized = url.endsWith('/api')
     ? url + '/v1'
     : url.replace(/\/+$/, '') + '/api/v1';
-  if (import.meta.env.DEV) {
+
+  // Fail fast in production if the base URL is misconfigured
+  if (import.meta.env.PROD && url !== normalized) {
+    throw new Error(`[API] Invalid VITE_API_URL="${url}". It must end with /api/v1 in production.`);
+  }
+
+  if (import.meta.env.DEV && url !== normalized) {
     console.warn(
       `[API] VITE_API_URL="${url}" no incluye /api/v1. ` +
       `Se normalizó automáticamente a "${normalized}". ` +

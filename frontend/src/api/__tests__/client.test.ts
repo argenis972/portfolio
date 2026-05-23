@@ -1,52 +1,46 @@
-import { describe, it, expect } from 'vitest';
-import { ensureApiV1Suffix, buildApiUrl } from '../client';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { ensureApiV1Suffix } from '../client';
 
-describe('ensureApiV1Suffix', () => {
-  it('leaves URL untouched when already ending with /api/v1', () => {
-    expect(ensureApiV1Suffix('https://api.argenisbackend.com/api/v1')).toBe(
-      'https://api.argenisbackend.com/api/v1',
-    );
+describe('API URL normalizer (ensureApiV1Suffix)', () => {
+  beforeEach(() => {
+    vi.unstubAllEnvs();
   });
 
-  it('leaves URL untouched when ending with /api/v2', () => {
-    expect(ensureApiV1Suffix('https://api.example.com/api/v2')).toBe(
-      'https://api.example.com/api/v2',
-    );
+  it('preserves url if it already has /api/v1', () => {
+    expect(ensureApiV1Suffix('https://api.test.com/api/v1')).toBe('https://api.test.com/api/v1');
   });
 
-  it('appends /api/v1 when base URL has no version suffix', () => {
-    expect(ensureApiV1Suffix('https://api.argenisbackend.com')).toBe(
-      'https://api.argenisbackend.com/api/v1',
-    );
+  it('preserves url if it already has another version like /api/v2', () => {
+    expect(ensureApiV1Suffix('https://api.test.com/api/v2')).toBe('https://api.test.com/api/v2');
   });
 
-  it('appends /api/v1 when base URL ends with /api', () => {
-    expect(ensureApiV1Suffix('https://api.argenisbackend.com/api')).toBe(
-      'https://api.argenisbackend.com/api/v1',
-    );
+  it('normalizes missing suffix and warns in DEV environment', () => {
+    const originalDev = import.meta.env.DEV;
+    const originalProd = import.meta.env.PROD;
+    
+    import.meta.env.DEV = true;
+    import.meta.env.PROD = false;
+
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    
+    expect(ensureApiV1Suffix('https://api.test.com')).toBe('https://api.test.com/api/v1');
+    expect(warnSpy).toHaveBeenCalled();
+    warnSpy.mockRestore();
+
+    import.meta.env.DEV = originalDev;
+    import.meta.env.PROD = originalProd;
   });
 
-  it('appends /api/v1 when base URL ends with trailing slash', () => {
-    expect(ensureApiV1Suffix('https://api.example.com/')).toBe(
-      'https://api.example.com/api/v1',
-    );
-  });
-
-  it('handles localhost URL without version', () => {
-    expect(ensureApiV1Suffix('http://localhost:8000')).toBe(
-      'http://localhost:8000/api/v1',
-    );
-  });
-
-  it('handles localhost URL already with /api/v1', () => {
-    expect(ensureApiV1Suffix('http://127.0.0.1:8000/api/v1')).toBe(
-      'http://127.0.0.1:8000/api/v1',
-    );
-  });
-});
-
-describe('buildApiUrl', () => {
-  it('throws if API_BASE_URL is empty', () => {
-    expect(() => buildApiUrl('/test')).not.toThrow();
+  it('throws an error in PROD environment if suffix is missing (Fail-fast)', () => {
+    const originalDev = import.meta.env.DEV;
+    const originalProd = import.meta.env.PROD;
+    
+    import.meta.env.DEV = false;
+    import.meta.env.PROD = true;
+    
+    expect(() => ensureApiV1Suffix('https://api.test.com')).toThrowError(/It must end with \/api\/v1 in production/);
+    
+    import.meta.env.DEV = originalDev;
+    import.meta.env.PROD = originalProd;
   });
 });

@@ -7,9 +7,10 @@
  */
 import { useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { buildApiUrl, ApiError } from '../api/client';
+import { buildApiUrl, ApiError, API_BASE_URL } from '../api/client';
 import { postChaosDrain, postChaosRetry, postChaosLatency, type ChaosResponse } from '../api/chaosService';
 import { emitTrace } from '../services/TraceEmitter';
+import * as Sentry from '@sentry/react';
 import type { LogLevel } from '../types/logs';
 import type { Incident } from '../types/incidents';
 
@@ -80,11 +81,21 @@ export function useChaosActions({ addTerminalEntry, addEntry, addIncident }: Use
       invalidateMetrics();
       startCooldown(setDrainCooldown);
     } catch (err: unknown) {
-      const isNetworkError = err instanceof TypeError;
+      const isNetworkError = err instanceof TypeError || (err instanceof Error && err.name === 'TypeError');
       const isApiError = err instanceof ApiError;
       const msg = err instanceof Error ? err.message : 'Unknown error';
       const url = buildApiUrl('/chaos/drain');
       const errorTag = isNetworkError ? 'NETWORK' : isApiError ? `HTTP_${(err as ApiError).status}` : 'UNKNOWN';
+      
+      Sentry.withScope((scope) => {
+        scope.setTag('api_base_url', API_BASE_URL);
+        scope.setTag('endpoint', '/chaos/drain');
+        scope.setTag('error_type', errorTag);
+        scope.setExtra('url', url);
+        scope.setExtra('request_id', rid);
+        Sentry.captureException(err);
+      });
+
       addTerminalEntry('ERROR', `chaos.drain failed error="${msg}" error_type=${errorTag} url=${url} request_id=${rid} trace_id=${traceId}`, rid);
       addEntry('ERROR', `chaos.drain status=FAILED error_type=${errorTag} error="${msg}" trace_id=${traceId}`, rid);
     } finally { setDrainLoading(false); }
@@ -106,11 +117,21 @@ export function useChaosActions({ addTerminalEntry, addEntry, addIncident }: Use
       invalidateMetrics();
       startCooldown(setRetryCooldown);
     } catch (err: unknown) {
-      const isNetworkError = err instanceof TypeError;
+      const isNetworkError = err instanceof TypeError || (err instanceof Error && err.name === 'TypeError');
       const isApiError = err instanceof ApiError;
       const msg = err instanceof Error ? err.message : 'Unknown error';
       const url = buildApiUrl('/chaos/retry');
       const errorTag = isNetworkError ? 'NETWORK' : isApiError ? `HTTP_${(err as ApiError).status}` : 'UNKNOWN';
+      
+      Sentry.withScope((scope) => {
+        scope.setTag('api_base_url', API_BASE_URL);
+        scope.setTag('endpoint', '/chaos/retry');
+        scope.setTag('error_type', errorTag);
+        scope.setExtra('url', url);
+        scope.setExtra('request_id', rid);
+        Sentry.captureException(err);
+      });
+
       addTerminalEntry('ERROR', `chaos.retry failed error="${msg}" error_type=${errorTag} url=${url} request_id=${rid} trace_id=${traceId}`, rid);
       addEntry('ERROR', `chaos.retry status=FAILED error_type=${errorTag} error="${msg}" trace_id=${traceId}`, rid);
     } finally { setRetryLoading(false); }
@@ -132,11 +153,21 @@ export function useChaosActions({ addTerminalEntry, addEntry, addIncident }: Use
       invalidateMetrics();
       startCooldown(setLatencyCooldown);
     } catch (err: unknown) {
-      const isNetworkError = err instanceof TypeError;
+      const isNetworkError = err instanceof TypeError || (err instanceof Error && err.name === 'TypeError');
       const isApiError = err instanceof ApiError;
       const msg = err instanceof Error ? err.message : 'Unknown error';
       const url = buildApiUrl('/chaos/latency');
       const errorTag = isNetworkError ? 'NETWORK' : isApiError ? `HTTP_${(err as ApiError).status}` : 'UNKNOWN';
+      
+      Sentry.withScope((scope) => {
+        scope.setTag('api_base_url', API_BASE_URL);
+        scope.setTag('endpoint', '/chaos/latency');
+        scope.setTag('error_type', errorTag);
+        scope.setExtra('url', url);
+        scope.setExtra('request_id', rid);
+        Sentry.captureException(err);
+      });
+
       addTerminalEntry('ERROR', `chaos.latency failed error="${msg}" error_type=${errorTag} url=${url} request_id=${rid} trace_id=${traceId}`, rid);
       addEntry('ERROR', `chaos.latency status=FAILED error_type=${errorTag} error="${msg}" trace_id=${traceId}`, rid);
     } finally { setLatencyLoading(false); }

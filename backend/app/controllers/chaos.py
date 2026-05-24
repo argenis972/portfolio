@@ -20,7 +20,7 @@ from fastapi import APIRouter, Request, Response, Depends
 from app.adapters.sql_models import ChaosIncidentModel
 from app.adapters.repository import PortfolioRepository
 from app.controllers.dependencies import get_repository
-from app.core.rate_limit import check_rate_limit
+from app.core.rate_limit import check_rate_limit, get_chaos_rate_key
 
 router = APIRouter(prefix="/chaos", tags=["Chaos Playground"])
 
@@ -198,7 +198,7 @@ async def simulate_spike(
     The system handles them through its normal rate-limiting and
     connection-pool pipeline — results are real, not mocked.
     """
-    check_rate_limit(request, "2/minute")
+    check_rate_limit(request, "2/minute", key_func=get_chaos_rate_key)
     start = time.time()
     burst_size = 30
     sent = 0
@@ -264,7 +264,7 @@ async def trigger_failure(
     Forces a 503 condition and records the recovery time.
     The incident is visible in /metrics/summary immediately.
     """
-    check_rate_limit(request, "2/minute")
+    check_rate_limit(request, "2/minute", key_func=get_chaos_rate_key)
     start = time.time()
 
     # Simulate the actual failure + recovery cycle
@@ -305,7 +305,7 @@ async def drain_queue(
     Simulates queue drain behavior as defined in the Failure Model.
     Sets worker_delayed=True and queue_backlog=132 for 120s.
     """
-    check_rate_limit(request, "2/minute")
+    check_rate_limit(request, "2/minute", key_func=get_chaos_rate_key)
     start = time.time()
     await asyncio.sleep(0.05)
 
@@ -339,7 +339,7 @@ async def force_retry(request: Request) -> dict:
     """
     Simulates forcing a manual retry.
     """
-    check_rate_limit(request, "5/minute")
+    check_rate_limit(request, "5/minute", key_func=get_chaos_rate_key)
     await asyncio.sleep(0.12)
 
     chaos_state.record_retries(1)
@@ -363,7 +363,7 @@ async def inject_latency(
     Simulates severe latency to test circuit breakers and timeout policies.
     Sets worker_delayed=True and cache fallback serving for 45s.
     """
-    check_rate_limit(request, "2/minute")
+    check_rate_limit(request, "2/minute", key_func=get_chaos_rate_key)
     start = time.time()
     latency_ms = 3000
     await asyncio.sleep(latency_ms / 1000.0)

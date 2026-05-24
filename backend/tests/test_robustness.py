@@ -241,6 +241,20 @@ def test_chaos_endpoints_fail_open_when_redis_unavailable(client, monkeypatch):
         )
 
 
+def test_chaos_rate_limits_are_isolated_per_endpoint(client):
+    """E2E chaos suite posts failure, spike, and latency in one run — each needs its own bucket."""
+    paths = (
+        "/api/v1/chaos/failure",
+        "/api/v1/chaos/spike",
+        "/api/v1/chaos/latency",
+    )
+    for path in paths:
+        resp = client.post(path)
+        assert resp.status_code == 200, (
+            f"Expected 200 for {path}, got {resp.status_code}: {resp.text}"
+        )
+
+
 def test_rate_limiter_prometheus_counter_on_redis_down(client, monkeypatch):
     """Verifies that multiple Redis errors during rate limiting do not raise duplicate timeseries errors in Prometheus."""
     from prometheus_client import REGISTRY

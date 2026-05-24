@@ -66,6 +66,11 @@ def get_contact_fingerprint_key(request: Request) -> str:
     return f"fingerprint:{fingerprint}"
 
 
+def get_chaos_rate_key(request: Request) -> str:
+    """Per-route chaos rate limit bucket (matches former slowapi per-endpoint behavior)."""
+    return f"chaos:{request.url.path}:{get_client_ip(request)}"
+
+
 # Initialize limiter using client IP as the default key.
 # When REDIS_URL is set, uses Redis as the backend storage for horizontal scaling.
 _storage_uri = (

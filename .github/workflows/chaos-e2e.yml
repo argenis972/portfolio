@@ -3,6 +3,12 @@ name: Chaos E2E
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - 'docker-compose.yml'
+      - '.github/workflows/chaos-e2e.yml'
   schedule:
     - cron: '0 6 * * 1'   # Monday 6am — weekly verification
 

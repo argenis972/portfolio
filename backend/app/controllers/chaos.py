@@ -20,7 +20,7 @@ from fastapi import APIRouter, Request, Response, Depends
 from app.adapters.sql_models import ChaosIncidentModel
 from app.adapters.repository import PortfolioRepository
 from app.controllers.dependencies import get_repository
-from app.core.rate_limit import limiter
+from app.core.rate_limit import check_rate_limit
 
 router = APIRouter(prefix="/chaos", tags=["Chaos Playground"])
 
@@ -190,7 +190,6 @@ async def _persist_incident(incident: ChaosIncident, repo: PortfolioRepository) 
         "Records real metrics: requests sent, dropped, and recovery time."
     ),
 )
-@limiter.limit("2/minute")
 async def simulate_spike(
     request: Request, repo: PortfolioRepository = Depends(get_repository)
 ) -> dict:
@@ -199,6 +198,7 @@ async def simulate_spike(
     The system handles them through its normal rate-limiting and
     connection-pool pipeline — results are real, not mocked.
     """
+    check_rate_limit(request, "2/minute")
     start = time.time()
     burst_size = 30
     sent = 0
@@ -255,7 +255,6 @@ async def simulate_spike(
         "shifts to 'degraded' until recovery."
     ),
 )
-@limiter.limit("2/minute")
 async def trigger_failure(
     request: Request,
     response: Response,
@@ -265,6 +264,7 @@ async def trigger_failure(
     Forces a 503 condition and records the recovery time.
     The incident is visible in /metrics/summary immediately.
     """
+    check_rate_limit(request, "2/minute")
     start = time.time()
 
     # Simulate the actual failure + recovery cycle
@@ -298,7 +298,6 @@ async def trigger_failure(
     summary="Purge/Drain processing queue",
     description="Purges the current request queue to simulate shedding load during severe backpressure.",
 )
-@limiter.limit("2/minute")
 async def drain_queue(
     request: Request, repo: PortfolioRepository = Depends(get_repository)
 ) -> dict:
@@ -306,6 +305,7 @@ async def drain_queue(
     Simulates queue drain behavior as defined in the Failure Model.
     Sets worker_delayed=True and queue_backlog=132 for 120s.
     """
+    check_rate_limit(request, "2/minute")
     start = time.time()
     await asyncio.sleep(0.05)
 
@@ -335,11 +335,11 @@ async def drain_queue(
     summary="Force manual retry of failed request",
     description="Forces a manual retry of a dead-lettered request.",
 )
-@limiter.limit("5/minute")
 async def force_retry(request: Request) -> dict:
     """
     Simulates forcing a manual retry.
     """
+    check_rate_limit(request, "5/minute")
     await asyncio.sleep(0.12)
 
     chaos_state.record_retries(1)
@@ -356,7 +356,6 @@ async def force_retry(request: Request) -> dict:
     summary="Inject artificial latency",
     description="Injects 3000ms latency to simulate DB timeout or network partition.",
 )
-@limiter.limit("2/minute")
 async def inject_latency(
     request: Request, repo: PortfolioRepository = Depends(get_repository)
 ) -> dict:
@@ -364,6 +363,7 @@ async def inject_latency(
     Simulates severe latency to test circuit breakers and timeout policies.
     Sets worker_delayed=True and cache fallback serving for 45s.
     """
+    check_rate_limit(request, "2/minute")
     start = time.time()
     latency_ms = 3000
     await asyncio.sleep(latency_ms / 1000.0)

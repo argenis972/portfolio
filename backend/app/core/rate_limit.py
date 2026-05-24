@@ -161,7 +161,7 @@ def check_rate_limit(request: Request, limit_string: str, key_func=get_email_or_
                     pass
                 continue
 
-            # Fail-open: allow through on read-only portfolio endpoints
+            # Fail-open: allow through on read-only portfolio and chaos endpoints
             logger.error(
                 "rate_limiter_backend_unavailable",
                 error=str(e),

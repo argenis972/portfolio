@@ -226,6 +226,21 @@ def test_rate_limiter_redis_fallback_fail_open_on_readonly(client, monkeypatch):
     )
 
 
+def test_chaos_endpoints_fail_open_when_redis_unavailable(client, monkeypatch):
+    """Chaos playground must stay usable when the Redis rate-limit backend is down."""
+
+    def mock_hit(*args, **kwargs):
+        raise ConnectionError("Redis is down")
+
+    monkeypatch.setattr("app.core.rate_limit.limiter.limiter.hit", mock_hit)
+
+    for path in ("/api/v1/chaos/drain", "/api/v1/chaos/retry"):
+        resp = client.post(path)
+        assert resp.status_code == 200, (
+            f"Expected 200 for {path} (fail-open), got {resp.status_code}: {resp.text}"
+        )
+
+
 def test_rate_limiter_prometheus_counter_on_redis_down(client, monkeypatch):
     """Verifies that multiple Redis errors during rate limiting do not raise duplicate timeseries errors in Prometheus."""
     from prometheus_client import REGISTRY
